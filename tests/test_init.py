@@ -75,3 +75,27 @@ async def test_setup_and_commit(hass: HomeAssistant, repo: Path, tmp_path: Path)
     assert response["results"][0]["committed"] is False
 
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_card_resource(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    from custom_components.git_sync import _storage_resources
+    from custom_components.git_sync.const import CARD_URL, VERSION
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=str(repo),
+        data={CONF_REPO_PATH: str(repo), CONF_REMOTE: "origin", CONF_SSH_KEY: ""},
+        options={CONF_COMMIT_INTERVAL: 0, CONF_EXPORT_ENABLED: False, CONF_EXPORT_DIR: str(tmp_path / "export")},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    resources = _storage_resources(hass)
+    assert resources is not None
+    urls = [item["url"] for item in resources.async_items()]
+    assert urls == [f"{CARD_URL}?v={VERSION}"]
+
+    assert await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not [item for item in resources.async_items() if item["url"].startswith(CARD_URL)]

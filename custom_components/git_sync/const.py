@@ -6,6 +6,7 @@ from typing import Final
 
 DOMAIN: Final = "git_sync"
 NAME: Final = "Git Sync"
+# Same as manifest.json and the card: the card URL carries it, so that browsers load a new release.
 VERSION: Final = "0.1.0"
 
 # Config entry data / options
@@ -65,9 +66,8 @@ ATTR_CONFIG_ENTRY_ID: Final = "config_entry_id"
 EVENT_COMMITTED: Final = f"{DOMAIN}_committed"
 EVENT_EXPORTED: Final = f"{DOMAIN}_exported"
 
-# Frontend
-CARD_FILENAME: Final = "git-sync-card.js"
-CARD_URL_BASE: Final = f"/{DOMAIN}_frontend"
+# The card bundled with the integration, served by Home Assistant and added to the dashboard resources.
+CARD_URL: Final = f"/{DOMAIN}/git-sync-card.js"
 
 STORAGE_VERSION: Final = 1
 

@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import GitSyncConfigEntry
@@ -104,7 +104,7 @@ SENSORS: tuple[GitSyncSensorDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GitSyncConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the sensors."""
     coordinator = entry.runtime_data

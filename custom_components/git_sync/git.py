@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
 import logging
 import os
-from pathlib import Path
 import shlex
+from dataclasses import dataclass, field
+from pathlib import Path
 
 from .const import CHANGED_FILES_MAX, DIFF_MAX_CHARS, GIT_TIMEOUT
 

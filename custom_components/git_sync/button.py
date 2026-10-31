@@ -8,7 +8,7 @@ from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import GitSyncConfigEntry
 from .coordinator import GitSyncCoordinator
@@ -39,7 +39,7 @@ BUTTONS: tuple[GitSyncButtonDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GitSyncConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the buttons."""
     coordinator = entry.runtime_data

@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
 import logging
 import re
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -94,9 +94,7 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=timedelta(
-                seconds=self.settings.get(CONF_STATUS_INTERVAL, DEFAULT_STATUS_INTERVAL)
-            ),
+            update_interval=timedelta(seconds=self.settings.get(CONF_STATUS_INTERVAL, DEFAULT_STATUS_INTERVAL)),
         )
         self.repo = GitRepo(
             self.settings[CONF_REPO_PATH],
@@ -106,9 +104,18 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
             author_name=self.settings.get(CONF_AUTHOR_NAME) or "",
             author_email=self.settings.get(CONF_AUTHOR_EMAIL) or "",
         )
-        self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}")
+        self._store = self._make_store(hass, entry)
         self._lock = asyncio.Lock()
         self._state = GitSyncData()
+
+    @staticmethod
+    def _make_store(hass: HomeAssistant, entry: ConfigEntry) -> Store[dict[str, Any]]:
+        return Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}")
+
+    @classmethod
+    async def async_remove_store(cls, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Delete the file holding the last push/export of a removed entry."""
+        await cls._make_store(hass, entry).async_remove()
 
     # ------------------------------------------------------------------ polling
 
@@ -212,9 +219,7 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         if not entity_id or not self.hass.services.has_service("ai_task", "generate_data"):
             return fallback
 
-        language = LANGUAGE_NAMES.get(
-            self.settings.get(CONF_COMMIT_LANGUAGE, DEFAULT_COMMIT_LANGUAGE), "English"
-        )
+        language = LANGUAGE_NAMES.get(self.settings.get(CONF_COMMIT_LANGUAGE, DEFAULT_COMMIT_LANGUAGE), "English")
         try:
             response = await self.hass.services.async_call(
                 "ai_task",

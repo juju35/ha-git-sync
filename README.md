@@ -1,46 +1,42 @@
-# Git Sync for Home Assistant
+# ha-git-sync
 
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
+[![HACS](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![HACS Validation](https://github.com/juju35/ha-git-sync/actions/workflows/hacs.yml/badge.svg)](https://github.com/juju35/ha-git-sync/actions/workflows/hacs.yml)
 [![Validate](https://github.com/juju35/ha-git-sync/actions/workflows/validate.yml/badge.svg)](https://github.com/juju35/ha-git-sync/actions/workflows/validate.yml)
-[![Lint](https://github.com/juju35/ha-git-sync/actions/workflows/lint.yml/badge.svg)](https://github.com/juju35/ha-git-sync/actions/workflows/lint.yml)
-[![Release](https://img.shields.io/github/v/release/juju35/ha-git-sync)](https://github.com/juju35/ha-git-sync/releases)
+[![Release](https://img.shields.io/github/v/release/juju35/ha-git-sync)](https://github.com/juju35/ha-git-sync/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Version your Home Assistant configuration with Git, without shell commands.
-Git Sync watches the `/config` work tree, commits and pushes changes on a schedule with an
-AI-generated [Conventional Commits](https://www.conventionalcommits.org/) message, exports your
-Lovelace dashboards out of `.storage`, and ships a Lovelace card to follow and drive all of it.
+<p align="center"><img src="custom_components/git_sync/brand/icon.png" alt="Git Sync" width="120"></p>
 
-It replaces the usual `shell_command` + `command_line` sensor + script + automation stack:
+Home Assistant integration that versions your configuration with Git: it commits and pushes the changes on a schedule with an AI-written commit message, exports your dashboards out of `.storage`, and comes with a Lovelace card to follow and drive it all.
 
-| Before (YAML)                                         | With Git Sync                                   |
-| ----------------------------------------------------- | ----------------------------------------------- |
-| `command_line` sensor running `git status` every 60 s | `sensor.*_status` (`clean` / `dirty` / `ahead` / `error`) |
-| `shell_command.git_stage_diff` + `ai_task` script     | Built-in AI commit message from the staged diff |
-| `shell_command.git_commit_push_ai` + hourly automation | Automatic commit interval (option)             |
-| `input_button` for a manual push                      | `button.*_commit_and_push` and the card         |
-| `input_text` storing the last push                    | `sensor.*_last_push` (timestamp)                |
-| `shell_command.export_dashboards` + 08:00 automation  | Daily export time (option), `button.*_export_dashboards` |
-| `ssh-keygen` / `cat id_ed25519.pub` shell commands    | `git_sync.generate_ssh_key` action              |
+<p align="center">
+  <img src="screenshots/card.png" alt="Git Sync card with changes pending" width="420">
+  <img src="screenshots/card-dark.png" alt="Git Sync card, dark theme" width="420">
+</p>
+
+It replaces the usual stack of `shell_command`, `command_line` sensor, script and automations around `git`, with nothing to write in YAML.
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=juju35&repository=ha-git-sync&category=integration)
 
 ## Features
 
-- **Status** of the work tree: changed files, branch, upstream, commits ahead/behind.
-- **Commit & push** every N minutes when something changed, or on demand (button, action, card).
-- **AI commit messages** through any `ai_task` entity (Google, OpenAI, Ollama…), in English,
-  French, German or Spanish, with a safe fallback when no AI task is configured or it fails.
-- **Notification** after each real commit, with an optional image (iOS needs an absolute HTTPS URL).
-- **Dashboard export**: copies `.storage/lovelace*` to a folder as raw JSON, readable YAML, or both,
-  daily at a chosen time and optionally right before each commit. Files are only rewritten when they change.
-- **SSH deploy key** generation; pushes use `StrictHostKeyChecking=accept-new` with a dedicated
-  `known_hosts` next to the key, so no manual `ssh-keyscan` is needed.
-- **Lovelace card** bundled with the integration, no extra resource to add.
-- Events `git_sync_committed` and `git_sync_exported` for your own automations.
-- UI in English, French, German and Spanish.
+- **Status** of the work tree: clean, changes pending, push pending or error, with the changed files, the branch and the remote
+- **Automatic commit and push** every N minutes (60 by default) when something changed, and on demand from a button, an action or the card
+- **AI commit messages**: the staged diff is sent to an `ai_task` entity (Google, OpenAI, Ollama…), which writes a one-line [Conventional Commits](https://www.conventionalcommits.org/) message in English, French, German or Spanish. Without AI task, or if it fails, a generic message is used
+- **Notification** after each real commit, with an optional image
+- **Dashboard export**: copies `.storage/lovelace*` to a folder, as raw JSON, readable YAML or both, every day at a set time and optionally right before each commit. A file is only rewritten when it changes
+- **SSH deploy key** created by an action; the push accepts the host key on first use, no `ssh-keyscan` needed
+- A failed push stays visible on the status until a later push succeeds, and is retried at the next commit
+- `git_sync_committed` and `git_sync_exported` **events**
+- **Lovelace card** bundled with the integration: status, last commit, changed files, last push and export, Commit & push and Export dashboards
+- English, French, German and Spanish
 
-## Requirements
+## Prerequisites
 
-- Home Assistant 2025.6 or newer, with `git` and `ssh` available (they are in the official images).
-- The configuration folder is already a Git repository with a remote:
+- Home Assistant 2024.12 or newer (the AI commit messages need the `ai_task` integration, 2025.8 or newer)
+- `git` and `ssh` in the Home Assistant container: they are in the official images
+- The configuration folder is a Git repository with a remote:
 
   ```bash
   cd /config
@@ -48,7 +44,7 @@ It replaces the usual `shell_command` + `command_line` sensor + script + automat
   git remote add origin git@github.com:<you>/homeassistant-config.git
   ```
 
-- A `.gitignore` that keeps secrets and runtime data out of the repository, for example:
+- A `.gitignore` keeping secrets and runtime files out of the repository, for example:
 
   ```gitignore
   secrets.yaml
@@ -57,147 +53,201 @@ It replaces the usual `shell_command` + `command_line` sensor + script + automat
   .ssh/
   *.db*
   *.log*
-  home-assistant_v2.db*
   deps/
   tts/
   __pycache__/
   ```
 
 > [!WARNING]
-> Everything that is not ignored gets pushed. Keep credentials in `secrets.yaml` (`!secret`)
-> and prefer a **private** repository.
+> Everything that is not ignored is pushed. Keep credentials in `secrets.yaml` (`!secret`) and prefer a **private** repository.
 
 ## Installation
 
-### HACS
+### Via HACS (recommended)
 
-1. HACS → ⋮ → *Custom repositories* → `https://github.com/juju35/ha-git-sync`, category *Integration*.
-2. Install **Git Sync** and restart Home Assistant.
+Click the button below to add the repository directly:
+
+[![Add to HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=juju35&repository=ha-git-sync&category=integration)
+
+Then click **Download** and restart Home Assistant.
+
+Or manually:
+
+1. Open HACS → **⋮** (top right) → **Custom repositories**
+2. Add `https://github.com/juju35/ha-git-sync` — Type: **Integration**
+3. Search for **Git Sync** and click **Download**
+4. Restart Home Assistant
 
 ### Manual
 
-Download `git_sync.zip` from the [latest release](https://github.com/juju35/ha-git-sync/releases/latest),
-extract it into `config/custom_components/git_sync/` and restart.
+Copy `custom_components/git_sync/` to `/config/custom_components/git_sync/`, then restart Home Assistant.
 
 ## Configuration
 
-*Settings → Devices & services → Add integration → Git Sync*
+[![Add integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=git_sync)
 
-| Field          | Default                   | Description                                             |
-| -------------- | ------------------------- | ------------------------------------------------------- |
-| Repository path | `/config`                | Folder containing `.git`                                |
-| Remote         | `origin`                  | Remote to push to                                       |
-| Branch         | *(current branch)*        | Target branch on the remote                             |
-| SSH private key | `/config/.ssh/id_ed25519` | Key used for the push                                   |
-| Author name / email | *(repository config)* | Overrides `user.name` / `user.email`                    |
+**Settings → Devices & services → Add integration → Git Sync**. The repository settings can be changed later with **Reconfigure**, the options with **Configure**.
 
-Options (*Configure* on the integration):
+| Setting | Default | Description |
+|---|---|---|
+| Repository path | `/config` | Folder containing `.git`. One entry per repository |
+| Remote | `origin` | Remote to push to |
+| Branch | current branch | Target branch on the remote |
+| SSH private key | `/config/.ssh/id_ed25519` | Key used for the push |
+| Author name / email | repository config | Overrides `user.name` / `user.email` |
 
-| Option                       | Default                     |
-| ---------------------------- | --------------------------- |
-| AI task entity               | none (generic message)      |
-| Commit message language      | English                     |
-| Automatic commit interval    | 60 min (0 disables it)      |
-| Status refresh interval      | 60 s                        |
-| Notification action          | none, e.g. `notify.mobile_app_phone` |
-| Notification image URL       | none                        |
-| Daily dashboard export       | on                          |
-| Export time                  | 08:00                       |
-| Export folder                | `/config/dashboards_export` |
-| Export format                | JSON                        |
-| Export before each commit    | off                         |
+| Option | Default | Description |
+|---|---|---|
+| AI task entity | none | Writes the commit message from the diff. Without it: `chore: update configuration (n files)` |
+| Commit message language | English | `en`, `fr`, `de` or `es` |
+| Automatic commit interval | 60 min | Commit and push every N minutes when something changed, 0 to disable, up to 1440 |
+| Status refresh interval | 60 s | How often `git status` is read, from 10 to 3600 |
+| Notification action | none | Sent after each commit, for example `notify.mobile_app_phone` |
+| Notification image URL | none | Absolute HTTPS URL (required by iOS) |
+| Daily dashboard export | on | Export the dashboards every day |
+| Export time | 08:00 | Time of the daily export |
+| Export folder | `/config/dashboards_export` | Where the dashboards are written |
+| Export format | JSON | JSON (raw copy of `.storage`), YAML (dashboard configuration only, easier to read in diffs) or both |
+| Export before each commit | off | Also export right before each commit |
 
 ### SSH deploy key
 
-1. *Developer tools → Actions* → `git_sync.generate_ssh_key` → *Perform action*: the response
-   contains the public key (an existing key is reused).
-2. GitHub → repository → *Settings → Deploy keys → Add deploy key*, paste it and tick
-   **Allow write access**.
+1. **Developer tools → Actions** → `git_sync.generate_ssh_key` → **Perform action**: the response holds the public key (an existing key is kept)
+2. On GitHub: repository → **Settings → Deploy keys → Add deploy key**, paste it and tick **Allow write access**
 
-## Entities
+### Entities
 
-| Entity                     | Description                                                       |
-| -------------------------- | ----------------------------------------------------------------- |
-| `sensor.*_status`          | `clean`, `dirty`, `ahead` or `error`; attributes: branch, remote, changed files, last error |
-| `sensor.*_changed_files`   | Number of changed files                                           |
-| `sensor.*_last_commit`     | HEAD commit time; attributes: message, sha                        |
-| `sensor.*_last_push`       | Last successful push by Git Sync; attribute: message              |
-| `sensor.*_last_export`     | Last dashboard export; attribute: files                           |
-| `sensor.*_branch`          | Current branch (diagnostic)                                       |
-| `button.*_commit_and_push` | Commit and push now                                               |
-| `button.*_export_dashboards` | Export the dashboards now                                       |
+| Entity | Description |
+|---|---|
+| `sensor.git_sync_<repo>_status` | `clean`, `dirty`, `ahead` (committed, push pending) or `error` (last push failed). Attributes: `branch`, `upstream`, `remote_url`, `ahead`, `behind`, `changed_count`, `changed_files` (first 50), `last_error` |
+| `sensor.git_sync_<repo>_changed_files` | Number of changed files |
+| `sensor.git_sync_<repo>_last_commit` | Time of the HEAD commit. Attributes: `message`, `sha`, `short_sha` |
+| `sensor.git_sync_<repo>_last_push` | Time of the last push made by Git Sync. Attribute: `message` |
+| `sensor.git_sync_<repo>_last_export` | Time of the last dashboard export. Attribute: `files` |
+| `sensor.git_sync_<repo>_branch` | Current branch (diagnostic) |
+| `button.git_sync_<repo>_commit_and_push` | Commit and push now |
+| `button.git_sync_<repo>_export_dashboards` | Export the dashboards now |
 
-## Actions
+### Action `git_sync.commit_push`
+
+Stages every change, commits and pushes. Without `message`, the AI task writes it. Returns whether a commit was made.
 
 ```yaml
-# Commit and push, AI message when "message" is omitted
 action: git_sync.commit_push
 data:
-  message: "fix(corridor): lower the night light threshold"   # optional
-response_variable: result   # {"results": [{"committed": true, "message": "..."}]}
-
-# Export the dashboards now
-action: git_sync.export_dashboards
-
-# Create the deploy key (or read the existing one)
-action: git_sync.generate_ssh_key
-response_variable: key      # {"public_key": "ssh-ed25519 AAAA... homeassistant"}
+  message: "fix(corridor): lower the night light threshold"  # optional
+response_variable: result  # {"results": [{"config_entry_id": "...", "committed": true, "message": "..."}]}
 ```
 
-Every action accepts an optional `config_entry_id` when several repositories are configured.
-
-### Events
+### Action `git_sync.export_dashboards`
 
 ```yaml
-triggers:
-  - trigger: event
-    event_type: git_sync_committed   # data: message, sha, files, entry_id
+action: git_sync.export_dashboards
+response_variable: result  # {"results": [{"config_entry_id": "...", "files": ["lovelace", ...]}]}
 ```
+
+### Action `git_sync.generate_ssh_key`
+
+```yaml
+action: git_sync.generate_ssh_key
+response_variable: key  # {"public_key": "ssh-ed25519 AAAA... homeassistant"}
+```
+
+Every action takes an optional `config_entry_id` to target one repository; without it, `commit_push` and `export_dashboards` run on all of them.
+
+### Event `git_sync_committed`
+
+| Field | Description |
+|---|---|
+| `entry_id` | Config entry of the repository |
+| `message` | Commit message |
+| `sha` | Commit hash |
+| `files` | Number of files committed |
+
+`git_sync_exported` gives `entry_id` and `files` (names of the exported files).
 
 ## Card
 
-The card is served by the integration and registered automatically.
+The integration serves the **Git Sync Card** and adds it to the dashboard resources (or loads it on every page when the resources are managed in YAML): no separate install. Add it from the card picker, or:
 
 ```yaml
 type: custom:git-sync-card
-entity: sensor.git_sync_config_status   # optional, the first Git Sync repository is used otherwise
-title: Configuration                    # optional
-show_files: true                        # collapsible list of changed files
-show_export: true                       # last export row and export button
 ```
 
-It shows the status, the last commit, the changed files (collapsible), the last push and export,
-and two actions. *Commit & push* opens a confirmation at the top of the card where a message can
-be typed; left empty, the AI task writes it. A visual editor is available.
+| Changes pending | Up to date |
+|---|---|
+| ![Card](screenshots/card.png) | ![Card, up to date](screenshots/card-clean.png) |
+| ![Card, dark theme](screenshots/card-dark.png) | ![Card, up to date, dark theme](screenshots/card-clean-dark.png) |
+
+| Push failed | Commit & push |
+|---|---|
+| ![Card, push failed](screenshots/card-error.png) | ![Card, commit confirmation](screenshots/card-confirm.png) |
+| ![Card, push failed, dark theme](screenshots/card-error-dark.png) | ![Card, commit confirmation, dark theme](screenshots/card-confirm-dark.png) |
+
+- **Header**: status (up to date, changes, push pending, error, working…), branch and remote repository
+- **Last commit**: message, short hash and how long ago
+- **Changed files**: collapsible list, folded again when you click elsewhere
+- **Last push** and **Dashboard export**, with the number of exported files
+- **Commit & push** opens a confirmation at the top of the card, where a message can be typed; left empty, the AI task writes it. **Export dashboards** runs the export right away. The result is shown in a toast
+
+Every option is in the visual editor:
+
+| Option | Default | Description |
+|---|---|---|
+| `entity` | found automatically | The **Status** sensor of the repository |
+| `title` | Git Sync | Card title |
+| `show_files` | `true` | Collapsible list of the changed files |
+| `show_export` | `true` | Last export and the **Export dashboards** button |
+| `language` | Home Assistant's | `en`, `fr`, `de` or `es` |
 
 ## Migrating from shell commands
 
-Once Git Sync is configured and has pushed at least once, remove from your YAML:
+Once Git Sync has pushed once, remove from your configuration:
 
-- `shell_command`: `git_commit_push`, `git_status_check`, `git_stage_diff`, `git_commit_push_ai`,
-  `export_dashboards`, `git_generate_ssh_key`, `git_show_ssh_key`, `add_github_known_host`
-- the `command_line` *Git status* sensor
-- the `git_commit_push_ia` script and the *Git autocommit & push* / *Export dashboards* automations
-- `input_button.git_push_manuel`, `input_text.git_dernier_push`, `input_text.dernier_export_dashboard`
-- `/config/git_push.sh`
+- `shell_command`: `git_commit_push`, `git_status_check`, `git_stage_diff`, `git_commit_push_ai`, `export_dashboards`, `git_generate_ssh_key`, `git_show_ssh_key`, `add_github_known_host`
+- the `command_line` **Git status** sensor, the commit script and the commit and dashboard export automations
+- the `input_button` and `input_text` helpers used for the manual push and the last push or export time, and the `git_push.sh` script
 
-Point Git Sync to the same key (`/config/.ssh/id_ed25519`) and the same export folder to keep
-the existing deploy key and history.
+Point Git Sync to the same key (`/config/.ssh/id_ed25519`) and export folder to keep your deploy key and history.
+
+## How it works
+
+Git Sync runs the `git` command line in the configuration folder. Every status interval it reads `git status`, the HEAD commit and the remote. A commit stages everything (`git add -A`), sends the statistics and the first 8000 characters of the diff to the AI task, keeps the first line of its answer without quotes, backticks or dollar signs (100 characters max), commits and pushes. Commits and exports never run at the same time. The last push and export are kept across restarts.
+
+To debug:
+
+```yaml
+logger:
+  logs:
+    custom_components.git_sync: debug
+```
 
 ## Development
 
 ```bash
-npm ci
-npm run build        # bundles src/ into custom_components/git_sync/frontend/
-npm run lint         # Biome
-pip install -r requirements_test.txt ruff vulture
-ruff check . && ruff format --check .
-vulture
-pytest
-pre-commit install
+pip install -r requirements_test.txt && pytest
+node --test test/*.test.mjs        # card
+python scripts/screenshots.py      # README screenshots (Playwright)
 ```
 
-The card bundle is not committed: CI builds it and the release workflow ships it inside `git_sync.zip`.
+### Releasing
+
+1. Bump the version in `custom_components/git_sync/manifest.json`, `const.py` (`VERSION`) and the card (`GIT_SYNC_CARD_VERSION`)
+2. Add a `## <version>` section at the top of [CHANGELOG.md](CHANGELOG.md)
+3. Push to `main`: the **Release** workflow creates the tag and the GitHub release with the changelog section as notes
+
+## Translations
+
+The integration and its card follow the language of Home Assistant. Currently supported:
+
+| Language | Code |
+|---|---|
+| English | `en` |
+| Français | `fr` |
+| Deutsch | `de` |
+| Español | `es` |
+
+Contributions for additional languages are welcome!
 
 ## License
 
