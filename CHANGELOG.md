@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+### What's new
+- The AI task is preselected when Home Assistant has only one: when adding the integration, and in the options of an entry where it was never set. Without it, the card's ✨ button stayed hidden and commits used the generic message. Emptying the field keeps it empty.
+- The commit message language defaults to the language of Home Assistant (English, French, German or Spanish).
+
 ## 0.1.0
 
 ### What's new

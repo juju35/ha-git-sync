@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 
 from .const import (
@@ -85,8 +85,29 @@ def _repository_schema(defaults: dict[str, Any]) -> vol.Schema:
     )
 
 
-def _options_schema(options: dict[str, Any]) -> vol.Schema:
-    ai_task = options.get(CONF_AI_TASK_ENTITY)
+def _default_ai_task(hass: HomeAssistant) -> str | None:
+    """The AI task entity, when there is exactly one: preselected rather than left empty."""
+    entities = hass.states.async_entity_ids("ai_task")
+    return entities[0] if len(entities) == 1 else None
+
+
+def _default_language(hass: HomeAssistant) -> str:
+    """Home Assistant's language when commit messages can be written in it, else English."""
+    language = (hass.config.language or "").split("-")[0]
+    return language if language in COMMIT_LANGUAGES else DEFAULT_COMMIT_LANGUAGE
+
+
+def _default_options(hass: HomeAssistant) -> dict[str, Any]:
+    """Options of a new entry: the only AI task and Home Assistant's language."""
+    options: dict[str, Any] = {CONF_COMMIT_LANGUAGE: _default_language(hass)}
+    if ai_task := _default_ai_task(hass):
+        options[CONF_AI_TASK_ENTITY] = ai_task
+    return options
+
+
+def _options_schema(hass: HomeAssistant, options: dict[str, Any]) -> vol.Schema:
+    # Never set (entries before 0.1.1): suggest the only AI task. Emptied on purpose: stored as None, stays empty.
+    ai_task = options[CONF_AI_TASK_ENTITY] if CONF_AI_TASK_ENTITY in options else _default_ai_task(hass)
     return vol.Schema(
         {
             vol.Optional(
@@ -95,7 +116,7 @@ def _options_schema(options: dict[str, Any]) -> vol.Schema:
             ): selector.EntitySelector(selector.EntitySelectorConfig(domain="ai_task")),
             vol.Required(
                 CONF_COMMIT_LANGUAGE,
-                default=options.get(CONF_COMMIT_LANGUAGE, DEFAULT_COMMIT_LANGUAGE),
+                default=options.get(CONF_COMMIT_LANGUAGE, _default_language(hass)),
             ): _choice(COMMIT_LANGUAGES, CONF_COMMIT_LANGUAGE),
             vol.Required(
                 CONF_COMMIT_INTERVAL,
@@ -155,7 +176,11 @@ class GitSyncConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             errors = await _validate(user_input)
             if not errors:
-                return self.async_create_entry(title=f"{NAME} {user_input[CONF_REPO_PATH]}", data=user_input)
+                return self.async_create_entry(
+                    title=f"{NAME} {user_input[CONF_REPO_PATH]}",
+                    data=user_input,
+                    options=_default_options(self.hass),
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -196,6 +221,10 @@ class GitSyncOptionsFlow(OptionsFlow):
         if user_input is not None:
             for key in (CONF_COMMIT_INTERVAL, CONF_STATUS_INTERVAL):
                 user_input[key] = int(user_input[key])
+            # An emptied field is left out of user_input: store it as None so it isn't suggested again.
+            user_input.setdefault(CONF_AI_TASK_ENTITY, None)
             return self.async_create_entry(data=user_input)
 
-        return self.async_show_form(step_id="init", data_schema=_options_schema(dict(self.config_entry.options)))
+        return self.async_show_form(
+            step_id="init", data_schema=_options_schema(self.hass, dict(self.config_entry.options))
+        )

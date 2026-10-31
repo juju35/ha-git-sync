@@ -159,3 +159,63 @@ async def test_generate_message(hass: HomeAssistant, repo: Path, tmp_path: Path)
     await hass.async_block_till_done()
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(DOMAIN, "generate_message", {}, blocking=True, return_response=True)
+
+
+async def test_default_ai_task_and_language(hass: HomeAssistant, repo: Path) -> None:
+    from custom_components.git_sync.const import CONF_AI_TASK_ENTITY, CONF_COMMIT_LANGUAGE
+
+    hass.config.language = "fr"
+    hass.states.async_set("ai_task.google_ai_task", "unknown")
+
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    done = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_REPO_PATH: str(repo), CONF_REMOTE: "origin", CONF_SSH_KEY: ""}
+    )
+    assert done["type"] is FlowResultType.CREATE_ENTRY
+    assert done["options"] == {CONF_AI_TASK_ENTITY: "ai_task.google_ai_task", CONF_COMMIT_LANGUAGE: "fr"}
+
+
+def _suggested(schema, key: str):
+    for marker in schema.schema:
+        if marker == key:
+            return (marker.description or {}).get("suggested_value")
+    raise KeyError(key)
+
+
+async def test_options_suggest_the_only_ai_task(hass: HomeAssistant, repo: Path) -> None:
+    from custom_components.git_sync.const import CONF_AI_TASK_ENTITY
+
+    hass.states.async_set("ai_task.google_ai_task", "unknown")
+    # An entry created before the AI task was preselected: no option at all.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=str(repo),
+        data={CONF_REPO_PATH: str(repo), CONF_REMOTE: "origin", CONF_SSH_KEY: ""},
+        options={CONF_COMMIT_INTERVAL: 0, CONF_EXPORT_ENABLED: False},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    form = await hass.config_entries.options.async_init(entry.entry_id)
+    assert _suggested(form["data_schema"], CONF_AI_TASK_ENTITY) == "ai_task.google_ai_task"
+
+    # Emptied on purpose: stored as None and no longer suggested.
+    done = await hass.config_entries.options.async_configure(
+        form["flow_id"], {k: v for k, v in _defaults(form["data_schema"]).items() if k != CONF_AI_TASK_ENTITY}
+    )
+    assert done["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_AI_TASK_ENTITY] is None
+    await hass.async_block_till_done()
+    form = await hass.config_entries.options.async_init(entry.entry_id)
+    assert _suggested(form["data_schema"], CONF_AI_TASK_ENTITY) is None
+
+
+def _defaults(schema) -> dict:
+    import voluptuous as vol
+
+    return {
+        str(marker): marker.default()
+        for marker in schema.schema
+        if isinstance(marker, vol.Marker) and marker.default is not vol.UNDEFINED
+    }
