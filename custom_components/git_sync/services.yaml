@@ -1,0 +1,24 @@
+commit_push:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: git_sync
+    message:
+      example: "fix: corridor light threshold"
+      selector:
+        text:
+
+export_dashboards:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: git_sync
+
+generate_ssh_key:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: git_sync

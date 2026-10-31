@@ -1,0 +1,16 @@
+{
+  "threshold": 3,
+  "minLines": 8,
+  "minTokens": 60,
+  "reporters": ["console"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/frontend/**",
+    "**/translations/**",
+    "**/strings.json",
+    "**/*.min.js"
+  ],
+  "format": ["javascript", "python"],
+  "absolute": false,
+  "exitCode": 1
+}

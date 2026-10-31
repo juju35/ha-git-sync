@@ -1,0 +1,231 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Repositorio Git",
+        "description": "Carpeta de Home Assistant versionada con Git y enviada a un remoto (GitHub, Gitea…).",
+        "data": {
+          "repo_path": "Ruta del repositorio",
+          "remote": "Remoto",
+          "branch": "Rama",
+          "ssh_key": "Clave SSH privada",
+          "author_name": "Nombre del autor",
+          "author_email": "Correo del autor"
+        },
+        "data_description": {
+          "repo_path": "Carpeta que contiene el directorio .git, normalmente /config.",
+          "remote": "Remoto Git al que enviar, normalmente origin.",
+          "branch": "Rama de destino en el remoto. Déjalo vacío para enviar la rama actual.",
+          "ssh_key": "Clave privada usada para el push. Créala con la acción generate_ssh_key y añade la clave pública como deploy key con acceso de escritura.",
+          "author_name": "Opcional, sustituye user.name / user.email del repositorio.",
+          "author_email": "Opcional, sustituye user.name / user.email del repositorio."
+        }
+      },
+      "reconfigure": {
+        "title": "Ajustes del repositorio",
+        "data": {
+          "repo_path": "Ruta del repositorio",
+          "remote": "Remoto",
+          "branch": "Rama",
+          "ssh_key": "Clave SSH privada",
+          "author_name": "Nombre del autor",
+          "author_email": "Correo del autor"
+        },
+        "data_description": {
+          "repo_path": "Carpeta que contiene el directorio .git, normalmente /config.",
+          "remote": "Remoto Git al que enviar, normalmente origin.",
+          "branch": "Rama de destino en el remoto. Déjalo vacío para enviar la rama actual.",
+          "ssh_key": "Clave privada usada para el push. Créala con la acción generate_ssh_key y añade la clave pública como deploy key con acceso de escritura.",
+          "author_name": "Opcional, sustituye user.name / user.email del repositorio.",
+          "author_email": "Opcional, sustituye user.name / user.email del repositorio."
+        }
+      }
+    },
+    "error": {
+      "not_a_repository": "Esta carpeta no es un repositorio Git.",
+      "unknown_remote": "Este remoto no existe en el repositorio."
+    },
+    "abort": {
+      "already_configured": "Este repositorio ya está configurado.",
+      "reconfigure_successful": "Repositorio actualizado.",
+      "unique_id_mismatch": "La ruta del repositorio no se puede cambiar: añade una nueva entrada."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opciones de Git Sync",
+        "description": "Mensaje de commit, programación, notificaciones y exportación de paneles.",
+        "data": {
+          "ai_task_entity": "Entidad AI task",
+          "commit_language": "Idioma del mensaje de commit",
+          "commit_interval": "Intervalo de commit automático",
+          "status_interval": "Intervalo de actualización del estado",
+          "notify_service": "Acción de notificación",
+          "notify_image": "URL de la imagen de notificación",
+          "export_enabled": "Exportación diaria de paneles",
+          "export_time": "Hora de exportación",
+          "export_dir": "Carpeta de exportación",
+          "export_format": "Formato de exportación",
+          "export_before_commit": "Exportar los paneles antes de cada commit"
+        },
+        "data_description": {
+          "ai_task_entity": "Genera un mensaje Conventional Commits a partir del diff. Sin ella se usa un mensaje genérico.",
+          "commit_interval": "Commit y push cada N minutos si hay cambios. 0 lo desactiva.",
+          "notify_service": "Por ejemplo notify.mobile_app_telefono. Déjalo vacío para desactivarlo.",
+          "notify_image": "URL HTTPS absoluta (requerida por iOS).",
+          "export_format": "JSON copia los archivos .storage tal cual; YAML solo conserva la configuración del panel, más legible en los diffs."
+        }
+      }
+    }
+  },
+  "selector": {
+    "export_format": {
+      "options": {
+        "json": "JSON (copia sin procesar)",
+        "yaml": "YAML (solo configuración)",
+        "both": "JSON y YAML"
+      }
+    },
+    "commit_language": {
+      "options": {
+        "en": "Inglés",
+        "fr": "Francés",
+        "de": "Alemán",
+        "es": "Español"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Estado",
+        "state": {
+          "clean": "Al día",
+          "dirty": "Cambios pendientes",
+          "ahead": "Push pendiente",
+          "error": "Error"
+        },
+        "state_attributes": {
+          "branch": {
+            "name": "Rama"
+          },
+          "upstream": {
+            "name": "Rama remota"
+          },
+          "remote_url": {
+            "name": "URL del remoto"
+          },
+          "ahead": {
+            "name": "Commits por delante"
+          },
+          "behind": {
+            "name": "Commits por detrás"
+          },
+          "changed_count": {
+            "name": "Archivos modificados"
+          },
+          "changed_files": {
+            "name": "Lista de archivos modificados"
+          },
+          "last_error": {
+            "name": "Último error"
+          }
+        }
+      },
+      "changed_files": {
+        "name": "Archivos modificados"
+      },
+      "last_commit": {
+        "name": "Último commit",
+        "state_attributes": {
+          "message": {
+            "name": "Mensaje"
+          },
+          "sha": {
+            "name": "Commit"
+          },
+          "short_sha": {
+            "name": "Commit corto"
+          }
+        }
+      },
+      "last_push": {
+        "name": "Último push",
+        "state_attributes": {
+          "message": {
+            "name": "Mensaje"
+          }
+        }
+      },
+      "last_export": {
+        "name": "Última exportación de paneles",
+        "state_attributes": {
+          "files": {
+            "name": "Archivos exportados"
+          }
+        }
+      },
+      "branch": {
+        "name": "Rama",
+        "state_attributes": {
+          "remote_url": {
+            "name": "URL del remoto"
+          },
+          "upstream": {
+            "name": "Rama remota"
+          }
+        }
+      }
+    },
+    "button": {
+      "commit_push": {
+        "name": "Commit y push"
+      },
+      "export_dashboards": {
+        "name": "Exportar paneles"
+      }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entry": {
+      "message": "No hay ningún repositorio de Git Sync cargado."
+    }
+  },
+  "services": {
+    "commit_push": {
+      "name": "Commit y push",
+      "description": "Prepara todos los cambios, hace commit con un mensaje generado por IA (o indicado) y envía al remoto.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repositorio",
+          "description": "Entrada de Git Sync a usar. Todos los repositorios si está vacío."
+        },
+        "message": {
+          "name": "Mensaje",
+          "description": "Mensaje de commit. Generado por la AI task si está vacío."
+        }
+      }
+    },
+    "export_dashboards": {
+      "name": "Exportar paneles",
+      "description": "Copia los paneles Lovelace de .storage a la carpeta de exportación.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repositorio",
+          "description": "Entrada de Git Sync a usar. Todos los repositorios si está vacío."
+        }
+      }
+    },
+    "generate_ssh_key": {
+      "name": "Generar clave SSH",
+      "description": "Crea el par de claves SSH si no existe y devuelve la clave pública para añadirla como deploy key.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repositorio",
+          "description": "Entrada de Git Sync a usar. Todos los repositorios si está vacío."
+        }
+      }
+    }
+  }
+}

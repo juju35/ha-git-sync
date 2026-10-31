@@ -1,0 +1,29 @@
+{
+  "entity": {
+    "sensor": {
+      "status": {
+        "default": "mdi:git",
+        "state": {
+          "clean": "mdi:check-circle-outline",
+          "dirty": "mdi:file-document-edit-outline",
+          "ahead": "mdi:cloud-upload-outline",
+          "error": "mdi:alert-circle-outline"
+        }
+      },
+      "changed_files": { "default": "mdi:file-multiple-outline" },
+      "last_commit": { "default": "mdi:source-commit" },
+      "last_push": { "default": "mdi:cloud-check-outline" },
+      "last_export": { "default": "mdi:view-dashboard-outline" },
+      "branch": { "default": "mdi:source-branch" }
+    },
+    "button": {
+      "commit_push": { "default": "mdi:source-commit-end" },
+      "export_dashboards": { "default": "mdi:export" }
+    }
+  },
+  "services": {
+    "commit_push": { "service": "mdi:source-commit-end" },
+    "export_dashboards": { "service": "mdi:export" },
+    "generate_ssh_key": { "service": "mdi:key-plus" }
+  }
+}
