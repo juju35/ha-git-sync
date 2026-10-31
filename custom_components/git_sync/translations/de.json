@@ -1,0 +1,231 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Git-Repository",
+        "description": "Mit Git versionierter Home-Assistant-Ordner, der zu einem Remote (GitHub, Gitea…) gepusht wird.",
+        "data": {
+          "repo_path": "Repository-Pfad",
+          "remote": "Remote",
+          "branch": "Branch",
+          "ssh_key": "Privater SSH-Schlüssel",
+          "author_name": "Autorname",
+          "author_email": "Autor-E-Mail"
+        },
+        "data_description": {
+          "repo_path": "Ordner mit dem .git-Verzeichnis, meist /config.",
+          "remote": "Git-Remote für den Push, meist origin.",
+          "branch": "Ziel-Branch auf dem Remote. Leer lassen, um den aktuellen Branch zu pushen.",
+          "ssh_key": "Privater Schlüssel für den Push. Mit der Aktion generate_ssh_key erzeugen und den öffentlichen Schlüssel als Deploy-Key mit Schreibzugriff hinzufügen.",
+          "author_name": "Optional, überschreibt user.name / user.email des Repositorys.",
+          "author_email": "Optional, überschreibt user.name / user.email des Repositorys."
+        }
+      },
+      "reconfigure": {
+        "title": "Repository-Einstellungen",
+        "data": {
+          "repo_path": "Repository-Pfad",
+          "remote": "Remote",
+          "branch": "Branch",
+          "ssh_key": "Privater SSH-Schlüssel",
+          "author_name": "Autorname",
+          "author_email": "Autor-E-Mail"
+        },
+        "data_description": {
+          "repo_path": "Ordner mit dem .git-Verzeichnis, meist /config.",
+          "remote": "Git-Remote für den Push, meist origin.",
+          "branch": "Ziel-Branch auf dem Remote. Leer lassen, um den aktuellen Branch zu pushen.",
+          "ssh_key": "Privater Schlüssel für den Push. Mit der Aktion generate_ssh_key erzeugen und den öffentlichen Schlüssel als Deploy-Key mit Schreibzugriff hinzufügen.",
+          "author_name": "Optional, überschreibt user.name / user.email des Repositorys.",
+          "author_email": "Optional, überschreibt user.name / user.email des Repositorys."
+        }
+      }
+    },
+    "error": {
+      "not_a_repository": "Dieser Ordner ist kein Git-Arbeitsverzeichnis.",
+      "unknown_remote": "Dieses Remote existiert im Repository nicht."
+    },
+    "abort": {
+      "already_configured": "Dieses Repository ist bereits eingerichtet.",
+      "reconfigure_successful": "Repository aktualisiert.",
+      "unique_id_mismatch": "Der Repository-Pfad kann nicht geändert werden: neuen Eintrag hinzufügen."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Git-Sync-Optionen",
+        "description": "Commit-Nachricht, Zeitpläne, Benachrichtigungen und Dashboard-Export.",
+        "data": {
+          "ai_task_entity": "AI-Task-Entität",
+          "commit_language": "Sprache der Commit-Nachricht",
+          "commit_interval": "Intervall für automatische Commits",
+          "status_interval": "Aktualisierungsintervall des Status",
+          "notify_service": "Benachrichtigungsaktion",
+          "notify_image": "Bild-URL der Benachrichtigung",
+          "export_enabled": "Täglicher Dashboard-Export",
+          "export_time": "Exportzeit",
+          "export_dir": "Exportordner",
+          "export_format": "Exportformat",
+          "export_before_commit": "Dashboards vor jedem Commit exportieren"
+        },
+        "data_description": {
+          "ai_task_entity": "Erzeugt aus dem Diff eine Conventional-Commits-Nachricht. Ohne sie wird eine generische Nachricht verwendet.",
+          "commit_interval": "Commit und Push alle N Minuten bei Änderungen. 0 deaktiviert es.",
+          "notify_service": "Zum Beispiel notify.mobile_app_telefon. Leer lassen zum Deaktivieren.",
+          "notify_image": "Absolute HTTPS-URL (von iOS verlangt).",
+          "export_format": "JSON kopiert die .storage-Dateien unverändert; YAML behält nur die Dashboard-Konfiguration, besser lesbar in Diffs."
+        }
+      }
+    }
+  },
+  "selector": {
+    "export_format": {
+      "options": {
+        "json": "JSON (Rohkopie)",
+        "yaml": "YAML (nur Konfiguration)",
+        "both": "JSON und YAML"
+      }
+    },
+    "commit_language": {
+      "options": {
+        "en": "Englisch",
+        "fr": "Französisch",
+        "de": "Deutsch",
+        "es": "Spanisch"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "clean": "Aktuell",
+          "dirty": "Änderungen ausstehend",
+          "ahead": "Push ausstehend",
+          "error": "Fehler"
+        },
+        "state_attributes": {
+          "branch": {
+            "name": "Branch"
+          },
+          "upstream": {
+            "name": "Upstream"
+          },
+          "remote_url": {
+            "name": "Remote-URL"
+          },
+          "ahead": {
+            "name": "Commits voraus"
+          },
+          "behind": {
+            "name": "Commits zurück"
+          },
+          "changed_count": {
+            "name": "Geänderte Dateien"
+          },
+          "changed_files": {
+            "name": "Liste geänderter Dateien"
+          },
+          "last_error": {
+            "name": "Letzter Fehler"
+          }
+        }
+      },
+      "changed_files": {
+        "name": "Geänderte Dateien"
+      },
+      "last_commit": {
+        "name": "Letzter Commit",
+        "state_attributes": {
+          "message": {
+            "name": "Nachricht"
+          },
+          "sha": {
+            "name": "Commit"
+          },
+          "short_sha": {
+            "name": "Kurzer Commit"
+          }
+        }
+      },
+      "last_push": {
+        "name": "Letzter Push",
+        "state_attributes": {
+          "message": {
+            "name": "Nachricht"
+          }
+        }
+      },
+      "last_export": {
+        "name": "Letzter Dashboard-Export",
+        "state_attributes": {
+          "files": {
+            "name": "Exportierte Dateien"
+          }
+        }
+      },
+      "branch": {
+        "name": "Branch",
+        "state_attributes": {
+          "remote_url": {
+            "name": "Remote-URL"
+          },
+          "upstream": {
+            "name": "Upstream"
+          }
+        }
+      }
+    },
+    "button": {
+      "commit_push": {
+        "name": "Commit und Push"
+      },
+      "export_dashboards": {
+        "name": "Dashboards exportieren"
+      }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entry": {
+      "message": "Kein Git-Sync-Repository geladen."
+    }
+  },
+  "services": {
+    "commit_push": {
+      "name": "Commit und Push",
+      "description": "Staged alle Änderungen, committet mit einer KI-generierten (oder angegebenen) Nachricht und pusht zum Remote.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Zu verwendender Git-Sync-Eintrag. Alle Repositories, wenn leer."
+        },
+        "message": {
+          "name": "Nachricht",
+          "description": "Commit-Nachricht. Wird vom AI-Task erzeugt, wenn leer."
+        }
+      }
+    },
+    "export_dashboards": {
+      "name": "Dashboards exportieren",
+      "description": "Kopiert die Lovelace-Dashboards aus .storage in den Exportordner.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Zu verwendender Git-Sync-Eintrag. Alle Repositories, wenn leer."
+        }
+      }
+    },
+    "generate_ssh_key": {
+      "name": "SSH-Schlüssel erzeugen",
+      "description": "Erzeugt das SSH-Schlüsselpaar falls nötig und gibt den öffentlichen Schlüssel für den Deploy-Key zurück.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Zu verwendender Git-Sync-Eintrag. Alle Repositories, wenn leer."
+        }
+      }
+    }
+  }
+}

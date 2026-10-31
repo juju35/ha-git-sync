@@ -1,0 +1,68 @@
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/ruff-action@v3
+        with:
+          args: check --output-format=github
+      - uses: astral-sh/ruff-action@v3
+        with:
+          args: format --check --diff
+
+  vulture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pip install vulture
+      - name: Dead code (only new code, existing code is whitelisted)
+        run: |
+          vulture | tee vulture.txt || true
+          if [ -s vulture.txt ]; then
+            sed -E 's/^([^:]+):([0-9]+): (.*)$/::error file=\1,line=\2::\3/' vulture.txt
+            exit 1
+          fi
+
+  biome:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx biome ci --reporter=github src
+
+  jscpd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx jscpd --reporters console,markdown --output jscpd-report src custom_components
+      - if: failure()
+        run: |
+          [ -f jscpd-report/jscpd-report.md ] && cat jscpd-report/jscpd-report.md >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::Code duplication above threshold, see the job summary"

@@ -1,0 +1,231 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Dépôt Git",
+        "description": "Dossier Home Assistant versionné avec Git et poussé vers un dépôt distant (GitHub, Gitea…).",
+        "data": {
+          "repo_path": "Chemin du dépôt",
+          "remote": "Remote",
+          "branch": "Branche",
+          "ssh_key": "Clé SSH privée",
+          "author_name": "Nom de l'auteur",
+          "author_email": "E-mail de l'auteur"
+        },
+        "data_description": {
+          "repo_path": "Dossier contenant le répertoire .git, en général /config.",
+          "remote": "Remote Git vers lequel pousser, en général origin.",
+          "branch": "Branche cible sur le remote. Laisser vide pour pousser la branche courante.",
+          "ssh_key": "Clé privée utilisée pour le push. Utilise l'action generate_ssh_key pour la créer, puis ajoute la clé publique comme deploy key avec accès en écriture.",
+          "author_name": "Facultatif, remplace user.name / user.email du dépôt.",
+          "author_email": "Facultatif, remplace user.name / user.email du dépôt."
+        }
+      },
+      "reconfigure": {
+        "title": "Paramètres du dépôt",
+        "data": {
+          "repo_path": "Chemin du dépôt",
+          "remote": "Remote",
+          "branch": "Branche",
+          "ssh_key": "Clé SSH privée",
+          "author_name": "Nom de l'auteur",
+          "author_email": "E-mail de l'auteur"
+        },
+        "data_description": {
+          "repo_path": "Dossier contenant le répertoire .git, en général /config.",
+          "remote": "Remote Git vers lequel pousser, en général origin.",
+          "branch": "Branche cible sur le remote. Laisser vide pour pousser la branche courante.",
+          "ssh_key": "Clé privée utilisée pour le push. Utilise l'action generate_ssh_key pour la créer, puis ajoute la clé publique comme deploy key avec accès en écriture.",
+          "author_name": "Facultatif, remplace user.name / user.email du dépôt.",
+          "author_email": "Facultatif, remplace user.name / user.email du dépôt."
+        }
+      }
+    },
+    "error": {
+      "not_a_repository": "Ce dossier n'est pas un dépôt Git.",
+      "unknown_remote": "Ce remote n'existe pas dans le dépôt."
+    },
+    "abort": {
+      "already_configured": "Ce dépôt est déjà configuré.",
+      "reconfigure_successful": "Dépôt mis à jour.",
+      "unique_id_mismatch": "Le chemin du dépôt ne peut pas changer : ajoute une nouvelle entrée."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options Git Sync",
+        "description": "Message de commit, planification, notifications et export des dashboards.",
+        "data": {
+          "ai_task_entity": "Entité AI task",
+          "commit_language": "Langue du message de commit",
+          "commit_interval": "Intervalle de commit automatique",
+          "status_interval": "Intervalle de rafraîchissement du statut",
+          "notify_service": "Action de notification",
+          "notify_image": "URL de l'image de notification",
+          "export_enabled": "Export quotidien des dashboards",
+          "export_time": "Heure de l'export",
+          "export_dir": "Dossier d'export",
+          "export_format": "Format d'export",
+          "export_before_commit": "Exporter les dashboards avant chaque commit"
+        },
+        "data_description": {
+          "ai_task_entity": "Génère un message Conventional Commits à partir du diff. Sans elle, un message générique est utilisé.",
+          "commit_interval": "Commit et push toutes les N minutes s'il y a des changements. 0 pour désactiver.",
+          "notify_service": "Par exemple notify.mobile_app_telephone. Laisser vide pour désactiver.",
+          "notify_image": "URL HTTPS absolue (requise par iOS).",
+          "export_format": "JSON copie les fichiers .storage tels quels ; YAML ne garde que la configuration du dashboard, plus lisible dans les diffs."
+        }
+      }
+    }
+  },
+  "selector": {
+    "export_format": {
+      "options": {
+        "json": "JSON (copie brute)",
+        "yaml": "YAML (configuration seule)",
+        "both": "JSON et YAML"
+      }
+    },
+    "commit_language": {
+      "options": {
+        "en": "Anglais",
+        "fr": "Français",
+        "de": "Allemand",
+        "es": "Espagnol"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Statut",
+        "state": {
+          "clean": "À jour",
+          "dirty": "Modifications en attente",
+          "ahead": "Push en attente",
+          "error": "Erreur"
+        },
+        "state_attributes": {
+          "branch": {
+            "name": "Branche"
+          },
+          "upstream": {
+            "name": "Branche distante"
+          },
+          "remote_url": {
+            "name": "URL du remote"
+          },
+          "ahead": {
+            "name": "Commits en avance"
+          },
+          "behind": {
+            "name": "Commits en retard"
+          },
+          "changed_count": {
+            "name": "Fichiers modifiés"
+          },
+          "changed_files": {
+            "name": "Liste des fichiers modifiés"
+          },
+          "last_error": {
+            "name": "Dernière erreur"
+          }
+        }
+      },
+      "changed_files": {
+        "name": "Fichiers modifiés"
+      },
+      "last_commit": {
+        "name": "Dernier commit",
+        "state_attributes": {
+          "message": {
+            "name": "Message"
+          },
+          "sha": {
+            "name": "Commit"
+          },
+          "short_sha": {
+            "name": "Commit court"
+          }
+        }
+      },
+      "last_push": {
+        "name": "Dernier push",
+        "state_attributes": {
+          "message": {
+            "name": "Message"
+          }
+        }
+      },
+      "last_export": {
+        "name": "Dernier export des dashboards",
+        "state_attributes": {
+          "files": {
+            "name": "Fichiers exportés"
+          }
+        }
+      },
+      "branch": {
+        "name": "Branche",
+        "state_attributes": {
+          "remote_url": {
+            "name": "URL du remote"
+          },
+          "upstream": {
+            "name": "Branche distante"
+          }
+        }
+      }
+    },
+    "button": {
+      "commit_push": {
+        "name": "Commit et push"
+      },
+      "export_dashboards": {
+        "name": "Exporter les dashboards"
+      }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entry": {
+      "message": "Aucun dépôt Git Sync n'est chargé."
+    }
+  },
+  "services": {
+    "commit_push": {
+      "name": "Commit et push",
+      "description": "Indexe tous les changements, committe avec un message généré par l'IA (ou fourni) et pousse vers le remote.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Dépôt",
+          "description": "Entrée Git Sync à utiliser. Tous les dépôts si vide."
+        },
+        "message": {
+          "name": "Message",
+          "description": "Message de commit. Généré par l'AI task si vide."
+        }
+      }
+    },
+    "export_dashboards": {
+      "name": "Exporter les dashboards",
+      "description": "Copie les dashboards Lovelace de .storage vers le dossier d'export.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Dépôt",
+          "description": "Entrée Git Sync à utiliser. Tous les dépôts si vide."
+        }
+      }
+    },
+    "generate_ssh_key": {
+      "name": "Générer la clé SSH",
+      "description": "Crée la paire de clés SSH si elle n'existe pas et renvoie la clé publique à ajouter comme deploy key.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Dépôt",
+          "description": "Entrée Git Sync à utiliser. Tous les dépôts si vide."
+        }
+      }
+    }
+  }
+}

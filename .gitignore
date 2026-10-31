@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.venv/
+.ruff_cache/
+.pytest_cache/
+.coverage
+node_modules/
+# Built in CI and shipped in the release zip only
+custom_components/git_sync/frontend/
+*.zip
+.DS_Store

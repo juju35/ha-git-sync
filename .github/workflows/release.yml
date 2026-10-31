@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Stamp the version from the tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          jq --arg v "$VERSION" '.version = $v' custom_components/git_sync/manifest.json > manifest.tmp
+          mv manifest.tmp custom_components/git_sync/manifest.json
+          sed -i -E "s/^VERSION: Final = \".*\"/VERSION: Final = \"$VERSION\"/" custom_components/git_sync/const.py
+      - run: npm run build
+      - name: Zip the integration
+        run: cd custom_components/git_sync && zip -r ../../git_sync.zip . -x "__pycache__/*"
+      - name: Upload the release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" git_sync.zip --clobber

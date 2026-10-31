@@ -1,0 +1,30 @@
+name: Cleanup merged branches
+
+on:
+  schedule:
+    - cron: "41 3 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete branches whose pull request is merged
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          default=$(gh api "repos/$REPO" --jq .default_branch)
+          gh api --paginate "repos/$REPO/branches" --jq '.[].name' | while read -r branch; do
+            [ "$branch" = "$default" ] && continue
+            merged=$(gh pr list -R "$REPO" --head "$branch" --state merged --json number --jq 'length')
+            open=$(gh pr list -R "$REPO" --head "$branch" --state open --json number --jq 'length')
+            if [ "$merged" -gt 0 ] && [ "$open" -eq 0 ]; then
+              echo "Deleting $branch"
+              gh api -X DELETE "repos/$REPO/git/refs/heads/$branch"
+            fi
+          done
