@@ -95,7 +95,7 @@ const REGISTRY = {
   'sensor.other': { platform: 'demo', device_id: 'd2' },
 };
 
-function makeHass({ status = 'clean', files = [], error = null, language = 'en', response } = {}) {
+function makeHass({ status = 'clean', files = [], error = null, language = 'en', response, aiTask = null } = {}) {
   const calls = [];
   return {
     calls,
@@ -111,6 +111,7 @@ function makeHass({ status = 'clean', files = [], error = null, language = 'en',
           changed_count: files.length,
           changed_files: files,
           last_error: error,
+          ai_task: aiTask,
         },
       },
       [LAST_COMMIT]: {
@@ -215,7 +216,7 @@ test('commit asks for confirmation, then calls the action with the message', asy
   card.shadowRoot.querySelector('#commit').click();
   assert.match(html(card), /Commit and push now\?/);
   assert.match(html(card), /1 changed file will be committed/);
-  card.shadowRoot.querySelector('#message').value = '  fix: typo ';
+  card.shadowRoot.querySelector('#message').handlers.input({ target: { value: '  fix: typo ' } });
   card.shadowRoot.querySelector('#confirm').click();
   await new Promise((r) => setTimeout(r, 0));
   assert.deepEqual(JSON.parse(JSON.stringify(hass.calls[0])), [
@@ -260,4 +261,45 @@ test('editor drops options left at their default', () => {
   editor.hass = makeHass();
   editor._form.dispatch({ show_files: true, show_export: false, title: '' });
   assert.deepEqual(JSON.parse(JSON.stringify(events[0])), { show_export: false });
+});
+
+test('message box: branch in the placeholder, no sparkle button without AI task', () => {
+  const card = render({}, makeHass({ status: 'dirty', files: ['a.yaml'] }));
+  card.shadowRoot.querySelector('#commit').click();
+  assert.match(html(card), /placeholder="Message \(Enter to commit on ‘main’\)"/);
+  assert.doesNotMatch(html(card), /id="generate"/);
+});
+
+test('sparkle button generates the message into the field, without committing', async () => {
+  const hass = makeHass({
+    status: 'dirty',
+    files: ['a.yaml'],
+    aiTask: 'ai_task.google',
+    response: { message: 'feat(lights): add the corridor scene' },
+  });
+  const card = render({}, hass);
+  card.shadowRoot.querySelector('#commit').click();
+  assert.match(html(card), /id="generate"/);
+  card.shadowRoot.querySelector('#generate').click();
+  assert.match(html(card), /class="field generating"/);
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(JSON.parse(JSON.stringify(hass.calls)), [
+    ['git_sync', 'generate_message', { config_entry_id: 'entry1' }, null, false, true],
+  ]);
+  assert.match(html(card), /value="feat\(lights\): add the corridor scene"/);
+  assert.match(html(card), /Commit and push now\?/);
+  card.shadowRoot.querySelector('#confirm').click();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(hass.calls[1][1], 'commit_push');
+  assert.equal(hass.calls[1][2].message, 'feat(lights): add the corridor scene');
+});
+
+test('sparkle button with nothing to describe shows a toast', async () => {
+  const hass = makeHass({ status: 'dirty', files: ['a.yaml'], aiTask: 'ai_task.google', response: { message: null } });
+  const card = render({}, hass);
+  card.shadowRoot.querySelector('#commit').click();
+  card.shadowRoot.querySelector('#generate').click();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(card.toasts, ['Nothing to describe: no changes']);
+  assert.match(html(card), /value=""/);
 });

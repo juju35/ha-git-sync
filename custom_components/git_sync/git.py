@@ -6,6 +6,8 @@ import asyncio
 import logging
 import os
 import shlex
+import shutil
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -101,14 +103,14 @@ class GitRepo:
             args += ["-c", f"user.email={self.author_email}"]
         return args
 
-    async def run(self, *args: str, check: bool = True) -> tuple[int, str]:
+    async def run(self, *args: str, check: bool = True, env: dict[str, str] | None = None) -> tuple[int, str]:
         """Run a git sub-command and return (returncode, stdout)."""
         cmd = [*self._base_args(), *args]
         proc = await asyncio.create_subprocess_exec(
             *cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            env=self._env(),
+            env={**self._env(), **(env or {})},
         )
         try:
             out, err = await asyncio.wait_for(proc.communicate(), GIT_TIMEOUT)
@@ -162,12 +164,32 @@ class GitRepo:
     async def stage_all(self) -> StagedDiff | None:
         """Stage every change and return the staged diff, None if nothing staged."""
         await self.run("add", "-A")
-        code, _ = await self.run("diff", "--cached", "--quiet", check=False)
+        return await self._staged_diff()
+
+    async def preview_diff(self) -> StagedDiff | None:
+        """Return the diff a commit would have, without touching the real index.
+
+        `git add -A` runs against a copy of the index (GIT_INDEX_FILE), so nothing the user staged changes.
+        """
+        _, index = await self.run("rev-parse", "--git-path", "index")
+        index_path = Path(self.path, index.strip())
+        tmp = await asyncio.to_thread(tempfile.mkdtemp, prefix="git_sync_")
+        try:
+            env = {"GIT_INDEX_FILE": str(Path(tmp, "index"))}
+            if await asyncio.to_thread(index_path.is_file):
+                await asyncio.to_thread(shutil.copyfile, index_path, env["GIT_INDEX_FILE"])
+            await self.run("add", "-A", env=env)
+            return await self._staged_diff(env)
+        finally:
+            await asyncio.to_thread(shutil.rmtree, tmp, True)
+
+    async def _staged_diff(self, env: dict[str, str] | None = None) -> StagedDiff | None:
+        code, _ = await self.run("diff", "--cached", "--quiet", check=False, env=env)
         if code == 0:
             return None
-        _, stat = await self.run("diff", "--cached", "--stat")
-        _, names = await self.run("diff", "--cached", "--name-only")
-        _, patch = await self.run("diff", "--cached")
+        _, stat = await self.run("diff", "--cached", "--stat", env=env)
+        _, names = await self.run("diff", "--cached", "--name-only", env=env)
+        _, patch = await self.run("diff", "--cached", env=env)
         return StagedDiff(
             stat=stat.strip(),
             patch=patch[:DIFF_MAX_CHARS],

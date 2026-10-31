@@ -10,20 +10,43 @@
           "error": "mdi:alert-circle-outline"
         }
       },
-      "changed_files": { "default": "mdi:file-multiple-outline" },
-      "last_commit": { "default": "mdi:source-commit" },
-      "last_push": { "default": "mdi:cloud-check-outline" },
-      "last_export": { "default": "mdi:view-dashboard-outline" },
-      "branch": { "default": "mdi:source-branch" }
+      "changed_files": {
+        "default": "mdi:file-multiple-outline"
+      },
+      "last_commit": {
+        "default": "mdi:source-commit"
+      },
+      "last_push": {
+        "default": "mdi:cloud-check-outline"
+      },
+      "last_export": {
+        "default": "mdi:view-dashboard-outline"
+      },
+      "branch": {
+        "default": "mdi:source-branch"
+      }
     },
     "button": {
-      "commit_push": { "default": "mdi:source-commit-end" },
-      "export_dashboards": { "default": "mdi:export" }
+      "commit_push": {
+        "default": "mdi:source-commit-end"
+      },
+      "export_dashboards": {
+        "default": "mdi:export"
+      }
     }
   },
   "services": {
-    "commit_push": { "service": "mdi:source-commit-end" },
-    "export_dashboards": { "service": "mdi:export" },
-    "generate_ssh_key": { "service": "mdi:key-plus" }
+    "commit_push": {
+      "service": "mdi:source-commit-end"
+    },
+    "export_dashboards": {
+      "service": "mdi:export"
+    },
+    "generate_ssh_key": {
+      "service": "mdi:key-plus"
+    },
+    "generate_message": {
+      "service": "mdi:creation-outline"
+    }
   }
 }

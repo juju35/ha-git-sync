@@ -14,6 +14,7 @@ from .const import (
     DOMAIN,
     SERVICE_COMMIT_PUSH,
     SERVICE_EXPORT_DASHBOARDS,
+    SERVICE_GENERATE_MESSAGE,
     SERVICE_GENERATE_SSH_KEY,
 )
 from .coordinator import GitSyncCoordinator
@@ -59,6 +60,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
         coordinator = _coordinators(hass, call)[0]
         return {"public_key": await coordinator.async_generate_ssh_key()}
 
+    async def generate_message(call: ServiceCall) -> ServiceResponse:
+        coordinator = _coordinators(hass, call)[0]
+        return {"message": await coordinator.async_generate_message()}
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GENERATE_MESSAGE,
+        generate_message,
+        schema=_ENTRY_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
     hass.services.async_register(
         DOMAIN,
         SERVICE_COMMIT_PUSH,

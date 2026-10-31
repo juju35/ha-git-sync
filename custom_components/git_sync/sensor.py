@@ -37,6 +37,7 @@ def _status_attrs(data: GitSyncData) -> dict[str, Any]:
         "changed_count": len(data.git.files),
         "changed_files": truncate_files(data.git.files),
         "last_error": data.last_error,
+        "ai_task": data.ai_task,
     }
 
 

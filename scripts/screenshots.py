@@ -46,6 +46,7 @@ COMMON = {
 
 # Material Design Icons paths used by the card (from @mdi/js).
 ICONS = {
+    "creation-outline": "M9 4L11.5 9.5L17 12L11.5 14.5L9 20L6.5 14.5L1 12L6.5 9.5L9 4M9 8.83L8 11L5.83 12L8 13L9 15.17L10 13L12.17 12L10 11L9 8.83M19 9L17.74 6.26L15 5L17.74 3.75L19 1L20.25 3.75L23 5L20.25 6.26L19 9M19 23L17.74 20.26L15 19L17.74 17.75L19 15L20.25 17.75L23 19L20.25 20.26L19 23Z",
     "git": "M2.6,10.59L8.38,4.8L10.07,6.5C9.83,7.35 10.22,8.28 11,8.73V14.27C10.4,14.61 10,15.26 10,16A2,2 0 0,0 12,18A2,2 0 0,0 14,16C14,15.26 13.6,14.61 13,14.27V9.41L15.07,11.5C15,11.65 15,11.82 15,12A2,2 0 0,0 17,14A2,2 0 0,0 19,12A2,2 0 0,0 17,10C16.82,10 16.65,10 16.5,10.07L13.93,7.5C14.19,6.57 13.71,5.55 12.78,5.16C12.35,5 11.9,4.96 11.5,5.07L9.8,3.38L10.59,2.6C11.37,1.81 12.63,1.81 13.41,2.6L21.4,10.59C22.19,11.37 22.19,12.63 21.4,13.41L13.41,21.4C12.63,22.19 11.37,22.19 10.59,21.4L2.6,13.41C1.81,12.63 1.81,11.37 2.6,10.59Z",
     "chevron-right": "M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z",
     "file-document-multiple-outline": "M16 0H8C6.9 0 6 .9 6 2V18C6 19.1 6.9 20 8 20H20C21.1 20 22 19.1 22 18V6L16 0M20 18H8V2H15V7H20V18M4 4V22H20V24H4C2.9 24 2 23.1 2 22V4H4M10 10V12H18V10H10M10 14V16H15V14H10Z",
@@ -114,6 +115,7 @@ def mock_hass(status, files, error=None):
                     "changed_count": len(files),
                     "changed_files": files,
                     "last_error": error,
+                    "ai_task": "ai_task.assistant",
                 },
             },
             LAST_COMMIT: {
@@ -175,7 +177,12 @@ MOUNT = """([hass, dark, action]) => {
     el.hass = { ...hass, themes: { darkMode: dark }, callService: async () => ({}) };
     document.getElementById("root").appendChild(el);
     if (action === "files") el.shadowRoot.querySelector(".toggle").click();
-    if (action === "confirm") el.shadowRoot.querySelector("#commit").click();
+    if (action === "confirm") {
+        el.shadowRoot.querySelector("#commit").click();
+        // The message written by the sparkle button (AI task) in the field.
+        el._draft = "feat(lights): add the corridor night scene";
+        el._render();
+    }
 }"""
 
 

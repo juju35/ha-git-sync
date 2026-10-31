@@ -11,7 +11,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -72,6 +72,7 @@ class GitSyncData:
     last_export: datetime | None = None
     last_export_files: list[str] = field(default_factory=list)
     last_error: str | None = None
+    ai_task: str | None = None
 
 
 def sanitize_message(raw: str) -> str:
@@ -106,7 +107,7 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         )
         self._store = self._make_store(hass, entry)
         self._lock = asyncio.Lock()
-        self._state = GitSyncData()
+        self._state = GitSyncData(ai_task=self.settings.get(CONF_AI_TASK_ENTITY) or None)
 
     @staticmethod
     def _make_store(hass: HomeAssistant, entry: ConfigEntry) -> Store[dict[str, Any]]:
@@ -212,34 +213,57 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         await self._notify(commit_message)
         return commit_message
 
+    def _fallback_message(self, diff: StagedDiff) -> str:
+        return f"chore: update configuration ({diff.files} file{'s' if diff.files > 1 else ''})"
+
     async def _ai_message(self, diff: StagedDiff) -> str:
         """Ask the configured AI task for a commit message, with a safe fallback."""
-        fallback = f"chore: update configuration ({diff.files} file{'s' if diff.files > 1 else ''})"
-        entity_id = self.settings.get(CONF_AI_TASK_ENTITY)
-        if not entity_id or not self.hass.services.has_service("ai_task", "generate_data"):
-            return fallback
-
-        language = LANGUAGE_NAMES.get(self.settings.get(CONF_COMMIT_LANGUAGE, DEFAULT_COMMIT_LANGUAGE), "English")
         try:
-            response = await self.hass.services.async_call(
-                "ai_task",
-                "generate_data",
-                {
-                    "task_name": "git_commit_message",
-                    "entity_id": entity_id,
-                    "instructions": AI_INSTRUCTIONS.format(
-                        language=language, max_len=COMMIT_MESSAGE_MAX, diff=diff.as_prompt()
-                    ),
-                },
-                blocking=True,
-                return_response=True,
-            )
+            return await self._async_ask_ai(diff) or self._fallback_message(diff)
         except HomeAssistantError as err:
             _LOGGER.warning("AI task failed, using fallback commit message: %s", err)
-            return fallback
+            return self._fallback_message(diff)
 
+    async def _async_ask_ai(self, diff: StagedDiff) -> str | None:
+        """Return the AI task's message, None when no AI task is set up; raise when it fails."""
+        entity_id = self.settings.get(CONF_AI_TASK_ENTITY)
+        if not entity_id or not self.hass.services.has_service("ai_task", "generate_data"):
+            return None
+        language = LANGUAGE_NAMES.get(self.settings.get(CONF_COMMIT_LANGUAGE, DEFAULT_COMMIT_LANGUAGE), "English")
+        prompt = AI_INSTRUCTIONS.format(language=language, max_len=COMMIT_MESSAGE_MAX, diff=diff.as_prompt())
+        response = await self.hass.services.async_call(
+            "ai_task",
+            "generate_data",
+            {
+                "task_name": "git_commit_message",
+                "entity_id": entity_id,
+                "instructions": prompt,
+            },
+            blocking=True,
+            return_response=True,
+        )
         data = (response or {}).get("data")
-        return sanitize_message(data if isinstance(data, str) else "") or fallback
+        return sanitize_message(data if isinstance(data, str) else "") or None
+
+    @property
+    def ai_task(self) -> str | None:
+        """The AI task entity writing the commit messages, if any."""
+        return self.settings.get(CONF_AI_TASK_ENTITY) or None
+
+    async def async_generate_message(self) -> str | None:
+        """Write a commit message for the current changes without committing. None when nothing changed."""
+        if not self.ai_task:
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="no_ai_task")
+        try:
+            diff = await self.repo.preview_diff()
+        except GitError as err:
+            raise HomeAssistantError(str(err)) from err
+        if diff is None:
+            return None
+        message = await self._async_ask_ai(diff)
+        if message is None:
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="ai_task_failed")
+        return message
 
     async def _notify(self, message: str) -> None:
         service = (self.settings.get(CONF_NOTIFY_SERVICE) or "").strip()

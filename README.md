@@ -119,7 +119,7 @@ Copy `custom_components/git_sync/` to `/config/custom_components/git_sync/`, the
 
 | Entity | Description |
 |---|---|
-| `sensor.git_sync_<repo>_status` | `clean`, `dirty`, `ahead` (committed, push pending) or `error` (last push failed). Attributes: `branch`, `upstream`, `remote_url`, `ahead`, `behind`, `changed_count`, `changed_files` (first 50), `last_error` |
+| `sensor.git_sync_<repo>_status` | `clean`, `dirty`, `ahead` (committed, push pending) or `error` (last push failed). Attributes: `branch`, `upstream`, `remote_url`, `ahead`, `behind`, `changed_count`, `changed_files` (first 50), `last_error`, `ai_task` |
 | `sensor.git_sync_<repo>_changed_files` | Number of changed files |
 | `sensor.git_sync_<repo>_last_commit` | Time of the HEAD commit. Attributes: `message`, `sha`, `short_sha` |
 | `sensor.git_sync_<repo>_last_push` | Time of the last push made by Git Sync. Attribute: `message` |
@@ -139,6 +139,15 @@ data:
 response_variable: result  # {"results": [{"config_entry_id": "...", "committed": true, "message": "..."}]}
 ```
 
+### Action `git_sync.generate_message`
+
+Writes a commit message for the current changes with the AI task, **without committing**: the diff is computed on a copy of the Git index, so what you staged by hand stays as it is. Returns `null` when nothing changed; fails when no AI task is set in the options. This is what the ✨ button of the card calls.
+
+```yaml
+action: git_sync.generate_message
+response_variable: result  # {"message": "feat(lights): add the corridor night scene"}
+```
+
 ### Action `git_sync.export_dashboards`
 
 ```yaml
@@ -153,7 +162,7 @@ action: git_sync.generate_ssh_key
 response_variable: key  # {"public_key": "ssh-ed25519 AAAA... homeassistant"}
 ```
 
-Every action takes an optional `config_entry_id` to target one repository; without it, `commit_push` and `export_dashboards` run on all of them.
+Every action takes an optional `config_entry_id` to target one repository; without it, `commit_push` and `export_dashboards` run on all of them, `generate_message` and `generate_ssh_key` on the first one.
 
 ### Event `git_sync_committed`
 
@@ -179,7 +188,7 @@ type: custom:git-sync-card
 | ![Card](screenshots/card.png) | ![Card, up to date](screenshots/card-clean.png) |
 | ![Card, dark theme](screenshots/card-dark.png) | ![Card, up to date, dark theme](screenshots/card-clean-dark.png) |
 
-| Push failed | Commit & push |
+| Push failed | Commit & push, message written by the ✨ button |
 |---|---|
 | ![Card, push failed](screenshots/card-error.png) | ![Card, commit confirmation](screenshots/card-confirm.png) |
 | ![Card, push failed, dark theme](screenshots/card-error-dark.png) | ![Card, commit confirmation, dark theme](screenshots/card-confirm-dark.png) |
@@ -188,7 +197,7 @@ type: custom:git-sync-card
 - **Last commit**: message, short hash and how long ago
 - **Changed files**: collapsible list, folded again when you click elsewhere
 - **Last push** and **Dashboard export**, with the number of exported files
-- **Commit & push** opens a confirmation at the top of the card, where a message can be typed; left empty, the AI task writes it. **Export dashboards** runs the export right away. The result is shown in a toast
+- **Commit & push** opens a confirmation at the top of the card with a message box, as in VS Code: the placeholder names the branch, and the ✨ button inside it (shown when an AI task is set) writes the message for the current changes without committing, so you can read and edit it before **Commit & push**. Left empty, the AI task writes it when committing. **Enter** commits, **Escape** closes. **Export dashboards** runs the export right away. The result is shown in a toast
 
 Every option is in the visual editor:
 

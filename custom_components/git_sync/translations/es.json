@@ -130,6 +130,9 @@
           },
           "last_error": {
             "name": "Último error"
+          },
+          "ai_task": {
+            "name": "AI task"
           }
         }
       },
@@ -190,6 +193,12 @@
   "exceptions": {
     "no_loaded_entry": {
       "message": "No hay ningún repositorio de Git Sync cargado."
+    },
+    "no_ai_task": {
+      "message": "No hay ninguna entidad AI task definida en las opciones de Git Sync."
+    },
+    "ai_task_failed": {
+      "message": "La AI task no devolvió ningún mensaje de commit."
     }
   },
   "services": {
@@ -224,6 +233,16 @@
         "config_entry_id": {
           "name": "Repositorio",
           "description": "Entrada de Git Sync a usar. Todos los repositorios si está vacío."
+        }
+      }
+    },
+    "generate_message": {
+      "name": "Generar mensaje de commit",
+      "description": "Escribe con la AI task un mensaje de commit para los cambios actuales, sin hacer commit. Devuelve null si no hay cambios.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repositorio",
+          "description": "Entrada de Git Sync a usar. El primer repositorio si está vacío."
         }
       }
     }

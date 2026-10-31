@@ -59,6 +59,7 @@ STATUSES: Final = [STATUS_CLEAN, STATUS_DIRTY, STATUS_AHEAD, STATUS_ERROR]
 SERVICE_COMMIT_PUSH: Final = "commit_push"
 SERVICE_EXPORT_DASHBOARDS: Final = "export_dashboards"
 SERVICE_GENERATE_SSH_KEY: Final = "generate_ssh_key"
+SERVICE_GENERATE_MESSAGE: Final = "generate_message"
 ATTR_MESSAGE: Final = "message"
 ATTR_CONFIG_ENTRY_ID: Final = "config_entry_id"
 

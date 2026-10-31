@@ -31,8 +31,10 @@ const GS_I18N = {
     confirm_title: 'Commit and push now?',
     confirm_text_one: '{n} changed file will be committed and pushed.',
     confirm_text_many: '{n} changed files will be committed and pushed.',
-    message: 'Commit message (optional)',
-    message_hint: 'Empty: written by the AI task',
+    message: 'Message (Enter to commit on ‘{branch}’)',
+    message_hint: 'Empty: written by the AI task when committing',
+    generate: 'Generate commit message',
+    generated_none: 'Nothing to describe: no changes',
     cancel: 'Cancel',
     committed: 'Committed: {m}',
     nothing: 'Nothing to commit',
@@ -74,8 +76,10 @@ const GS_I18N = {
     confirm_title: 'Commit et push maintenant ?',
     confirm_text_one: '{n} fichier modifié sera committé et poussé.',
     confirm_text_many: '{n} fichiers modifiés seront committés et poussés.',
-    message: 'Message de commit (facultatif)',
-    message_hint: 'Vide : rédigé par l’AI task',
+    message: 'Message (Entrée pour committer sur « {branch} »)',
+    message_hint: 'Vide : rédigé par l’AI task au moment du commit',
+    generate: 'Générer le message de commit',
+    generated_none: 'Rien à décrire : aucune modification',
     cancel: 'Annuler',
     committed: 'Commit : {m}',
     nothing: 'Rien à committer',
@@ -117,8 +121,10 @@ const GS_I18N = {
     confirm_title: 'Jetzt committen und pushen?',
     confirm_text_one: '{n} geänderte Datei wird committet und gepusht.',
     confirm_text_many: '{n} geänderte Dateien werden committet und gepusht.',
-    message: 'Commit-Nachricht (optional)',
-    message_hint: 'Leer: vom AI-Task geschrieben',
+    message: 'Nachricht (Eingabe zum Committen auf „{branch}“)',
+    message_hint: 'Leer: beim Commit vom AI-Task geschrieben',
+    generate: 'Commit-Nachricht erzeugen',
+    generated_none: 'Nichts zu beschreiben: keine Änderungen',
     cancel: 'Abbrechen',
     committed: 'Committet: {m}',
     nothing: 'Nichts zu committen',
@@ -160,8 +166,10 @@ const GS_I18N = {
     confirm_title: '¿Hacer commit y push ahora?',
     confirm_text_one: 'Se hará commit y push de {n} archivo modificado.',
     confirm_text_many: 'Se hará commit y push de {n} archivos modificados.',
-    message: 'Mensaje de commit (opcional)',
-    message_hint: 'Vacío: lo escribe la AI task',
+    message: 'Mensaje (Intro para hacer commit en «{branch}»)',
+    message_hint: 'Vacío: lo escribe la AI task al hacer commit',
+    generate: 'Generar mensaje de commit',
+    generated_none: 'Nada que describir: sin cambios',
     cancel: 'Cancelar',
     committed: 'Commit: {m}',
     nothing: 'Nada que confirmar',
@@ -253,6 +261,8 @@ class GitSyncCard extends HTMLElement {
     this._filesOpen = false;
     this._confirm = false;
     this._busy = null;
+    this._draft = '';
+    this._generating = false;
     this._outside = (ev) => {
       if (!this._filesOpen || ev.composedPath?.().includes(this)) return;
       this._filesOpen = false;
@@ -358,11 +368,12 @@ class GitSyncCard extends HTMLElement {
     const entry = this._hass?.devices?.[this._ids?.device]?.config_entries?.[0];
     if (entry) data.config_entry_id = entry;
     if (service === 'commit_push') {
-      const message = this.shadowRoot.querySelector('#message')?.value?.trim();
+      const message = this._draft.trim();
       if (message) data.message = message;
     }
     this._busy = service;
     this._confirm = false;
+    this._draft = '';
     this._render();
     try {
       // callService(domain, service, data, target, notifyOnError, returnResponse)
@@ -375,6 +386,30 @@ class GitSyncCard extends HTMLElement {
     } finally {
       this._busy = null;
       this._render();
+    }
+  }
+
+  // Asks the AI task for a message describing the current changes, without committing, and puts it in the field.
+  async _generate() {
+    if (this._generating) return;
+    const data = {};
+    const entry = this._hass?.devices?.[this._ids?.device]?.config_entries?.[0];
+    if (entry) data.config_entry_id = entry;
+    this._generating = true;
+    this._render();
+    try {
+      const result = await this._hass.callService('git_sync', 'generate_message', data, undefined, false, true);
+      const message = result?.response?.message;
+      if (message) this._draft = message;
+      else this._toast(this._t('generated_none'));
+    } catch (err) {
+      this._toast(this._t('failed', { e: err?.message || String(err) }));
+    } finally {
+      this._generating = false;
+      if (this._confirm) {
+        this._render();
+        this.shadowRoot.querySelector('#message')?.focus?.();
+      }
     }
   }
 
@@ -393,11 +428,16 @@ class GitSyncCard extends HTMLElement {
     on('#export', () => this._call('export_dashboards'));
     const close = () => {
       this._confirm = false;
+      this._draft = '';
       this._render();
     };
     on('#cancel', close);
     on('.overlay', close);
     on('#confirm', () => this._call('commit_push'));
+    on('#generate', () => this._generate());
+    root.querySelector('#message')?.addEventListener('input', (ev) => {
+      this._draft = ev.target?.value ?? '';
+    });
     root.querySelector('#message')?.addEventListener('keydown', (ev) => {
       if (ev.key === 'Enter') this._call('commit_push');
       if (ev.key === 'Escape') close();
@@ -484,9 +524,17 @@ class GitSyncCard extends HTMLElement {
         <div class="popup" role="dialog" aria-modal="true">
           <div class="p-title">${gsEsc(this._t('confirm_title'))}</div>
           <div class="p-text">${gsEsc(this._n('confirm_text', count))}</div>
-          <label for="message">${gsEsc(this._t('message'))}</label>
-          <input id="message" type="text" maxlength="100" autocomplete="off" />
-          <div class="hint">${gsEsc(this._t('message_hint'))}</div>
+          <div class="field${this._generating ? ' generating' : ''}">
+            <input id="message" type="text" maxlength="100" autocomplete="off" aria-label="${gsEsc(this._t('message', { branch: a.branch || 'HEAD' }))}"
+              placeholder="${gsEsc(this._t('message', { branch: a.branch || 'HEAD' }))}" value="${gsEsc(this._draft)}"${this._generating ? ' disabled' : ''} />
+            ${
+              a.ai_task
+                ? `<button class="gen" id="generate" title="${gsEsc(this._t('generate'))}" aria-label="${gsEsc(this._t('generate'))}"${this._generating ? ' disabled' : ''}>
+                    <ha-icon icon="${this._generating ? 'mdi:loading' : 'mdi:creation-outline'}"></ha-icon></button>`
+                : ''
+            }
+          </div>
+          ${a.ai_task ? `<div class="hint">${gsEsc(this._t('message_hint'))}</div>` : ''}
           <div class="actions">
             <button class="action" id="cancel"><ha-icon icon="mdi:close"></ha-icon>${gsEsc(this._t('cancel'))}</button>
             <button class="action" id="confirm"><ha-icon icon="mdi:source-commit-end"></ha-icon>${gsEsc(this._t('commit'))}</button>
@@ -593,18 +641,29 @@ class GitSyncCard extends HTMLElement {
                border: 1px solid var(--divider-color, rgba(127,127,127,.2)); }
       .p-title { font-size: 16px; font-weight: 500; color: var(--primary-text-color); }
       .p-text { margin-top: 4px; font-size: 13px; color: var(--secondary-text-color); }
-      .popup label { display: block; margin-top: 12px; font-size: 12px; color: var(--secondary-text-color); }
-      .popup input { box-sizing: border-box; width: 100%; margin-top: 4px; padding: 9px 10px; border-radius: 8px;
+      /* VS Code-like message box: placeholder with the branch, sparkle button inside, on the right */
+      .field { position: relative; margin-top: 12px; }
+      .field input { box-sizing: border-box; width: 100%; padding: 9px 40px 9px 10px; border-radius: 8px;
                      font: inherit; font-size: 14px; color: var(--primary-text-color); outline: none;
                      background: var(--secondary-background-color, transparent);
-                     border: 1px solid var(--divider-color, rgba(127,127,127,.3)); }
-      .popup input:focus { border-color: var(--gs-accent); }
+                     border: 1px solid var(--divider-color, rgba(127,127,127,.3)); text-overflow: ellipsis; }
+      .field input::placeholder { color: var(--secondary-text-color); opacity: .8; }
+      .field input:focus { border-color: var(--gs-accent); }
+      .field input[disabled] { opacity: .6; }
+      .gen { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); width: 32px; height: 32px;
+             display: grid; place-items: center; padding: 0; border: none; border-radius: 6px; cursor: pointer;
+             background: transparent; color: var(--secondary-text-color); transition: color .15s ease, background .15s ease; }
+      .gen ha-icon { --mdc-icon-size: 18px; }
+      .gen:hover:not([disabled]) { color: var(--gs-accent); background: color-mix(in srgb, var(--gs-accent) 10%, transparent); }
+      .gen:focus-visible { outline: 2px solid var(--gs-accent); outline-offset: 1px; }
+      .gen[disabled] { cursor: default; }
+      .generating .gen ha-icon { animation: gs-spin 1s linear infinite; color: var(--gs-accent); }
       .hint { margin-top: 4px; font-size: 11px; color: var(--secondary-text-color); }
       .popup .actions { margin-top: 14px; }
 
       @keyframes gs-spin { to { transform: rotate(360deg); } }
       @keyframes gs-pulse { 50% { opacity: .3; } }
-      @media (prefers-reduced-motion: reduce) { .pill.busy::before, button.action.busy ha-icon { animation: none; } }
+      @media (prefers-reduced-motion: reduce) { .pill.busy::before, button.action.busy ha-icon, .generating .gen ha-icon { animation: none; } }
     `;
   }
 }

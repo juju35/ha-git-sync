@@ -130,6 +130,9 @@
           },
           "last_error": {
             "name": "Letzter Fehler"
+          },
+          "ai_task": {
+            "name": "AI-Task"
           }
         }
       },
@@ -190,6 +193,12 @@
   "exceptions": {
     "no_loaded_entry": {
       "message": "Kein Git-Sync-Repository geladen."
+    },
+    "no_ai_task": {
+      "message": "In den Git-Sync-Optionen ist keine AI-Task-Entität festgelegt."
+    },
+    "ai_task_failed": {
+      "message": "Der AI-Task hat keine Commit-Nachricht zurückgegeben."
     }
   },
   "services": {
@@ -224,6 +233,16 @@
         "config_entry_id": {
           "name": "Repository",
           "description": "Zu verwendender Git-Sync-Eintrag. Alle Repositories, wenn leer."
+        }
+      }
+    },
+    "generate_message": {
+      "name": "Commit-Nachricht erzeugen",
+      "description": "Schreibt mit dem AI-Task eine Commit-Nachricht für die aktuellen Änderungen, ohne zu committen. Gibt null zurück, wenn nichts geändert wurde.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Zu verwendender Git-Sync-Eintrag. Das erste Repository, wenn leer."
         }
       }
     }
