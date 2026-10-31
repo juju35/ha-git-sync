@@ -1,16 +1,9 @@
 {
-  "threshold": 3,
-  "minLines": 8,
-  "minTokens": 60,
-  "reporters": ["console"],
-  "ignore": [
-    "**/node_modules/**",
-    "**/frontend/**",
-    "**/translations/**",
-    "**/strings.json",
-    "**/*.min.js"
-  ],
-  "format": ["javascript", "python"],
+  "minTokens": 50,
+  "threshold": 0,
   "absolute": false,
-  "exitCode": 1
+  "gitignore": true,
+  "ignore": ["**/dist/**", "**/vendor/**", "**/node_modules/**", "**/tests/**", "**/test/**", "**/.git/**", "**/*.min.js", "**/translations/**"],
+  "reporters": ["console", "json"],
+  "output": "report"
 }

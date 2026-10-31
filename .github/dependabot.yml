@@ -2,12 +2,8 @@ version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
-    schedule: { interval: weekly }
-    labels: [ci, dependencies]
-  - package-ecosystem: npm
-    directory: /
-    schedule: { interval: weekly }
-    labels: [card, dependencies]
+    schedule:
+      interval: monthly
     groups:
-      dev:
+      actions:
         patterns: ["*"]

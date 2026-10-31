@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import voluptuous as vol
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-import voluptuous as vol
 
 from .const import (
     ATTR_CONFIG_ENTRY_ID,
@@ -13,6 +14,7 @@ from .const import (
     DOMAIN,
     SERVICE_COMMIT_PUSH,
     SERVICE_EXPORT_DASHBOARDS,
+    SERVICE_GENERATE_MESSAGE,
     SERVICE_GENERATE_SSH_KEY,
 )
 from .coordinator import GitSyncCoordinator
@@ -23,7 +25,7 @@ _COMMIT_SCHEMA = _ENTRY_SCHEMA.extend({vol.Optional(ATTR_MESSAGE): cv.string})
 
 def _coordinators(hass: HomeAssistant, call: ServiceCall) -> list[GitSyncCoordinator]:
     """Return the targeted coordinators (one entry, or all loaded entries)."""
-    entries = hass.config_entries.async_loaded_entries(DOMAIN)
+    entries = [e for e in hass.config_entries.async_entries(DOMAIN) if e.state is ConfigEntryState.LOADED]
     if entry_id := call.data.get(ATTR_CONFIG_ENTRY_ID):
         entries = [entry for entry in entries if entry.entry_id == entry_id]
     if not entries:
@@ -58,6 +60,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
         coordinator = _coordinators(hass, call)[0]
         return {"public_key": await coordinator.async_generate_ssh_key()}
 
+    async def generate_message(call: ServiceCall) -> ServiceResponse:
+        coordinator = _coordinators(hass, call)[0]
+        return {"message": await coordinator.async_generate_message()}
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GENERATE_MESSAGE,
+        generate_message,
+        schema=_ENTRY_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
     hass.services.async_register(
         DOMAIN,
         SERVICE_COMMIT_PUSH,

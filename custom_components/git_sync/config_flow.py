@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -12,7 +13,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import selector
-import voluptuous as vol
 
 from .const import (
     COMMIT_LANGUAGES,
@@ -68,9 +68,7 @@ def _number(minimum: int, maximum: int, unit: str) -> selector.NumberSelector:
 
 def _choice(options: list[str], key: str) -> selector.SelectSelector:
     return selector.SelectSelector(
-        selector.SelectSelectorConfig(
-            options=options, translation_key=key, mode=selector.SelectSelectorMode.DROPDOWN
-        )
+        selector.SelectSelectorConfig(options=options, translation_key=key, mode=selector.SelectSelectorMode.DROPDOWN)
     )
 
 
@@ -116,9 +114,9 @@ def _options_schema(options: dict[str, Any]) -> vol.Schema:
                 CONF_EXPORT_TIME, default=options.get(CONF_EXPORT_TIME, DEFAULT_EXPORT_TIME)
             ): selector.TimeSelector(),
             vol.Required(CONF_EXPORT_DIR, default=options.get(CONF_EXPORT_DIR, DEFAULT_EXPORT_DIR)): _TEXT,
-            vol.Required(
-                CONF_EXPORT_FORMAT, default=options.get(CONF_EXPORT_FORMAT, DEFAULT_EXPORT_FORMAT)
-            ): _choice(EXPORT_FORMATS, CONF_EXPORT_FORMAT),
+            vol.Required(CONF_EXPORT_FORMAT, default=options.get(CONF_EXPORT_FORMAT, DEFAULT_EXPORT_FORMAT)): _choice(
+                EXPORT_FORMATS, CONF_EXPORT_FORMAT
+            ),
             vol.Required(
                 CONF_EXPORT_BEFORE_COMMIT, default=options.get(CONF_EXPORT_BEFORE_COMMIT, False)
             ): selector.BooleanSelector(),
@@ -200,6 +198,4 @@ class GitSyncOptionsFlow(OptionsFlow):
                 user_input[key] = int(user_input[key])
             return self.async_create_entry(data=user_input)
 
-        return self.async_show_form(
-            step_id="init", data_schema=_options_schema(dict(self.config_entry.options))
-        )
+        return self.async_show_form(step_id="init", data_schema=_options_schema(dict(self.config_entry.options)))

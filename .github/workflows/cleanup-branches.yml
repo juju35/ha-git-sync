@@ -1,8 +1,12 @@
-name: Cleanup merged branches
+name: Clean up merged branches
 
+# Deletes the branches whose pull request was merged: right after a pull request is closed,
+# and once a week for leftovers. Branches with an open pull request or never merged are kept.
 on:
+  pull_request:
+    types: [closed]
   schedule:
-    - cron: "41 3 * * 0"
+    - cron: "30 3 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -13,18 +17,20 @@ jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
-      - name: Delete branches whose pull request is merged
+      - name: Delete merged branches
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
         run: |
+          owner="${REPO%%/*}"
           default=$(gh api "repos/$REPO" --jq .default_branch)
-          gh api --paginate "repos/$REPO/branches" --jq '.[].name' | while read -r branch; do
+          for branch in $(gh api "repos/$REPO/branches" --paginate --jq '.[].name'); do
             [ "$branch" = "$default" ] && continue
-            merged=$(gh pr list -R "$REPO" --head "$branch" --state merged --json number --jq 'length')
-            open=$(gh pr list -R "$REPO" --head "$branch" --state open --json number --jq 'length')
-            if [ "$merged" -gt 0 ] && [ "$open" -eq 0 ]; then
-              echo "Deleting $branch"
-              gh api -X DELETE "repos/$REPO/git/refs/heads/$branch"
+            open=$(gh api "repos/$REPO/pulls?state=open&head=$owner:$branch" --jq length)
+            merged=$(gh api "repos/$REPO/pulls?state=closed&head=$owner:$branch" --jq '[.[] | select(.merged_at)] | length')
+            if [ "$open" = "0" ] && [ "$merged" != "0" ]; then
+              gh api -X DELETE "repos/$REPO/git/refs/heads/$branch" >/dev/null && echo "Deleted $branch" || echo "::warning::Could not delete $branch"
+            else
+              echo "Kept $branch (open PRs: $open, merged PRs: $merged)"
             fi
           done

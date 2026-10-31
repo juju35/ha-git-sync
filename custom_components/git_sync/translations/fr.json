@@ -130,6 +130,9 @@
           },
           "last_error": {
             "name": "Dernière erreur"
+          },
+          "ai_task": {
+            "name": "AI task"
           }
         }
       },
@@ -190,6 +193,12 @@
   "exceptions": {
     "no_loaded_entry": {
       "message": "Aucun dépôt Git Sync n'est chargé."
+    },
+    "no_ai_task": {
+      "message": "Aucune entité AI task n'est définie dans les options de Git Sync."
+    },
+    "ai_task_failed": {
+      "message": "L'AI task n'a renvoyé aucun message de commit."
     }
   },
   "services": {
@@ -224,6 +233,16 @@
         "config_entry_id": {
           "name": "Dépôt",
           "description": "Entrée Git Sync à utiliser. Tous les dépôts si vide."
+        }
+      }
+    },
+    "generate_message": {
+      "name": "Générer le message de commit",
+      "description": "Rédige un message de commit pour les modifications en cours avec l'AI task, sans committer. Renvoie null s'il n'y a aucune modification.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Dépôt",
+          "description": "Entrée Git Sync à utiliser. Le premier dépôt si vide."
         }
       }
     }

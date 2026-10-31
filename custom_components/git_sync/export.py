@@ -63,9 +63,7 @@ def export_dashboards(storage_dir: str, export_dir: str, export_format: str) -> 
             if config is None:
                 continue
             name = f"{file.name}.yaml"
-            content = yaml.safe_dump(
-                config, allow_unicode=True, sort_keys=False, default_flow_style=False, width=120
-            )
+            content = yaml.safe_dump(config, allow_unicode=True, sort_keys=False, default_flow_style=False, width=120)
             written += _write_if_changed(target / name, content)
             exported.append(name)
 
