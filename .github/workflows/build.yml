@@ -22,7 +22,7 @@ jobs:
       - run: npm run build
       - name: Package the integration
         run: cd custom_components/git_sync && zip -r ../../git_sync.zip . -x "__pycache__/*"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: git_sync
           path: git_sync.zip
