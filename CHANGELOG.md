@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.4 - 2026-11-01
+
+### What's new
+- Added Italian, Dutch, European Portuguese and Polish translations: the setup and options, the entities, the actions and the card with its visual editor (`it`, `nl`, `pt` and `pl`). The card follows Home Assistant's language or the `language` option; `pt-BR` uses the European Portuguese texts, in the integration and in the card, with Brazilian date formats. Commit messages are still written in English, French, German or Spanish.
+
 ## 0.1.3 - 2026-11-01
 
 ### What's new
