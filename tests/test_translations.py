@@ -44,3 +44,11 @@ def test_translation_parity(language: str):
     for key, text in english.items():
         assert other[key].strip(), key
         assert _placeholders(other[key]) == _placeholders(text), key
+
+
+@pytest.mark.parametrize("language", ["en", *LANGUAGES])
+def test_single_repository_actions_say_so(language: str):
+    """generate_ssh_key and generate_message use the first repository without config_entry_id, not all of them."""
+    strings = _load(language)
+    field = "services.{}.fields.config_entry_id.description"
+    assert strings[field.format("generate_ssh_key")] == strings[field.format("generate_message")]
