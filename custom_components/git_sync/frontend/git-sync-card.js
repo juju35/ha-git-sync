@@ -4,7 +4,7 @@
  * Served and added to the dashboard resources by the Git Sync integration.
  * https://github.com/juju35/ha-git-sync
  */
-var GIT_SYNC_CARD_VERSION = '0.1.1';
+var GIT_SYNC_CARD_VERSION = '0.1.2';
 
 const GS_I18N = {
   en: {
@@ -31,6 +31,7 @@ const GS_I18N = {
     confirm_title: 'Commit and push now?',
     confirm_text_one: '{n} changed file will be committed and pushed.',
     confirm_text_many: '{n} changed files will be committed and pushed.',
+    confirm_push: 'The commits waiting will be pushed.',
     message: 'Message (Enter to commit on ‘{branch}’)',
     message_hint: 'Empty: written by the AI task when committing',
     generate: 'Generate commit message',
@@ -38,6 +39,7 @@ const GS_I18N = {
     cancel: 'Cancel',
     committed: 'Committed: {m}',
     nothing: 'Nothing to commit',
+    pushed: 'Pending commits pushed',
     exported_one: '{n} dashboard file exported',
     exported_many: '{n} dashboard files exported',
     failed: 'Failed: {e}',
@@ -76,6 +78,7 @@ const GS_I18N = {
     confirm_title: 'Commit et push maintenant ?',
     confirm_text_one: '{n} fichier modifié sera committé et poussé.',
     confirm_text_many: '{n} fichiers modifiés seront committés et poussés.',
+    confirm_push: 'Les commits en attente seront poussés.',
     message: 'Message (Entrée pour committer sur « {branch} »)',
     message_hint: 'Vide : rédigé par l’AI task au moment du commit',
     generate: 'Générer le message de commit',
@@ -83,6 +86,7 @@ const GS_I18N = {
     cancel: 'Annuler',
     committed: 'Commit : {m}',
     nothing: 'Rien à committer',
+    pushed: 'Commits en attente poussés',
     exported_one: '{n} fichier de dashboard exporté',
     exported_many: '{n} fichiers de dashboard exportés',
     failed: 'Échec : {e}',
@@ -121,6 +125,7 @@ const GS_I18N = {
     confirm_title: 'Jetzt committen und pushen?',
     confirm_text_one: '{n} geänderte Datei wird committet und gepusht.',
     confirm_text_many: '{n} geänderte Dateien werden committet und gepusht.',
+    confirm_push: 'Die ausstehenden Commits werden gepusht.',
     message: 'Nachricht (Eingabe zum Committen auf „{branch}“)',
     message_hint: 'Leer: beim Commit vom AI-Task geschrieben',
     generate: 'Commit-Nachricht erzeugen',
@@ -128,6 +133,7 @@ const GS_I18N = {
     cancel: 'Abbrechen',
     committed: 'Committet: {m}',
     nothing: 'Nichts zu committen',
+    pushed: 'Ausstehende Commits gepusht',
     exported_one: '{n} Dashboard-Datei exportiert',
     exported_many: '{n} Dashboard-Dateien exportiert',
     failed: 'Fehlgeschlagen: {e}',
@@ -166,6 +172,7 @@ const GS_I18N = {
     confirm_title: '¿Hacer commit y push ahora?',
     confirm_text_one: 'Se hará commit y push de {n} archivo modificado.',
     confirm_text_many: 'Se hará commit y push de {n} archivos modificados.',
+    confirm_push: 'Se hará push de los commits pendientes.',
     message: 'Mensaje (Intro para hacer commit en «{branch}»)',
     message_hint: 'Vacío: lo escribe la AI task al hacer commit',
     generate: 'Generar mensaje de commit',
@@ -173,6 +180,7 @@ const GS_I18N = {
     cancel: 'Cancelar',
     committed: 'Commit: {m}',
     nothing: 'Nada que confirmar',
+    pushed: 'Commits pendientes enviados',
     exported_one: '{n} archivo de panel exportado',
     exported_many: '{n} archivos de panel exportados',
     failed: 'Error: {e}',
@@ -379,7 +387,10 @@ class GitSyncCard extends HTMLElement {
       // callService(domain, service, data, target, notifyOnError, returnResponse)
       const result = await this._hass.callService('git_sync', service, data, undefined, false, true);
       const first = result?.response?.results?.[0];
-      if (service === 'commit_push') this._toast(first?.committed ? this._t('committed', { m: first.message }) : this._t('nothing'));
+      if (service === 'commit_push') {
+        if (first?.committed) this._toast(this._t('committed', { m: first.message }));
+        else this._toast(this._t(first?.pushed ? 'pushed' : 'nothing'));
+      }
       else this._toast(this._n('exported', first?.files?.length ?? 0));
     } catch (err) {
       this._toast(this._t('failed', { e: err?.message || String(err) }));
@@ -400,8 +411,10 @@ class GitSyncCard extends HTMLElement {
     try {
       const result = await this._hass.callService('git_sync', 'generate_message', data, undefined, false, true);
       const message = result?.response?.message;
-      if (message) this._draft = message;
-      else this._toast(this._t('generated_none'));
+      // The popup may have been closed meanwhile: a late message must not come back at the next opening.
+      if (message) {
+        if (this._confirm) this._draft = message;
+      } else this._toast(this._t('generated_none'));
     } catch (err) {
       this._toast(this._t('failed', { e: err?.message || String(err) }));
     } finally {
@@ -416,9 +429,15 @@ class GitSyncCard extends HTMLElement {
   _bind() {
     const root = this.shadowRoot;
     const on = (sel, fn) => root.querySelector(sel)?.addEventListener('click', fn);
-    on('.toggle', () => {
+    const toggleFiles = () => {
       this._filesOpen = !this._filesOpen;
       this._render();
+    };
+    on('.toggle', toggleFiles);
+    root.querySelector('.toggle')?.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Enter' && ev.key !== ' ') return;
+      ev.preventDefault();
+      toggleFiles();
     });
     on('#commit', () => {
       this._confirm = true;
@@ -433,18 +452,34 @@ class GitSyncCard extends HTMLElement {
     };
     on('#cancel', close);
     on('.overlay', close);
-    on('#confirm', () => this._call('commit_push'));
+    on('#confirm', () => {
+      if (!this._generating) this._call('commit_push');
+    });
     on('#generate', () => this._generate());
     root.querySelector('#message')?.addEventListener('input', (ev) => {
       this._draft = ev.target?.value ?? '';
     });
     root.querySelector('#message')?.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter') this._call('commit_push');
+      if (ev.key === 'Enter' && !this._generating) this._call('commit_push');
       if (ev.key === 'Escape') close();
     });
   }
 
+  // The element with the keyboard focus, as a selector to find it again after a render replaced the DOM.
+  _focused() {
+    const el = this.shadowRoot?.activeElement;
+    if (!el) return null;
+    if (el.id) return `#${el.id}`;
+    return el.classList?.contains('toggle') ? '.toggle' : null;
+  }
+
   _render() {
+    const focused = this._focused();
+    this._paint();
+    if (focused) this.shadowRoot.querySelector(focused)?.focus?.();
+  }
+
+  _paint() {
     if (!this._config || !this.shadowRoot) return;
     const hass = this._hass;
     if (!hass) return;
@@ -523,7 +558,7 @@ class GitSyncCard extends HTMLElement {
       ? `<div class="overlay"></div>
         <div class="popup" role="dialog" aria-modal="true">
           <div class="p-title">${gsEsc(this._t('confirm_title'))}</div>
-          <div class="p-text">${gsEsc(this._n('confirm_text', count))}</div>
+          <div class="p-text">${gsEsc(count > 0 ? this._n('confirm_text', count) : this._t('confirm_push'))}</div>
           <div class="field${this._generating ? ' generating' : ''}">
             <input id="message" type="text" maxlength="100" autocomplete="off" aria-label="${gsEsc(this._t('message', { branch: a.branch || 'HEAD' }))}"
               placeholder="${gsEsc(this._t('message', { branch: a.branch || 'HEAD' }))}" value="${gsEsc(this._draft)}"${this._generating ? ' disabled' : ''} />
@@ -537,7 +572,7 @@ class GitSyncCard extends HTMLElement {
           ${a.ai_task ? `<div class="hint">${gsEsc(this._t('message_hint'))}</div>` : ''}
           <div class="actions">
             <button class="action" id="cancel"><ha-icon icon="mdi:close"></ha-icon>${gsEsc(this._t('cancel'))}</button>
-            <button class="action" id="confirm"><ha-icon icon="mdi:source-commit-end"></ha-icon>${gsEsc(this._t('commit'))}</button>
+            <button class="action" id="confirm"${this._generating ? ' disabled' : ''}><ha-icon icon="mdi:source-commit-end"></ha-icon>${gsEsc(this._t('commit'))}</button>
           </div>
         </div>`
       : '';
@@ -663,7 +698,10 @@ class GitSyncCard extends HTMLElement {
 
       @keyframes gs-spin { to { transform: rotate(360deg); } }
       @keyframes gs-pulse { 50% { opacity: .3; } }
-      @media (prefers-reduced-motion: reduce) { .pill.busy::before, button.action.busy ha-icon, .generating .gen ha-icon { animation: none; } }
+      @media (prefers-reduced-motion: reduce) {
+        .pill.busy::before, button.action.busy ha-icon, .generating .gen ha-icon { animation: none; }
+        .chevron, button.action, .gen { transition: none; }
+      }
     `;
   }
 }
