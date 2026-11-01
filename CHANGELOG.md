@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.2
+
+### Fixes
+- A repository set up as the README said (`git remote add`, no `git push -u`) is pushed: the first push sets the upstream. Before, every push failed with "no upstream branch", or, with a branch set, the commits waiting to be pushed were never noticed. A branch never pushed now shows "Push pending".
+- A failed push is retried by the automatic commit, even when no file changed since.
+- Commit & push with nothing new to commit pushes the pending commits and says so: the last push time is updated and the card shows "Pending commits pushed" instead of "Nothing to commit". The `git_sync.commit_push` response gains `pushed`.
+- The user and token of an HTTPS remote (`https://user:token@…`) no longer appear in the `remote_url` attribute, nor in Git errors shown on the card or written to the logs.
+- The notification action and image, and the branch and author in the repository settings, can be emptied again: an emptied field no longer comes back with its old value.
+- The status refresh no longer takes Git's index lock, which could make a commit running at the same time fail.
+- The dashboard export removes the files it no longer produces (deleted dashboard, format switched from JSON to YAML).
+- `git_sync.generate_ssh_key`: the description of `config_entry_id` says the first repository is used, not all of them.
+- Card: the changed files list opens with Enter or Space and the keyboard focus survives updates; Commit & push waits for the ✨ message being written, and a message arriving after the popup closed is dropped; a pending push no longer announces "0 changed files"; no chevron or button transition with reduced motion.
+
 ## 0.1.1
 
 ### What's new
