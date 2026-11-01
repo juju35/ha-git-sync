@@ -173,6 +173,12 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
 
         # last_error only holds commit/push failures; it is cleared by the next
         # successful push, so a failed push stays visible until it is fixed.
+        # It is also cleared once nothing is left to commit or push, e.g. after a `git push` run in a terminal:
+        # a failed commit leaves its files staged (dirty), a failed push leaves commits ahead (push_pending).
+        # A detached HEAD cannot tell whether its commits reached the remote: its error is kept.
+        git_state = state.git
+        if state.last_error and not (git_state.dirty or git_state.push_pending or git_state.detached):
+            state.last_error = None
         if state.git.dirty:
             state.status = STATUS_DIRTY
         elif state.last_error:

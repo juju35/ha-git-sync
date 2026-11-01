@@ -408,3 +408,56 @@ async def test_export_cleanup_spares_the_users_files(hass: HomeAssistant, repo: 
     await entry.runtime_data.async_export_dashboards()
     assert (other / "lovelace.old").read_text(encoding="utf-8") == "mine\n"
     await hass.async_block_till_done()
+
+
+async def test_push_error_cleared_once_pushed_outside(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    """A failed push then fixed with `git push` in a terminal: the error does not stay forever."""
+    import pytest
+    from homeassistant.exceptions import HomeAssistantError
+
+    entry = _entry(repo)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = entry.runtime_data
+
+    remote = tmp_path / "remote.git"
+    remote.rename(tmp_path / "away.git")
+    (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    with pytest.raises(HomeAssistantError):
+        await coordinator.async_commit_push("feat: add scripts")
+    await coordinator.async_refresh()
+    assert _status(hass).state == "error"
+
+    (tmp_path / "away.git").rename(remote)
+    git(repo, "push", "-q")
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert _status(hass).state == "clean"
+    assert coordinator.data.last_error is None
+
+
+async def test_failed_commit_keeps_the_error(hass: HomeAssistant, repo: Path) -> None:
+    """A commit that fails leaves the files staged: the tree is dirty, the error is kept for the card."""
+    from unittest.mock import patch
+
+    import pytest
+    from homeassistant.exceptions import HomeAssistantError
+
+    from custom_components.git_sync.git import GitError, GitRepo
+
+    entry = _entry(repo)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = entry.runtime_data
+
+    (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    with (
+        patch.object(GitRepo, "commit", side_effect=GitError("git commit failed: Author identity unknown")),
+        pytest.raises(HomeAssistantError),
+    ):
+        await coordinator.async_commit_push("feat: add scripts")
+    await coordinator.async_refresh()
+    assert _status(hass).state == "dirty"
+    assert coordinator.data.last_error == "git commit failed: Author identity unknown"
