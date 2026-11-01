@@ -76,3 +76,19 @@ def repo(tmp_path: Path) -> Path:
     git(work, "remote", "add", "origin", str(remote))
     git(work, "push", "-q", "-u", "origin", "main")
     return work
+
+
+@pytest.fixture
+def fresh_repo(tmp_path: Path) -> Path:
+    """A repository set up as the README says: one commit and a remote, never pushed (no upstream)."""
+    remote = tmp_path / "remote.git"
+    work = tmp_path / "work"
+    subprocess.run(["git", "init", "--bare", "-q", "-b", "main", str(remote)], check=True)
+    subprocess.run(["git", "init", "-q", "-b", "main", str(work)], check=True)
+    git(work, "config", "user.name", "Test")
+    git(work, "config", "user.email", "test@example.com")
+    (work / "configuration.yaml").write_text("default_config:\n", encoding="utf-8")
+    git(work, "add", "-A")
+    git(work, "commit", "-q", "-m", "chore: initial")
+    git(work, "remote", "add", "origin", str(remote))
+    return work

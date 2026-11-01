@@ -72,15 +72,31 @@ def _choice(options: list[str], key: str) -> selector.SelectSelector:
     )
 
 
+# Optional text fields that can be emptied. The frontend leaves an emptied field out of the submitted data, and a
+# `default=` would then bring the old value back: they get a suggested value instead, and an empty string when missing.
+_REPOSITORY_OPTIONAL = (CONF_BRANCH, CONF_AUTHOR_NAME, CONF_AUTHOR_EMAIL)
+_OPTIONS_OPTIONAL = (CONF_NOTIFY_SERVICE, CONF_NOTIFY_IMAGE)
+
+
+def _suggested(value: Any) -> dict[str, Any] | None:
+    return {"suggested_value": value} if value else None
+
+
+def _fill_empty(user_input: dict[str, Any], keys: tuple[str, ...]) -> dict[str, Any]:
+    for key in keys:
+        user_input.setdefault(key, "")
+    return user_input
+
+
 def _repository_schema(defaults: dict[str, Any]) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(CONF_REPO_PATH, default=defaults.get(CONF_REPO_PATH, DEFAULT_REPO_PATH)): _TEXT,
             vol.Required(CONF_REMOTE, default=defaults.get(CONF_REMOTE, DEFAULT_REMOTE)): _TEXT,
-            vol.Optional(CONF_BRANCH, default=defaults.get(CONF_BRANCH, DEFAULT_BRANCH)): _TEXT,
+            vol.Optional(CONF_BRANCH, description=_suggested(defaults.get(CONF_BRANCH, DEFAULT_BRANCH))): _TEXT,
             vol.Required(CONF_SSH_KEY, default=defaults.get(CONF_SSH_KEY, DEFAULT_SSH_KEY)): _TEXT,
-            vol.Optional(CONF_AUTHOR_NAME, default=defaults.get(CONF_AUTHOR_NAME, "")): _TEXT,
-            vol.Optional(CONF_AUTHOR_EMAIL, default=defaults.get(CONF_AUTHOR_EMAIL, "")): _EMAIL,
+            vol.Optional(CONF_AUTHOR_NAME, description=_suggested(defaults.get(CONF_AUTHOR_NAME))): _TEXT,
+            vol.Optional(CONF_AUTHOR_EMAIL, description=_suggested(defaults.get(CONF_AUTHOR_EMAIL))): _EMAIL,
         }
     )
 
@@ -126,8 +142,8 @@ def _options_schema(hass: HomeAssistant, options: dict[str, Any]) -> vol.Schema:
                 CONF_STATUS_INTERVAL,
                 default=options.get(CONF_STATUS_INTERVAL, DEFAULT_STATUS_INTERVAL),
             ): _number(10, 3600, "s"),
-            vol.Optional(CONF_NOTIFY_SERVICE, default=options.get(CONF_NOTIFY_SERVICE, "")): _TEXT,
-            vol.Optional(CONF_NOTIFY_IMAGE, default=options.get(CONF_NOTIFY_IMAGE, "")): _URL,
+            vol.Optional(CONF_NOTIFY_SERVICE, description=_suggested(options.get(CONF_NOTIFY_SERVICE))): _TEXT,
+            vol.Optional(CONF_NOTIFY_IMAGE, description=_suggested(options.get(CONF_NOTIFY_IMAGE))): _URL,
             vol.Required(
                 CONF_EXPORT_ENABLED, default=options.get(CONF_EXPORT_ENABLED, True)
             ): selector.BooleanSelector(),
@@ -194,6 +210,7 @@ class GitSyncConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             user_input[CONF_REPO_PATH] = user_input[CONF_REPO_PATH].rstrip("/") or "/"
+            _fill_empty(user_input, _REPOSITORY_OPTIONAL)
             errors = await _validate(user_input)
             if not errors:
                 await self.async_set_unique_id(user_input[CONF_REPO_PATH])
@@ -221,8 +238,9 @@ class GitSyncOptionsFlow(OptionsFlow):
         if user_input is not None:
             for key in (CONF_COMMIT_INTERVAL, CONF_STATUS_INTERVAL):
                 user_input[key] = int(user_input[key])
-            # An emptied field is left out of user_input: store it as None so it isn't suggested again.
+            # An emptied field is left out of user_input: store it empty so it isn't suggested again.
             user_input.setdefault(CONF_AI_TASK_ENTITY, None)
+            _fill_empty(user_input, _OPTIONS_OPTIONAL)
             return self.async_create_entry(data=user_input)
 
         return self.async_show_form(

@@ -7,16 +7,28 @@ import vm from 'node:vm';
 const source = readFileSync(new URL('../custom_components/git_sync/frontend/git-sync-card.js', import.meta.url), 'utf8');
 
 // Elements found in the rendered HTML by an id or class: enough to click the buttons and type a message.
-const fakeElement = () => ({
+// They also track the shadow root's activeElement, to check that a re-render keeps the keyboard focus.
+const fakeElement = (root, sel) => ({
   handlers: {},
   value: '',
+  id: sel.startsWith('#') ? sel.slice(1) : '',
+  classList: { contains: (c) => sel === `.${c}` },
   addEventListener(type, fn) {
     this.handlers[type] = fn;
   },
   click() {
     this.handlers.click?.({});
   },
-  focus() {},
+  key(key) {
+    const ev = { key, prevented: false, preventDefault() {
+      this.prevented = true;
+    } };
+    this.handlers.keydown?.(ev);
+    return ev;
+  },
+  focus() {
+    root.activeElement = this;
+  },
 });
 const fakeNode = () => ({
   innerHTML: '',
@@ -38,7 +50,7 @@ const fakeNode = () => ({
         const html = root.innerHTML;
         const present = sel.startsWith('#') ? html.includes(`id="${sel.slice(1)}"`) : html.includes(`class="${sel.slice(1)}`) || html.includes(` ${sel.slice(1)}"`);
         if (!present) return null;
-        elements[sel] ||= fakeElement();
+        elements[sel] ||= fakeElement(root, sel);
         return elements[sel];
       },
     };
@@ -48,6 +60,7 @@ const fakeNode = () => ({
       get: () => inner,
       set: (v) => {
         inner = v;
+        root.activeElement = null;
         for (const k of Object.keys(elements)) delete elements[k];
       },
     });
@@ -302,4 +315,76 @@ test('sparkle button with nothing to describe shows a toast', async () => {
   await new Promise((r) => setTimeout(r, 0));
   assert.deepEqual(card.toasts, ['Nothing to describe: no changes']);
   assert.match(html(card), /value=""/);
+});
+
+test('changed files expand from the keyboard (Enter and Space) and keep the focus', () => {
+  const card = render({}, makeHass({ status: 'dirty', files: ['a.yaml'] }));
+  const toggle = card.shadowRoot.querySelector('.toggle');
+  toggle.focus();
+  const ev = toggle.key('Enter');
+  assert.equal(ev.prevented, true);
+  assert.match(html(card), /<li title="a.yaml">/);
+  assert.match(html(card), /aria-expanded="true"/);
+  // Re-rendered by innerHTML: the new toggle has the focus.
+  assert.equal(card.shadowRoot.activeElement, card.shadowRoot.querySelector('.toggle'));
+  card.shadowRoot.querySelector('.toggle').key(' ');
+  assert.doesNotMatch(html(card), /<li title="a.yaml">/);
+  card.shadowRoot.querySelector('.toggle').key('a');
+  assert.doesNotMatch(html(card), /<li title="a.yaml">/);
+});
+
+test('a Home Assistant update does not lose the keyboard focus', () => {
+  const hass = makeHass({ status: 'dirty', files: ['a.yaml'] });
+  const card = render({}, hass);
+  card.shadowRoot.querySelector('#commit').focus();
+  card.hass = makeHass({ status: 'dirty', files: ['a.yaml', 'b.yaml'] });
+  assert.match(html(card), /2 files/);
+  assert.equal(card.shadowRoot.activeElement?.id, 'commit');
+});
+
+test('push pending: the confirmation does not announce 0 changed files', () => {
+  const card = render({}, makeHass({ status: 'ahead' }));
+  card.shadowRoot.querySelector('#commit').click();
+  assert.doesNotMatch(html(card), /0 changed files/);
+  assert.match(html(card), /The commits waiting will be pushed\./);
+  const fr = render({}, makeHass({ status: 'error', language: 'fr' }));
+  fr.shadowRoot.querySelector('#commit').click();
+  assert.match(html(fr), /Les commits en attente seront poussés\./);
+});
+
+test('push only: the toast says it was pushed, not "Nothing to commit"', async () => {
+  const hass = makeHass({ status: 'ahead', response: { results: [{ committed: false, pushed: true, message: null }] } });
+  const card = render({}, hass);
+  card.shadowRoot.querySelector('#commit').click();
+  card.shadowRoot.querySelector('#confirm').click();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(card.toasts, ['Pending commits pushed']);
+});
+
+test('no commit while the message is being generated, and no stale message afterwards', async () => {
+  let answer;
+  const hass = makeHass({ status: 'dirty', files: ['a.yaml'], aiTask: 'ai_task.google' });
+  hass.callService = (...args) => {
+    hass.calls.push(args);
+    return new Promise((resolve) => {
+      answer = resolve;
+    });
+  };
+  const card = render({}, hass);
+  card.shadowRoot.querySelector('#commit').click();
+  card.shadowRoot.querySelector('#generate').click();
+  assert.match(html(card), /id="confirm"[^>]*disabled/);
+  // Closed while generating: the late answer is not kept for the next opening.
+  card.shadowRoot.querySelector('#cancel').click();
+  answer({ response: { message: 'feat: late message' } });
+  await new Promise((r) => setTimeout(r, 0));
+  card.shadowRoot.querySelector('#commit').click();
+  assert.match(html(card), /id="message"[^>]*value=""/);
+  assert.doesNotMatch(html(card), /id="confirm"[^>]*disabled/);
+});
+
+test('reduced motion: no chevron or button transition', () => {
+  const css = html(render({}, makeHass())).match(/@media \(prefers-reduced-motion: reduce\) \{([\s\S]*?\})\s*\}/)?.[1] || '';
+  assert.match(css, /\.chevron/);
+  assert.match(css, /transition: none/);
 });

@@ -232,7 +232,7 @@
       "fields": {
         "config_entry_id": {
           "name": "Repositorio",
-          "description": "Entrada de Git Sync a usar. Todos los repositorios si está vacío."
+          "description": "Entrada de Git Sync a usar. El primer repositorio si está vacío."
         }
       }
     },

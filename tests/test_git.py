@@ -3,11 +3,21 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
+
+import pytest
 
 from custom_components.git_sync.coordinator import sanitize_message
 from custom_components.git_sync.export import export_dashboards
-from custom_components.git_sync.git import GitRepo, GitStatus, _parse_branch_line
+from custom_components.git_sync.git import (
+    GitError,
+    GitRepo,
+    GitStatus,
+    _parse_branch_line,
+    redact_credentials,
+    redact_url,
+)
 
 from .conftest import git
 
@@ -68,3 +78,110 @@ def test_export_dashboards(tmp_path: Path) -> None:
     assert files == ["lovelace", "lovelace.yaml"]
     assert "title: Home" in (out / "lovelace.yaml").read_text(encoding="utf-8")
     assert not (out / "core.config").exists()
+
+
+@pytest.mark.parametrize("branch", ["", "main"])
+async def test_first_push_sets_the_upstream(fresh_repo: Path, branch: str) -> None:
+    """The README setup (no `push -u`): the first push works and tracks the remote branch."""
+    git_repo = GitRepo(str(fresh_repo), remote="origin", branch=branch, ssh_key="", author_name="", author_email="")
+    status = await git_repo.status()
+    assert status.upstream is None
+    assert status.push_pending
+
+    await git_repo.push()
+    status = await git_repo.status()
+    assert status.upstream == "origin/main"
+    assert not status.push_pending
+    assert git(fresh_repo, "log", "-1", "--format=%s", "origin/main").strip() == "chore: initial"
+
+    # The next commit is seen as a pending push.
+    (fresh_repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    await git_repo.stage_all()
+    await git_repo.commit("feat: add scripts")
+    status = await git_repo.status()
+    assert status.ahead == 1
+    assert status.push_pending
+
+
+async def test_detached_head_is_not_a_pending_push(repo: Path) -> None:
+    git(repo, "checkout", "-q", "--detach")
+    status = await _repo(repo).status()
+    assert status.upstream is None
+    assert not status.push_pending
+
+
+async def test_status_does_not_rewrite_the_index(repo: Path) -> None:
+    """Polling `git status` must not take index.lock, or a concurrent `git add` fails on it."""
+    index = repo / ".git" / "index"
+    tracked = repo / "configuration.yaml"
+    before = index.stat().st_mtime_ns
+    # Same content, new mtime: a plain `git status` refreshes the stat data and rewrites the index.
+    os.utime(tracked, ns=(tracked.stat().st_atime_ns, tracked.stat().st_mtime_ns + 5_000_000_000))
+    await _repo(repo).status()
+    assert index.stat().st_mtime_ns == before
+    assert _repo(repo)._env()["GIT_OPTIONAL_LOCKS"] == "0"
+
+
+def test_redact_credentials() -> None:
+    assert redact_url("https://user:ghp_secret@github.com/me/ha.git") == "https://github.com/me/ha.git"
+    assert redact_url("https://ghp_secret@github.com/me/ha.git") == "https://github.com/me/ha.git"
+    assert redact_url("git@github.com:me/ha.git") == "git@github.com:me/ha.git"
+    assert redact_url("ssh://git@github.com:22/me/ha.git") == "ssh://github.com:22/me/ha.git"
+    assert redact_url(None) is None
+    assert (
+        redact_credentials("fatal: repository 'https://u:tok@example.com/r.git/' not found")
+        == "fatal: repository 'https://example.com/r.git/' not found"
+    )
+
+
+async def test_git_errors_hide_the_token(repo: Path) -> None:
+    """A git error quoting a URL with credentials reaches last_error and the logs without them."""
+    with pytest.raises(GitError) as err:
+        await _repo(repo).run("checkout", "https://user:ghp_secret@github.com/me/ha.git")
+    assert "github.com/me/ha.git" in str(err.value)
+    assert "ghp_secret" not in str(err.value)
+
+
+def _storage(tmp_path: Path, *names: str) -> Path:
+    storage = tmp_path / ".storage"
+    storage.mkdir(exist_ok=True)
+    for name in names:
+        (storage / name).write_text(
+            json.dumps({"version": 1, "key": name, "data": {"config": {"views": [{"title": name}]}}}),
+            encoding="utf-8",
+        )
+    return storage
+
+
+def test_export_removes_stale_files(tmp_path: Path) -> None:
+    """A deleted dashboard, or a json→yaml switch, does not leave its old file behind."""
+    storage = _storage(tmp_path, "lovelace", "lovelace.old")
+    out = tmp_path / "export"
+    (out).mkdir()
+    (out / "README.md").write_text("mine\n", encoding="utf-8")
+
+    assert export_dashboards(str(storage), str(out), "both") == [
+        "lovelace",
+        "lovelace.yaml",
+        "lovelace.old",
+        "lovelace.old.yaml",
+    ]
+    (storage / "lovelace.old").unlink()
+    assert export_dashboards(str(storage), str(out), "yaml") == ["lovelace.yaml"]
+    assert sorted(p.name for p in out.iterdir()) == ["README.md", "lovelace.yaml"]
+
+
+def test_export_keeps_the_yaml_of_an_unreadable_dashboard(tmp_path: Path) -> None:
+    storage = _storage(tmp_path, "lovelace")
+    out = tmp_path / "export"
+    export_dashboards(str(storage), str(out), "yaml")
+    (storage / "lovelace").write_text("{not json", encoding="utf-8")
+    assert export_dashboards(str(storage), str(out), "yaml") == []
+    assert (out / "lovelace.yaml").exists()
+
+
+def test_export_into_the_storage_folder_deletes_nothing(tmp_path: Path) -> None:
+    storage = _storage(tmp_path, "lovelace")
+    export_dashboards(str(storage), str(storage), "yaml")
+    assert (storage / "lovelace").exists()
+    assert (storage / "lovelace.yaml").exists()

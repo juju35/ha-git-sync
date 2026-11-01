@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+  # Called by Release, so that a version is published only once these checks pass.
+  workflow_call:
 
 permissions:
   contents: read
@@ -26,18 +28,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Same ruff version as the pre-commit hook, so both jobs apply the same rules
+      # (and stay aligned when Dependabot bumps .pre-commit-config.yaml).
+      - name: Read ruff version from .pre-commit-config.yaml
+        id: ruff-version
+        run: |
+          version=$(awk '/astral-sh\/ruff-pre-commit/ {f=1} f && /rev:/ {sub(/.*rev:[ ]*"?v?/, ""); sub(/".*/, ""); print; exit}' .pre-commit-config.yaml)
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
       - uses: astral-sh/ruff-action@278981a28ce3188b1e39527901f38254bf3aac89 # v4.1.0
         with:
-          # Same ruff as .pre-commit-config.yaml, so that both jobs apply the same rules.
-          version: "0.16.9"
+          version: ${{ steps.ruff-version.outputs.version }}
   biome:
     name: Biome (card JS)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # One Biome version everywhere: the pre-commit hook's, which Dependabot bumps; biome.json's $schema must match it.
+      - name: Read Biome version from .pre-commit-config.yaml
+        id: biome-version
+        run: |
+          version=$(grep -o '@biomejs/biome@[0-9][0-9.]*' .pre-commit-config.yaml | head -n 1 | cut -d@ -f3)
+          rev=$(awk '/biomejs\/pre-commit/ {f=1} f && /rev:/ {sub(/.*rev:[ ]*"?v?/, ""); sub(/".*/, ""); print; exit}' .pre-commit-config.yaml)
+          test -n "$version"
+          [ "$rev" = "$version" ] || { echo "::error file=.pre-commit-config.yaml::biome rev v$rev and additional_dependencies $version differ"; exit 1; }
+          grep -q "schemas/$version/schema.json" biome.json || { echo "::error file=biome.json::\$schema is not Biome $version"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
       - uses: biomejs/setup-biome@4c91541eaada48f67d7dbd7833600ce162b68f51 # v2
         with:
-          version: 2.6.2
+          version: ${{ steps.biome-version.outputs.version }}
       - run: biome ci --reporter=github .
   duplication:
     name: Duplication (jscpd)
