@@ -98,7 +98,7 @@ Copy `custom_components/git_sync/` to `/config/custom_components/git_sync/`, the
 | Remote | `origin` | Remote to push to |
 | Branch | current branch | Target branch on the remote |
 | SSH private key | `/config/.ssh/id_ed25519` | Key used for the push |
-| Author name / email | repository config | Overrides `user.name` / `user.email` |
+| Author name / email | repository config | Overrides `user.name` / `user.email`. Required when Git has no identity in the Home Assistant container (the `git config --global` of the Terminal add-on is not seen there): the form asks for it instead of every commit failing |
 
 | Option | Default | Description |
 |---|---|---|
@@ -106,11 +106,11 @@ Copy `custom_components/git_sync/` to `/config/custom_components/git_sync/`, the
 | Commit message language | Home Assistant's, else English | `en`, `fr`, `de` or `es` |
 | Automatic commit interval | 60 min | Commit and push every N minutes when something changed, 0 to disable, up to 1440 |
 | Status refresh interval | 60 s | How often `git status` is read, from 10 to 3600 |
-| Notification action | none | Sent after each commit, for example `notify.mobile_app_phone` |
+| Notification action | none | Sent after each commit, for example `notify.mobile_app_phone`. An action that does not exist is refused by the form |
 | Notification image URL | none | Absolute HTTPS URL (required by iOS) |
 | Daily dashboard export | on | Export the dashboards every day |
 | Export time | 08:00 | Time of the daily export |
-| Export folder | `/config/dashboards_export` | Where the dashboards are written. Its `lovelace*` files that the export no longer produces (deleted dashboard, format changed) are removed |
+| Export folder | `/config/dashboards_export` | Where the dashboards are written. The files an earlier export wrote there and that it no longer produces (deleted dashboard, format changed) are removed, unless you edited them since; any other file of the folder, such as your own `lovelace-*.yaml`, is never removed nor overwritten, even when it has the name of an export (a warning is logged and that file is skipped) |
 | Export format | JSON | JSON (raw copy of `.storage`), YAML (dashboard configuration only, easier to read in diffs) or both |
 | Export before each commit | off | Also export right before each commit |
 

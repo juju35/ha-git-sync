@@ -369,3 +369,223 @@ async def test_reconfigure_can_empty_branch_and_author(hass: HomeAssistant, repo
     assert done["reason"] == "reconfigure_successful"
     assert (entry.data[CONF_BRANCH], entry.data[CONF_AUTHOR_NAME], entry.data[CONF_AUTHOR_EMAIL]) == ("", "", "")
     await hass.async_block_till_done()
+
+
+async def test_export_cleanup_spares_the_users_files(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    """Across a restart, the export removes a deleted dashboard's file but never the user's lovelace-*.yaml."""
+    import json
+
+    hass.config.config_dir = str(tmp_path / "config")
+    storage = tmp_path / "config" / ".storage"
+    storage.mkdir(parents=True)
+    for name in ("lovelace", "lovelace.old"):
+        (storage / name).write_text(json.dumps({"data": {"config": {"views": []}}}), encoding="utf-8")
+    export_dir = repo / "dashboards"
+    export_dir.mkdir()
+    (export_dir / "lovelace-energy.yaml").write_text("views: []\n", encoding="utf-8")
+    (export_dir / "lovelace_tablet.yaml").write_text("views: []\n", encoding="utf-8")
+
+    entry = _entry(repo, **{CONF_EXPORT_DIR: str(export_dir)})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert await entry.runtime_data.async_export_dashboards() == ["lovelace", "lovelace.old"]
+
+    # Restart: the list of files written by the export survives it.
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    (storage / "lovelace.old").unlink()
+    await hass.services.async_call(DOMAIN, "export_dashboards", {}, blocking=True, return_response=True)
+    assert sorted(p.name for p in export_dir.iterdir()) == ["lovelace", "lovelace-energy.yaml", "lovelace_tablet.yaml"]
+
+    # Another export folder: the manifest of the first one deletes nothing there.
+    other = repo / "other"
+    other.mkdir()
+    (other / "lovelace.old").write_text("mine\n", encoding="utf-8")
+    hass.config_entries.async_update_entry(entry, options={**entry.options, CONF_EXPORT_DIR: str(other)})
+    await hass.async_block_till_done()
+    await entry.runtime_data.async_export_dashboards()
+    assert (other / "lovelace.old").read_text(encoding="utf-8") == "mine\n"
+    await hass.async_block_till_done()
+
+
+def _dashboards(tmp_path: Path, hass: HomeAssistant, *names: str) -> Path:
+    import json
+
+    hass.config.config_dir = str(tmp_path / "config")
+    storage = tmp_path / "config" / ".storage"
+    storage.mkdir(parents=True)
+    for name in names:
+        (storage / name).write_text(json.dumps({"data": {"config": {"views": [{"title": name}]}}}), encoding="utf-8")
+    return storage
+
+
+async def test_export_spares_an_exported_file_the_user_reused(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    """An exported YAML edited by the user (now a YAML-mode dashboard) is not deleted with its dashboard."""
+    storage = _dashboards(tmp_path, hass, "lovelace", "lovelace.dashboard_x")
+    export_dir = repo / "dashboards"
+    entry = _entry(repo, **{CONF_EXPORT_DIR: str(export_dir), "export_format": "yaml"})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await entry.runtime_data.async_export_dashboards()
+
+    (export_dir / "lovelace.dashboard_x.yaml").write_text("views: [{title: Mine}]\n", encoding="utf-8")
+    (storage / "lovelace.dashboard_x").unlink()
+    # The hashes of what the export wrote survive a restart.
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert await entry.runtime_data.async_export_dashboards() == ["lovelace.yaml"]
+    assert (export_dir / "lovelace.dashboard_x.yaml").read_text(encoding="utf-8") == "views: [{title: Mine}]\n"
+    await hass.async_block_till_done()
+
+
+async def test_first_export_does_not_overwrite_the_users_file(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    """Never exported before: a file of the user with an export name stays as it is."""
+    _dashboards(tmp_path, hass, "lovelace", "lovelace_resources")
+    export_dir = repo / "dashboards"
+    export_dir.mkdir()
+    (export_dir / "lovelace_resources.yaml").write_text("mine: true\n", encoding="utf-8")
+    entry = _entry(repo, **{CONF_EXPORT_DIR: str(export_dir), "export_format": "yaml"})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert await entry.runtime_data.async_export_dashboards() == ["lovelace.yaml"]
+    assert (export_dir / "lovelace_resources.yaml").read_text(encoding="utf-8") == "mine: true\n"
+    await hass.async_block_till_done()
+
+
+async def test_export_after_an_update_refreshes_the_old_files(
+    hass: HomeAssistant, hass_storage: dict, repo: Path, tmp_path: Path
+) -> None:
+    """Update from 0.1.4 (an export done, no manifest): its exported files are refreshed, none deleted."""
+    _dashboards(tmp_path, hass, "lovelace")
+    export_dir = repo / "dashboards"
+    export_dir.mkdir()
+    (export_dir / "lovelace.yaml").write_text("views: []\n", encoding="utf-8")
+    (export_dir / "lovelace.gone.yaml").write_text("views: []\n", encoding="utf-8")
+    entry = _entry(repo, **{CONF_EXPORT_DIR: str(export_dir), "export_format": "yaml"})
+    hass_storage[f"{DOMAIN}.{entry.entry_id}"] = {
+        "version": 1,
+        "key": f"{DOMAIN}.{entry.entry_id}",
+        "data": {
+            "last_export": "2026-10-30T10:00:00+00:00",
+            "last_export_files": ["lovelace.yaml", "lovelace.gone.yaml", "lovelace-energy.yaml"],
+        },
+    }
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert await entry.runtime_data.async_export_dashboards() == ["lovelace.yaml"]
+    assert "title: lovelace" in (export_dir / "lovelace.yaml").read_text(encoding="utf-8")
+    assert (export_dir / "lovelace.gone.yaml").exists()
+    await hass.async_block_till_done()
+
+
+async def test_push_error_cleared_once_pushed_outside(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    """A failed push then fixed with `git push` in a terminal: the error does not stay forever."""
+    import pytest
+    from homeassistant.exceptions import HomeAssistantError
+
+    entry = _entry(repo)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = entry.runtime_data
+
+    remote = tmp_path / "remote.git"
+    remote.rename(tmp_path / "away.git")
+    (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    with pytest.raises(HomeAssistantError):
+        await coordinator.async_commit_push("feat: add scripts")
+    await coordinator.async_refresh()
+    assert _status(hass).state == "error"
+
+    (tmp_path / "away.git").rename(remote)
+    git(repo, "push", "-q")
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert _status(hass).state == "clean"
+    assert coordinator.data.last_error is None
+
+
+async def test_failed_commit_keeps_the_error(hass: HomeAssistant, repo: Path) -> None:
+    """A commit that fails leaves the files staged: the tree is dirty, the error is kept for the card."""
+    from unittest.mock import patch
+
+    import pytest
+    from homeassistant.exceptions import HomeAssistantError
+
+    from custom_components.git_sync.git import GitError, GitRepo
+
+    entry = _entry(repo)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = entry.runtime_data
+
+    (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    with (
+        patch.object(GitRepo, "commit", side_effect=GitError("git commit failed: Author identity unknown")),
+        pytest.raises(HomeAssistantError),
+    ):
+        await coordinator.async_commit_push("feat: add scripts")
+    await coordinator.async_refresh()
+    assert _status(hass).state == "dirty"
+    assert coordinator.data.last_error == "git commit failed: Author identity unknown"
+
+
+async def test_config_flow_requires_a_git_identity(
+    hass: HomeAssistant, repo: Path, tmp_path: Path, monkeypatch
+) -> None:
+    """No user.email for git (HA container, empty HOME): the form asks for the author, commits would all fail."""
+    from custom_components.git_sync.const import CONF_AUTHOR_EMAIL, CONF_AUTHOR_NAME
+
+    home = tmp_path / "home"
+    home.mkdir()
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(home))
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+    for name in ("EMAIL", "GIT_AUTHOR_EMAIL", "GIT_COMMITTER_EMAIL", "GIT_AUTHOR_NAME", "GIT_COMMITTER_NAME"):
+        monkeypatch.delenv(name, raising=False)
+    git(repo, "config", "--unset", "user.email")
+    git(repo, "config", "--unset", "user.name")
+    # No guess from the host name: what the HA container ends up with ("root@<host>.(none)" is refused).
+    git(repo, "config", "user.useConfigOnly", "true")
+
+    data = {CONF_REPO_PATH: str(repo), CONF_REMOTE: "origin", CONF_SSH_KEY: ""}
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    missing = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert missing["type"] is FlowResultType.FORM
+    assert missing["errors"] == {CONF_AUTHOR_EMAIL: "author_required"}
+
+    done = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**data, CONF_AUTHOR_NAME: "Home Assistant", CONF_AUTHOR_EMAIL: "ha@example.com"}
+    )
+    assert done["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_options_reject_an_unknown_notification_action(hass: HomeAssistant, repo: Path) -> None:
+    from custom_components.git_sync.const import CONF_NOTIFY_SERVICE
+
+    entry = _entry(repo)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    hass.services.async_register("notify", "mobile_app_phone", lambda call: None)
+
+    form = await hass.config_entries.options.async_init(entry.entry_id)
+    defaults = _defaults(form["data_schema"])
+    bad = await hass.config_entries.options.async_configure(
+        form["flow_id"], {**defaults, CONF_NOTIFY_SERVICE: "notify.mobile_app_phnoe"}
+    )
+    assert bad["type"] is FlowResultType.FORM
+    assert bad["errors"] == {CONF_NOTIFY_SERVICE: "unknown_notify_service"}
+
+    # Both spellings the notification accepts: "notify.name" and "name".
+    done = await hass.config_entries.options.async_configure(
+        form["flow_id"], {**defaults, CONF_NOTIFY_SERVICE: "mobile_app_phone"}
+    )
+    assert done["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_NOTIFY_SERVICE] == "mobile_app_phone"
+    await hass.async_block_till_done()

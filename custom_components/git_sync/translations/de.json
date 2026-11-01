@@ -43,7 +43,8 @@
     },
     "error": {
       "not_a_repository": "Dieser Ordner ist kein Git-Arbeitsverzeichnis.",
-      "unknown_remote": "Dieses Remote existiert im Repository nicht."
+      "unknown_remote": "Dieses Remote existiert im Repository nicht.",
+      "author_required": "Git weiß hier nicht, wer die Commits signiert: Autor-E-Mail (und Namen) angeben."
     },
     "abort": {
       "already_configured": "Dieses Repository ist bereits eingerichtet.",
@@ -77,6 +78,9 @@
           "export_format": "JSON kopiert die .storage-Dateien unverändert; YAML behält nur die Dashboard-Konfiguration, besser lesbar in Diffs."
         }
       }
+    },
+    "error": {
+      "unknown_notify_service": "Diese Benachrichtigungsaktion existiert nicht."
     }
   },
   "selector": {

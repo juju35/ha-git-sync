@@ -43,7 +43,8 @@
     },
     "error": {
       "not_a_repository": "Questa cartella non è un repository Git.",
-      "unknown_remote": "Questo remote non esiste nel repository."
+      "unknown_remote": "Questo remote non esiste nel repository.",
+      "author_required": "Git non sa chi firma i commit qui: inserisci l'email (e il nome) dell'autore."
     },
     "abort": {
       "already_configured": "Questo repository è già configurato.",
@@ -77,6 +78,9 @@
           "export_format": "JSON copia i file .storage così come sono; YAML mantiene solo la configurazione della dashboard, più leggibile nei diff."
         }
       }
+    },
+    "error": {
+      "unknown_notify_service": "Questa azione di notifica non esiste."
     }
   },
   "selector": {

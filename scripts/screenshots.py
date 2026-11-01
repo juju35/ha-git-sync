@@ -3,8 +3,10 @@
 Usage: python scripts/screenshots.py  (needs `pip install playwright` and `playwright install chromium`)
 CHROMIUM_PATH=/path/to/chrome to use another browser. The clock is frozen so the "x min ago" stay the same.
 Mock data only: no real repository, file name or person. Every capture keeps a 16 px frame of the theme background.
+A file is only rewritten when its decoded pixels change, so a re-encoding alone never shows up as a diff.
 """
 
+import base64
 import json
 import os
 from datetime import datetime, timedelta
@@ -186,6 +188,33 @@ MOUNT = """([hass, dark, action]) => {
 }"""
 
 
+SAME_PIXELS = """async ([a, b]) => {
+    const load = async (b64) => {
+        const img = new Image();
+        img.src = "data:image/png;base64," + b64;
+        await img.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d", { colorSpace: "srgb" });
+        ctx.drawImage(img, 0, 0);
+        return ctx.getImageData(0, 0, canvas.width, canvas.height);
+    };
+    const [x, y] = await Promise.all([load(a), load(b)]);
+    if (x.width !== y.width || x.height !== y.height) return false;
+    for (let i = 0; i < x.data.length; i++) if (x.data[i] !== y.data[i]) return false;
+    return true;
+}"""
+
+
+def same_pixels(page, path: Path, png: bytes) -> bool:
+    """Compare the decoded pixels of the existing capture and the new one (PNG bytes can differ for the same image)."""
+    if not path.exists():
+        return False
+    old = base64.b64encode(path.read_bytes()).decode()
+    return page.evaluate(SAME_PIXELS, [old, base64.b64encode(png).decode()])
+
+
 def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(executable_path=os.environ.get("CHROMIUM_PATH") or None)
@@ -202,8 +231,12 @@ def main():
             clip = {"x": 0, "y": 0, "width": WIDTH + 32, "height": int(box["height"] + 0.999) + 32}
             path = ROOT / "screenshots" / f"{name}.png"
             path.parent.mkdir(exist_ok=True)
-            page.screenshot(path=str(path), clip=clip, animations="disabled")
-            print(path.relative_to(ROOT))
+            png = page.screenshot(clip=clip, animations="disabled")
+            if same_pixels(page, path, png):
+                print(f"{path.relative_to(ROOT)} (unchanged)")
+            else:
+                path.write_bytes(png)
+                print(path.relative_to(ROOT))
             page.close()
         browser.close()
 

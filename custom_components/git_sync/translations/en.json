@@ -43,7 +43,8 @@
     },
     "error": {
       "not_a_repository": "This folder is not a Git work tree.",
-      "unknown_remote": "This remote does not exist in the repository."
+      "unknown_remote": "This remote does not exist in the repository.",
+      "author_required": "Git does not know who signs the commits here: enter the author email (and name)."
     },
     "abort": {
       "already_configured": "This repository is already configured.",
@@ -77,6 +78,9 @@
           "export_format": "JSON copies the .storage files as is; YAML keeps only the dashboard configuration, easier to read in diffs."
         }
       }
+    },
+    "error": {
+      "unknown_notify_service": "This notification action does not exist."
     }
   },
   "selector": {
