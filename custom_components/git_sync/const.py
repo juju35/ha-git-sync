@@ -7,7 +7,7 @@ from typing import Final
 DOMAIN: Final = "git_sync"
 NAME: Final = "Git Sync"
 # Same as manifest.json and the card: the card URL carries it, so that browsers load a new release.
-VERSION: Final = "0.1.4"
+VERSION: Final = "0.1.5"
 
 # Config entry data / options
 CONF_REPO_PATH: Final = "repo_path"
