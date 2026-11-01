@@ -466,7 +466,7 @@ async def test_failed_commit_keeps_the_error(hass: HomeAssistant, repo: Path) ->
 async def test_config_flow_requires_a_git_identity(
     hass: HomeAssistant, repo: Path, tmp_path: Path, monkeypatch
 ) -> None:
-    """Without user.email for git (HA container, empty HOME), the form asks for the author instead of every commit failing."""
+    """No user.email for git (HA container, empty HOME): the form asks for the author, commits would all fail."""
     from custom_components.git_sync.const import CONF_AUTHOR_EMAIL, CONF_AUTHOR_NAME
 
     home = tmp_path / "home"
