@@ -261,7 +261,7 @@ The integration and its card follow the language of Home Assistant (the card pic
 | Español | `es` |
 | Italiano | `it` |
 | Nederlands | `nl` |
-| Português (European Portuguese) | `pt` |
+| Português (Portugal) | `pt` |
 | Polski | `pl` |
 | Српски (Serbian, Cyrillic) | `sr` |
 | Srpski (Serbian, Latin) | `sr-Latn` |
