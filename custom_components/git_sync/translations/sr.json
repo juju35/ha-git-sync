@@ -1,0 +1,250 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Git репозиторијум",
+        "description": "Фасцикла Home Assistant-а верзионисана помоћу Git-а и push-ована на удаљени репозиторијум (GitHub, Gitea…).",
+        "data": {
+          "repo_path": "Путања репозиторијума",
+          "remote": "Удаљени репозиторијум",
+          "branch": "Грана",
+          "ssh_key": "Приватни SSH кључ",
+          "author_name": "Име аутора",
+          "author_email": "Имејл аутора"
+        },
+        "data_description": {
+          "repo_path": "Фасцикла која садржи директоријум .git, обично /config.",
+          "remote": "Git remote на који се ради push, обично origin.",
+          "branch": "Циљна грана на удаљеном репозиторијуму. Остави празно за push тренутне гране.",
+          "ssh_key": "Приватни кључ за push. Направи га радњом generate_ssh_key, па додај јавни кључ као deploy key са дозволом за писање.",
+          "author_name": "Опционо, замењује git user.name / user.email репозиторијума.",
+          "author_email": "Опционо, замењује git user.name / user.email репозиторијума."
+        }
+      },
+      "reconfigure": {
+        "title": "Подешавања репозиторијума",
+        "data": {
+          "repo_path": "Путања репозиторијума",
+          "remote": "Удаљени репозиторијум",
+          "branch": "Грана",
+          "ssh_key": "Приватни SSH кључ",
+          "author_name": "Име аутора",
+          "author_email": "Имејл аутора"
+        },
+        "data_description": {
+          "repo_path": "Фасцикла која садржи директоријум .git, обично /config.",
+          "remote": "Git remote на који се ради push, обично origin.",
+          "branch": "Циљна грана на удаљеном репозиторијуму. Остави празно за push тренутне гране.",
+          "ssh_key": "Приватни кључ за push. Направи га радњом generate_ssh_key, па додај јавни кључ као deploy key са дозволом за писање.",
+          "author_name": "Опционо, замењује git user.name / user.email репозиторијума.",
+          "author_email": "Опционо, замењује git user.name / user.email репозиторијума."
+        }
+      }
+    },
+    "error": {
+      "not_a_repository": "Ова фасцикла није Git радно стабло.",
+      "unknown_remote": "Овај remote не постоји у репозиторијуму."
+    },
+    "abort": {
+      "already_configured": "Овај репозиторијум је већ подешен.",
+      "reconfigure_successful": "Репозиторијум је ажуриран.",
+      "unique_id_mismatch": "Путања репозиторијума не може да се промени: додај нови унос."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Git Sync опције",
+        "description": "Commit порука, распореди, обавештења и извоз контролних табли.",
+        "data": {
+          "ai_task_entity": "AI task ентитет",
+          "commit_language": "Језик commit поруке",
+          "commit_interval": "Интервал аутоматског commit-а",
+          "status_interval": "Интервал освежавања статуса",
+          "notify_service": "Радња обавештења",
+          "notify_image": "URL слике обавештења",
+          "export_enabled": "Дневни извоз контролних табли",
+          "export_time": "Време извоза",
+          "export_dir": "Фасцикла за извоз",
+          "export_format": "Формат извоза",
+          "export_before_commit": "Извези контролне табле пре сваког commit-а"
+        },
+        "data_description": {
+          "ai_task_entity": "Пише поруку у формату Conventional Commits на основу diff-а. Без њега се користи општа порука.",
+          "commit_interval": "Commit и push на сваких N минута када има измена. 0 га искључује.",
+          "notify_service": "На пример notify.mobile_app_phone. Остави празно да искључиш.",
+          "notify_image": "Апсолутни HTTPS URL (захтева га iOS).",
+          "export_format": "JSON копира датотеке из .storage какве јесу; YAML задржава само конфигурацију контролне табле, лакшу за читање у diff-овима."
+        }
+      }
+    }
+  },
+  "selector": {
+    "export_format": {
+      "options": {
+        "json": "JSON (сирова копија)",
+        "yaml": "YAML (само конфигурација)",
+        "both": "JSON и YAML"
+      }
+    },
+    "commit_language": {
+      "options": {
+        "en": "Енглески",
+        "fr": "Француски",
+        "de": "Немачки",
+        "es": "Шпански"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Статус",
+        "state": {
+          "clean": "Ажурирано",
+          "dirty": "Измене на чекању",
+          "ahead": "Push на чекању",
+          "error": "Грешка"
+        },
+        "state_attributes": {
+          "branch": {
+            "name": "Грана"
+          },
+          "upstream": {
+            "name": "Праћена грана"
+          },
+          "remote_url": {
+            "name": "URL удаљеног репозиторијума"
+          },
+          "ahead": {
+            "name": "Commit-ови испред"
+          },
+          "behind": {
+            "name": "Commit-ови иза"
+          },
+          "changed_count": {
+            "name": "Измењене датотеке"
+          },
+          "changed_files": {
+            "name": "Листа измењених датотека"
+          },
+          "last_error": {
+            "name": "Последња грешка"
+          },
+          "ai_task": {
+            "name": "AI task"
+          }
+        }
+      },
+      "changed_files": {
+        "name": "Измењене датотеке"
+      },
+      "last_commit": {
+        "name": "Последњи commit",
+        "state_attributes": {
+          "message": {
+            "name": "Порука"
+          },
+          "sha": {
+            "name": "Commit"
+          },
+          "short_sha": {
+            "name": "Кратки commit"
+          }
+        }
+      },
+      "last_push": {
+        "name": "Последњи push",
+        "state_attributes": {
+          "message": {
+            "name": "Порука"
+          }
+        }
+      },
+      "last_export": {
+        "name": "Последњи извоз контролних табли",
+        "state_attributes": {
+          "files": {
+            "name": "Извезене датотеке"
+          }
+        }
+      },
+      "branch": {
+        "name": "Грана",
+        "state_attributes": {
+          "remote_url": {
+            "name": "URL удаљеног репозиторијума"
+          },
+          "upstream": {
+            "name": "Праћена грана"
+          }
+        }
+      }
+    },
+    "button": {
+      "commit_push": {
+        "name": "Commit и push"
+      },
+      "export_dashboards": {
+        "name": "Извези контролне табле"
+      }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entry": {
+      "message": "Ниједан Git Sync репозиторијум није учитан."
+    },
+    "no_ai_task": {
+      "message": "Ниједан AI task ентитет није подешен у Git Sync опцијама."
+    },
+    "ai_task_failed": {
+      "message": "AI task није вратио commit поруку."
+    }
+  },
+  "services": {
+    "commit_push": {
+      "name": "Commit и push",
+      "description": "Додаје све измене у stage, ради commit са поруком коју пише AI (или са задатом) и push на удаљени репозиторијум.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Репозиторијум",
+          "description": "Git Sync унос који се користи. Сви репозиторијуми када је празно."
+        },
+        "message": {
+          "name": "Порука",
+          "description": "Commit порука. Када је празно, пише је AI task."
+        }
+      }
+    },
+    "export_dashboards": {
+      "name": "Извези контролне табле",
+      "description": "Копира Lovelace контролне табле из .storage у фасциклу за извоз.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Репозиторијум",
+          "description": "Git Sync унос који се користи. Сви репозиторијуми када је празно."
+        }
+      }
+    },
+    "generate_ssh_key": {
+      "name": "Генериши SSH кључ",
+      "description": "Прави пар SSH кључева ако не постоји и враћа јавни кључ који се додаје као deploy key.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Репозиторијум",
+          "description": "Git Sync унос који се користи. Први репозиторијум када је празно."
+        }
+      }
+    },
+    "generate_message": {
+      "name": "Генериши commit поруку",
+      "description": "Пише commit поруку за тренутне измене помоћу AI task-а, без commit-а. Враћа null када ништа није измењено.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Репозиторијум",
+          "description": "Git Sync унос који се користи. Први репозиторијум када је празно."
+        }
+      }
+    }
+  }
+}

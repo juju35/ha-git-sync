@@ -154,17 +154,85 @@ function render(config, hass) {
 
 const html = (card) => card.shadowRoot.innerHTML;
 
-test('every language has the English keys', () => {
+test('every language has the English keys and placeholders', () => {
   const keys = Object.keys(GS_I18N.en).sort();
+  const placeholders = (s) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+  assert.deepEqual(Object.keys(GS_I18N).sort(), ['de', 'en', 'es', 'fr', 'sr', 'sr-Latn']);
   for (const [lang, strings] of Object.entries(GS_I18N)) {
     assert.deepEqual(Object.keys(strings).sort(), keys, lang);
+    for (const key of keys) {
+      assert.equal(typeof strings[key], typeof GS_I18N.en[key], `${lang}.${key}`);
+      assert.deepEqual(placeholders(strings[key]), placeholders(GS_I18N.en[key]), `${lang}.${key}: placeholders`);
+    }
   }
+});
+
+test('Serbian: the Cyrillic and Latin cards say the same thing, letter for letter', () => {
+  const cyr = 'абвгдђежзијклљмнњопрстћуфхцчџш';
+  const lat = ['a', 'b', 'v', 'g', 'd', 'đ', 'e', 'ž', 'z', 'i', 'j', 'k', 'l', 'lj', 'm', 'n', 'nj', 'o', 'p', 'r', 's', 't', 'ć', 'u', 'f', 'h', 'c', 'č', 'dž', 'š'];
+  const map = new Map();
+  [...cyr].forEach((c, i) => {
+    map.set(c, lat[i]);
+    map.set(c.toUpperCase(), lat[i][0].toUpperCase() + lat[i].slice(1));
+  });
+  // Latin words left in Cyrillic are names and Git terms of the English card (Git Sync, commit, push, Enter…).
+  const english = Object.values(GS_I18N.en).join(' ').toLowerCase();
+  for (const [key, text] of Object.entries(GS_I18N.sr)) {
+    assert.equal([...text].map((c) => map.get(c) ?? c).join(''), GS_I18N['sr-Latn'][key], key);
+    assert.doesNotMatch(GS_I18N['sr-Latn'][key], /[\u0400-\u04ff]/, key);
+    for (const word of text.match(/[A-Za-z]+/g) || []) assert.ok(english.includes(word.toLowerCase()), `${key}: ${word}`);
+  }
+});
+
+test('Serbian: a file count reads right for any number', () => {
+  // The noun changes form after 2–4 and after 5+: the count goes after a colon, not before it.
+  assert.equal(GS_I18N.sr.files_many, 'Датотека: {n}');
+  assert.equal(GS_I18N['sr-Latn'].files_many, 'Datoteka: {n}');
+  for (const key of ['confirm_text_many', 'exported_many']) assert.match(GS_I18N.sr[key], /: \{n\}\.?$/, key);
 });
 
 test('language follows Home Assistant, then the config, with English as fallback', () => {
   assert.equal(gsLang({ language: 'fr-FR' }, {}), 'fr');
   assert.equal(gsLang({ language: 'fr' }, { language: 'de' }), 'de');
   assert.equal(gsLang({ language: 'ja' }, {}), 'en');
+});
+
+test('language: exact code, then the part before the dash, then English', () => {
+  assert.equal(gsLang({ language: 'fr-FR' }, {}), 'fr');
+  assert.equal(gsLang({ language: 'sr-Latn' }, {}), 'sr-Latn');
+  assert.equal(gsLang({ locale: { language: 'sr-Latn' }, language: 'sr' }, {}), 'sr-Latn');
+  assert.equal(gsLang({ language: 'sr' }, {}), 'sr');
+  assert.equal(gsLang({ language: 'sr-Cyrl' }, {}), 'sr');
+  assert.equal(gsLang({ language: 'pt-BR' }, {}), 'en');
+  assert.equal(gsLang({ language: 'en' }, { language: 'sr-Latn' }), 'sr-Latn');
+});
+
+test('Serbian Latin: the card, its dates and relative times are in Latin script', () => {
+  const card = render({}, makeHass({ language: 'sr-Latn', status: 'dirty', files: ['a.yaml', 'b.yaml'] }));
+  const out = html(card);
+  assert.match(out, /Izmene/);
+  assert.match(out, /Datoteka: 2/);
+  assert.match(out, /Poslednji push/);
+  assert.match(card._ago(minutesAgo(42)), /^pre 42 minut/);
+  assert.doesNotMatch(card._ago(minutesAgo(42)) + card._absolute(minutesAgo(42)), /[\u0400-\u04ff]/);
+  const cyr = render({}, makeHass({ language: 'sr', status: 'dirty', files: ['a.yaml'] }));
+  assert.match(html(cyr), /1 датотека/);
+  assert.match(cyr._ago(minutesAgo(42)), /^пре 42 минут/);
+});
+
+test('editor offers Serbian in both scripts', () => {
+  const editor = new GitSyncCardEditor();
+  editor.appendChild = () => {};
+  editor.setConfig({});
+  editor.hass = makeHass();
+  const options = editor._form.schema.find((s) => s.name === 'language').selector.select.options;
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(options.slice(-2).map((o) => [o.value, o.label]))),
+    [
+      ['sr', 'Српски'],
+      ['sr-Latn', 'Srpski (latinica)'],
+    ],
+  );
 });
 
 test('entities found by translation key, or by entity ID when it is missing', () => {
