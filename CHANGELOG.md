@@ -3,7 +3,7 @@
 ## 0.1.5 - 2026-11-01
 
 ### Fixes
-- Dashboard export: the cleanup only removes the files an earlier export wrote into the export folder. Before, it deleted every `lovelace*` file of the folder it had not just written, including your own YAML-mode dashboards such as `lovelace-energy.yaml`, and the automatic commit pushed the deletion. Nothing is removed from a folder the export never wrote to, nor on the first export after this update.
+- Dashboard export: the cleanup only removes the files an earlier export wrote into the export folder. Before, it deleted every `lovelace*` file of the folder it had not just written, including your own YAML-mode dashboards such as `lovelace-energy.yaml`, and the automatic commit pushed the deletion. Nothing is removed from a folder the export never wrote to, nor on the first export after this update. A file the export wrote and you edited since (for example reused as a YAML-mode dashboard) is no longer deleted with its dashboard, and a file of yours that has the name of an export (`lovelace_resources.yaml`…) is no longer overwritten: it is skipped with a warning in the log.
 - A push error no longer stays on the card once the commits have been pushed another way (for example `git push` in a terminal) and nothing is left to commit or push.
 - File names with accents or other non-ASCII characters are listed as they are in the changed files (`été.yaml`, not `\303\251t\303\251.yaml`).
 - Setup and repository settings: when Git does not know who signs the commits in the Home Assistant container, the form asks for the author email instead of creating an entry whose every commit fails with "Author identity unknown".
@@ -11,6 +11,9 @@
 - Card: choosing another Git Sync sensor in the visual editor (last commit, changed files…) no longer shows "Unavailable" with Commit & push disabled.
 - Card: on a narrow card the title stays readable and truncates, the status pill shrinks to its coloured dot (its text stays in the tooltip), and long button labels (Polish, Serbian) wrap instead of overflowing the card or the confirmation popup.
 - Card: the status pill and the error message are easier to read, in light and dark themes.
+- Card: at 6 columns on a phone, the title keeps four letters, and a long value (last export in Polish or Serbian) goes under its label and wraps instead of being cut by the card. On wider cards the status pill shows its whole label instead of truncating it ("Re…").
+- Card: inside a container sized to its content (layout-card, button-card, a grid column sized `auto`), the card no longer shrinks to a few pixels.
+- Card: giving the keyboard focus back after an update no longer scrolls the page.
 
 ## 0.1.4 - 2026-11-01
 

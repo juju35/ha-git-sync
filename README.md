@@ -110,7 +110,7 @@ Copy `custom_components/git_sync/` to `/config/custom_components/git_sync/`, the
 | Notification image URL | none | Absolute HTTPS URL (required by iOS) |
 | Daily dashboard export | on | Export the dashboards every day |
 | Export time | 08:00 | Time of the daily export |
-| Export folder | `/config/dashboards_export` | Where the dashboards are written. The files an earlier export wrote there and that it no longer produces (deleted dashboard, format changed) are removed; any other file of the folder, such as your own `lovelace-*.yaml`, is left alone |
+| Export folder | `/config/dashboards_export` | Where the dashboards are written. The files an earlier export wrote there and that it no longer produces (deleted dashboard, format changed) are removed, unless you edited them since; any other file of the folder, such as your own `lovelace-*.yaml`, is never removed nor overwritten, even when it has the name of an export (a warning is logged and that file is skipped) |
 | Export format | JSON | JSON (raw copy of `.storage`), YAML (dashboard configuration only, easier to read in diffs) or both |
 | Export before each commit | off | Also export right before each commit |
 
