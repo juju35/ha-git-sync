@@ -185,13 +185,18 @@ class GitRepo:
 
     async def status(self) -> GitStatus:
         """Return branch, upstream divergence and changed files."""
-        _, out = await self.run("status", "--porcelain=v1", "--branch", "--untracked-files=all")
+        # -z: paths as they are, never quoted or escaped (non-ASCII names, spaces, quotes).
+        _, out = await self.run("status", "--porcelain=v1", "-z", "--branch", "--untracked-files=all")
         status = GitStatus()
-        for line in out.splitlines():
-            if line.startswith("## "):
-                _parse_branch_line(line[3:], status)
-            elif line.strip():
-                status.files.append(line[3:].strip().strip('"'))
+        entries = iter(out.split("\0"))
+        for entry in entries:
+            if entry.startswith("## "):
+                _parse_branch_line(entry[3:], status)
+            elif len(entry) > 3:
+                status.files.append(entry[3:])
+                if entry[0] in "RC":
+                    # A rename or copy is followed by its original path.
+                    next(entries, None)
         return status
 
     async def last_commit(self) -> GitCommit | None:

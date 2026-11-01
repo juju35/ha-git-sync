@@ -228,3 +228,20 @@ def test_export_deletes_only_its_own_stale_files(tmp_path: Path) -> None:
     export_dashboards(str(storage), str(out), "yaml", [*first.managed, "../lovelace.secret", "README.md"])
     assert sorted(p.name for p in out.iterdir()) == ["lovelace-energy.yaml", "lovelace.yaml"]
     assert (tmp_path / "lovelace.secret").exists()
+
+
+async def test_status_lists_non_ascii_names_as_is(repo: Path) -> None:
+    """`git status` quotes non-ASCII paths by default ("\\303\\251t\\303\\251.yaml"): the names stay readable."""
+    (repo / "été.yaml").write_text("{}\n", encoding="utf-8")
+    (repo / "with space.yaml").write_text("{}\n", encoding="utf-8")
+    status = await _repo(repo).status()
+    assert sorted(status.files) == ["with space.yaml", "été.yaml"]
+
+
+async def test_status_with_a_staged_rename(repo: Path) -> None:
+    """A rename left staged (failed commit) counts once, under its new name."""
+    git(repo, "mv", "configuration.yaml", "configuration é.yaml")
+    status = await _repo(repo).status()
+    assert status.files == ["configuration é.yaml"]
+    assert status.branch == "main"
+    assert status.upstream == "origin/main"
