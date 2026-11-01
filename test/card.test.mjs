@@ -507,3 +507,49 @@ test('reduced motion: no chevron or button transition', () => {
   assert.match(css, /\.chevron/);
   assert.match(css, /transition: none/);
 });
+
+test('editor picks another Git Sync sensor: the card still uses the status sensor of its device', () => {
+  const out = html(render({ entity: LAST_COMMIT }, makeHass({ status: 'dirty', files: ['a.yaml'] })));
+  assert.match(out, /st-dirty/);
+  assert.match(out, /main → me\/homeassistant-config/);
+  assert.doesNotMatch(out, /id="commit"\s+disabled/);
+  // An entity of no Git Sync device stays as chosen (it shows as not available, nothing else is guessed).
+  const other = html(render({ entity: 'sensor.other' }, makeHass()));
+  assert.doesNotMatch(other, /main → me\/homeassistant-config/);
+});
+
+// The CSS rule of a selector in the card's stylesheet (first match).
+const cssRule = (css, selector) => {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return css.match(new RegExp(`(?:^|[}\\s])${escaped}\\s*\\{([^}]*)\\}`))?.[1] || '';
+};
+
+test('narrow card: the title truncates, the pill shrinks to its dot, buttons wrap instead of overflowing', () => {
+  const out = html(render({}, makeHass({ status: 'ahead' })));
+  const css = out.match(/<style>([\s\S]*?)<\/style>/)[1];
+  assert.match(cssRule(css, '.titles'), /flex: 1 1 auto;[\s\S]*min-width: 0/);
+  const title = cssRule(css, '.title');
+  assert.match(title, /min-width: \dch/);
+  assert.match(title, /white-space: nowrap/);
+  assert.match(title, /text-overflow: ellipsis/);
+  const pill = cssRule(css, '.pill');
+  assert.match(pill, /flex: 0 1 auto/);
+  assert.match(pill, /min-width: 0/);
+  assert.match(pill, /max-width: 50%/);
+  assert.match(cssRule(css, '.pill-text'), /text-overflow: ellipsis/);
+  assert.match(cssRule(css, 'ha-card'), /container-type: inline-size/);
+  assert.match(css, /@container \(max-width: \d+px\) \{[\s\S]*?\.pill-text \{ display: none; \}/);
+  assert.match(cssRule(css, '.badge'), /flex: none/);
+  const button = cssRule(css, 'button.action');
+  assert.match(button, /min-width: 0/);
+  assert.match(button, /white-space: normal/);
+  // The pill text stays available when only the dot is shown.
+  assert.match(out, /class="pill" title="Push pending" aria-label="Push pending"/);
+});
+
+test('pill and error text: state colour mixed with the text colour (readable in light and dark themes)', () => {
+  const out = html(render({}, makeHass({ status: 'error', error: 'git push failed' })));
+  const css = out.match(/<style>([\s\S]*?)<\/style>/)[1];
+  assert.match(cssRule(css, '.pill'), /color: color-mix\(in srgb, var\(--s\) 40%, var\(--primary-text-color\)\)/);
+  assert.match(cssRule(css, '.err'), /color: color-mix\(in srgb, var\(--gs-alert\) 40%, var\(--primary-text-color\)\)/);
+});
