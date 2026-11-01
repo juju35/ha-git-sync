@@ -157,11 +157,12 @@ const html = (card) => card.shadowRoot.innerHTML;
 test('every language has the English keys and placeholders', () => {
   const keys = Object.keys(GS_I18N.en).sort();
   const placeholders = (s) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
-  assert.deepEqual(Object.keys(GS_I18N).sort(), ['de', 'en', 'es', 'fr', 'sr', 'sr-Latn']);
+  assert.deepEqual(Object.keys(GS_I18N).sort(), ['de', 'en', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'sr', 'sr-Latn']);
   for (const [lang, strings] of Object.entries(GS_I18N)) {
     assert.deepEqual(Object.keys(strings).sort(), keys, lang);
     for (const key of keys) {
       assert.equal(typeof strings[key], typeof GS_I18N.en[key], `${lang}.${key}`);
+      assert.ok(strings[key].trim(), `${lang}.${key}: empty`);
       assert.deepEqual(placeholders(strings[key]), placeholders(GS_I18N.en[key]), `${lang}.${key}: placeholders`);
     }
   }
@@ -203,8 +204,34 @@ test('language: exact code, then the part before the dash, then English', () => 
   assert.equal(gsLang({ locale: { language: 'sr-Latn' }, language: 'sr' }, {}), 'sr-Latn');
   assert.equal(gsLang({ language: 'sr' }, {}), 'sr');
   assert.equal(gsLang({ language: 'sr-Cyrl' }, {}), 'sr');
-  assert.equal(gsLang({ language: 'pt-BR' }, {}), 'en');
+  assert.equal(gsLang({ language: 'zh-Hant' }, {}), 'en');
   assert.equal(gsLang({ language: 'en' }, { language: 'sr-Latn' }), 'sr-Latn');
+});
+
+test('language: Italian, Dutch, Portuguese and Polish, regional variants included', () => {
+  assert.equal(gsLang({ language: 'it-IT' }, {}), 'it');
+  assert.equal(gsLang({ language: 'nl-BE' }, {}), 'nl');
+  assert.equal(gsLang({ language: 'pt' }, {}), 'pt');
+  // Brazilian Portuguese falls back to the European Portuguese strings, not to English.
+  assert.equal(gsLang({ language: 'pt-BR' }, {}), 'pt');
+  assert.equal(gsLang({ language: 'pl-PL' }, {}), 'pl');
+  assert.equal(gsLang({ language: 'sr-Latn' }, {}), 'sr-Latn');
+  assert.equal(gsLang({ language: 'ja' }, {}), 'en');
+});
+
+test('Polish: a file count reads right for any number', () => {
+  // Like Serbian, the noun changes form after 2–4 and after 5+: the count goes after a colon.
+  assert.equal(GS_I18N.pl.files_many, 'Pliki: {n}');
+  for (const key of ['confirm_text_many', 'exported_many']) assert.match(GS_I18N.pl[key], /: \{n\}\.?$/, key);
+  const card = render({}, makeHass({ language: 'pl', status: 'dirty', files: ['a.yaml', 'b.yaml', 'c.yaml', 'd.yaml', 'e.yaml'] }));
+  assert.match(html(card), /Pliki: 5/);
+  assert.match(html(card), /Ostatni push/);
+});
+
+test('European Portuguese wording', () => {
+  const card = render({}, makeHass({ language: 'pt-PT', status: 'dirty', files: ['a.yaml', 'b.yaml'] }));
+  assert.match(html(card), /2 ficheiros/);
+  assert.doesNotMatch(Object.values(GS_I18N.pt).join(' '), /arquivo|tela|usuário|configurações/i);
 });
 
 test('Serbian Latin: the card, its dates and relative times are in Latin script', () => {
@@ -218,6 +245,20 @@ test('Serbian Latin: the card, its dates and relative times are in Latin script'
   const cyr = render({}, makeHass({ language: 'sr', status: 'dirty', files: ['a.yaml'] }));
   assert.match(html(cyr), /1 датотека/);
   assert.match(cyr._ago(minutesAgo(42)), /^пре 42 минут/);
+});
+
+test('editor offers every language of the card, Italian, Dutch, Portuguese and Polish included', () => {
+  const editor = new GitSyncCardEditor();
+  editor.appendChild = () => {};
+  editor.setConfig({});
+  editor.hass = makeHass();
+  const options = editor._form.schema.find((s) => s.name === 'language').selector.select.options;
+  assert.deepEqual(JSON.parse(JSON.stringify(options.map((o) => o.value).sort())), Object.keys(GS_I18N).sort());
+  const labels = Object.fromEntries(options.map((o) => [o.value, o.label]));
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(['it', 'nl', 'pt', 'pl'].map((l) => labels[l]))),
+    ['Italiano', 'Nederlands', 'Português', 'Polski'],
+  );
 });
 
 test('editor offers Serbian in both scripts', () => {

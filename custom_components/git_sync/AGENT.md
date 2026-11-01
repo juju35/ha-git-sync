@@ -17,7 +17,7 @@ custom_components/git_sync/
 ├── button.py        # commit_push, export_dashboards
 ├── entity.py        # Service device per entry
 ├── frontend/git-sync-card.js   # custom:git-sync-card, finds its entities by platform + translation_key, calls the actions with returnResponse
-├── const.py / icons.json / services.yaml / translations/{en,fr,de,es}.json / brand/
+├── const.py / icons.json / services.yaml / translations/{en,fr,de,es,it,nl,pt,pl,sr,sr-Latn}.json / brand/
 ```
 
 ## Rules

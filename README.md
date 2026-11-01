@@ -30,7 +30,7 @@ It replaces the usual stack of `shell_command`, `command_line` sensor, script an
 - A failed push stays visible on the status until a later push succeeds, and is retried at the next commit
 - `git_sync_committed` and `git_sync_exported` **events**
 - **Lovelace card** bundled with the integration: status, last commit, changed files, last push and export, Commit & push and Export dashboards
-- English, French, German, Spanish and Serbian (Cyrillic and Latin)
+- English, French, German, Spanish, Italian, Dutch, European Portuguese, Polish and Serbian (Cyrillic and Latin)
 
 ## Prerequisites
 
@@ -211,7 +211,7 @@ Every option is in the visual editor:
 | `title` | Git Sync | Card title |
 | `show_files` | `true` | Collapsible list of the changed files |
 | `show_export` | `true` | Last export and the **Export dashboards** button |
-| `language` | Home Assistant's | `en`, `fr`, `de`, `es`, `sr` (Serbian, Cyrillic) or `sr-Latn` (Serbian, Latin) |
+| `language` | Home Assistant's | `en`, `fr`, `de`, `es`, `it`, `nl`, `pt` (European Portuguese), `pl`, `sr` (Serbian, Cyrillic) or `sr-Latn` (Serbian, Latin) |
 
 ## Migrating from shell commands
 
@@ -251,7 +251,7 @@ python scripts/screenshots.py      # README screenshots (Playwright)
 
 ## Translations
 
-The integration and its card follow the language of Home Assistant (the card picks Serbian Latin when Home Assistant is set to `sr-Latn`). Currently supported:
+The integration and its card follow the language of Home Assistant (the card picks Serbian Latin when Home Assistant is set to `sr-Latn`, and European Portuguese for `pt-BR`). Currently supported:
 
 | Language | Code |
 |---|---|
@@ -259,6 +259,10 @@ The integration and its card follow the language of Home Assistant (the card pic
 | Français | `fr` |
 | Deutsch | `de` |
 | Español | `es` |
+| Italiano | `it` |
+| Nederlands | `nl` |
+| Português (European Portuguese) | `pt` |
+| Polski | `pl` |
 | Српски (Serbian, Cyrillic) | `sr` |
 | Srpski (Serbian, Latin) | `sr-Latn` |
 
