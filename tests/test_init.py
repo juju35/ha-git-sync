@@ -404,9 +404,81 @@ async def test_export_cleanup_spares_the_users_files(hass: HomeAssistant, repo: 
     (other / "lovelace.old").write_text("mine\n", encoding="utf-8")
     hass.config_entries.async_update_entry(entry, options={**entry.options, CONF_EXPORT_DIR: str(other)})
     await hass.async_block_till_done()
-    entry.runtime_data._export_manifest["files"].append("lovelace.old")
     await entry.runtime_data.async_export_dashboards()
     assert (other / "lovelace.old").read_text(encoding="utf-8") == "mine\n"
+    await hass.async_block_till_done()
+
+
+def _dashboards(tmp_path: Path, hass: HomeAssistant, *names: str) -> Path:
+    import json
+
+    hass.config.config_dir = str(tmp_path / "config")
+    storage = tmp_path / "config" / ".storage"
+    storage.mkdir(parents=True)
+    for name in names:
+        (storage / name).write_text(json.dumps({"data": {"config": {"views": [{"title": name}]}}}), encoding="utf-8")
+    return storage
+
+
+async def test_export_spares_an_exported_file_the_user_reused(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    """An exported YAML edited by the user (now a YAML-mode dashboard) is not deleted with its dashboard."""
+    storage = _dashboards(tmp_path, hass, "lovelace", "lovelace.dashboard_x")
+    export_dir = repo / "dashboards"
+    entry = _entry(repo, **{CONF_EXPORT_DIR: str(export_dir), "export_format": "yaml"})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await entry.runtime_data.async_export_dashboards()
+
+    (export_dir / "lovelace.dashboard_x.yaml").write_text("views: [{title: Mine}]\n", encoding="utf-8")
+    (storage / "lovelace.dashboard_x").unlink()
+    # The hashes of what the export wrote survive a restart.
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert await entry.runtime_data.async_export_dashboards() == ["lovelace.yaml"]
+    assert (export_dir / "lovelace.dashboard_x.yaml").read_text(encoding="utf-8") == "views: [{title: Mine}]\n"
+    await hass.async_block_till_done()
+
+
+async def test_first_export_does_not_overwrite_the_users_file(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    """Never exported before: a file of the user with an export name stays as it is."""
+    _dashboards(tmp_path, hass, "lovelace", "lovelace_resources")
+    export_dir = repo / "dashboards"
+    export_dir.mkdir()
+    (export_dir / "lovelace_resources.yaml").write_text("mine: true\n", encoding="utf-8")
+    entry = _entry(repo, **{CONF_EXPORT_DIR: str(export_dir), "export_format": "yaml"})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert await entry.runtime_data.async_export_dashboards() == ["lovelace.yaml"]
+    assert (export_dir / "lovelace_resources.yaml").read_text(encoding="utf-8") == "mine: true\n"
+    await hass.async_block_till_done()
+
+
+async def test_export_after_an_update_refreshes_the_old_files(
+    hass: HomeAssistant, hass_storage: dict, repo: Path, tmp_path: Path
+) -> None:
+    """Update from 0.1.4 (an export done, no manifest): its exported files are refreshed, none deleted."""
+    _dashboards(tmp_path, hass, "lovelace")
+    export_dir = repo / "dashboards"
+    export_dir.mkdir()
+    (export_dir / "lovelace.yaml").write_text("views: []\n", encoding="utf-8")
+    (export_dir / "lovelace.gone.yaml").write_text("views: []\n", encoding="utf-8")
+    entry = _entry(repo, **{CONF_EXPORT_DIR: str(export_dir), "export_format": "yaml"})
+    hass_storage[f"{DOMAIN}.{entry.entry_id}"] = {
+        "version": 1,
+        "key": f"{DOMAIN}.{entry.entry_id}",
+        "data": {
+            "last_export": "2026-10-30T10:00:00+00:00",
+            "last_export_files": ["lovelace.yaml", "lovelace.gone.yaml", "lovelace-energy.yaml"],
+        },
+    }
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert await entry.runtime_data.async_export_dashboards() == ["lovelace.yaml"]
+    assert "title: lovelace" in (export_dir / "lovelace.yaml").read_text(encoding="utf-8")
+    assert (export_dir / "lovelace.gone.yaml").exists()
     await hass.async_block_till_done()
 
 

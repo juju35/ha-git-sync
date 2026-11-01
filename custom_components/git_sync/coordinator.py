@@ -8,6 +8,7 @@ import os
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from functools import partial
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -122,8 +123,9 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         self._store = self._make_store(hass, entry)
         self._lock = asyncio.Lock()
         self._state = GitSyncData(ai_task=self.settings.get(CONF_AI_TASK_ENTITY) or None)
-        # Files the integration itself wrote into the export folder: the only ones a later export may delete.
-        self._export_manifest: dict[str, Any] = {}
+        # Per export folder, the files the integration itself wrote there and the hash of what it wrote: the only
+        # files a later export may overwrite, or delete while unchanged.
+        self._export_manifest: dict[str, dict[str, str]] = {}
 
     @staticmethod
     def _make_store(hass: HomeAssistant, entry: ConfigEntry) -> Store[dict[str, Any]]:
@@ -146,8 +148,12 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
             self._state.last_export = dt_util.parse_datetime(value)
         self._state.last_export_files = stored.get("last_export_files", [])
         manifest = stored.get("export_manifest")
-        if isinstance(manifest, dict) and isinstance(manifest.get("files"), list):
-            self._export_manifest = manifest
+        if isinstance(manifest, dict):
+            self._export_manifest = {
+                folder: {name: digest for name, digest in files.items() if isinstance(digest, str)}
+                for folder, files in manifest.items()
+                if isinstance(folder, str) and isinstance(files, dict)
+            }
 
     async def _async_save(self) -> None:
         state = self._state
@@ -331,23 +337,27 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
 
     async def _export(self) -> list[str]:
         export_dir = os.path.normpath(self.settings.get(CONF_EXPORT_DIR) or DEFAULT_EXPORT_DIR)
-        # Files written by an earlier export into this same folder; nothing is deleted from another folder,
-        # nor on the first export after an upgrade (no manifest yet).
-        manifest = self._export_manifest
-        previous = manifest.get("files", []) if manifest.get("dir") == export_dir else []
+        # Files written by an earlier export into this same folder. Nothing is deleted from a folder the export
+        # never wrote to, nor on the first export after an update from a version without manifest; that first
+        # export (an export was done, no manifest) refreshes the old version's files instead of skipping them.
+        previous = self._export_manifest.get(export_dir, {})
+        adopt = not self._export_manifest and self._state.last_export is not None
         try:
             result = await self.hass.async_add_executor_job(
-                export_dashboards,
-                self.hass.config.path(".storage"),
-                export_dir,
-                self.settings.get(CONF_EXPORT_FORMAT) or DEFAULT_EXPORT_FORMAT,
-                previous,
+                partial(
+                    export_dashboards,
+                    self.hass.config.path(".storage"),
+                    export_dir,
+                    self.settings.get(CONF_EXPORT_FORMAT) or DEFAULT_EXPORT_FORMAT,
+                    previous,
+                    adopt=adopt,
+                )
             )
         except OSError as err:
             raise HomeAssistantError(f"Dashboard export failed: {err}") from err
 
         files = result.files
-        self._export_manifest = {"dir": export_dir, "files": result.managed}
+        self._export_manifest[export_dir] = result.managed
         self._state.last_export = dt_util.utcnow()
         self._state.last_export_files = files
         await self._async_save()

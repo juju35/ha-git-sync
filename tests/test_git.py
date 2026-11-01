@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -76,7 +77,7 @@ def test_export_dashboards(tmp_path: Path) -> None:
 
     result = export_dashboards(str(storage), str(out), "both")
     assert result.files == ["lovelace", "lovelace.yaml"]
-    assert result.managed == ["lovelace", "lovelace.yaml"]
+    assert list(result.managed) == ["lovelace", "lovelace.yaml"]
     assert "title: Home" in (out / "lovelace.yaml").read_text(encoding="utf-8")
     assert not (out / "core.config").exists()
 
@@ -182,7 +183,7 @@ def test_export_keeps_the_yaml_of_an_unreadable_dashboard(tmp_path: Path) -> Non
     assert second.files == []
     assert (out / "lovelace.yaml").exists()
     # Still the integration's file: removed once the dashboard is gone for good.
-    assert second.managed == ["lovelace.yaml"]
+    assert list(second.managed) == ["lovelace.yaml"]
     (storage / "lovelace").unlink()
     export_dashboards(str(storage), str(out), "yaml", second.managed)
     assert not (out / "lovelace.yaml").exists()
@@ -223,10 +224,13 @@ def test_export_deletes_only_its_own_stale_files(tmp_path: Path) -> None:
     (tmp_path / "lovelace.secret").write_text("x\n", encoding="utf-8")
 
     first = export_dashboards(str(storage), str(out), "json")
-    assert first.managed == ["lovelace"]
+    assert list(first.managed) == ["lovelace"]
     # A tampered manifest cannot reach outside the folder nor a file that is not a dashboard export.
-    export_dashboards(str(storage), str(out), "yaml", [*first.managed, "../lovelace.secret", "README.md"])
-    assert sorted(p.name for p in out.iterdir()) == ["lovelace-energy.yaml", "lovelace.yaml"]
+    (out / "README.md").write_text("x\n", encoding="utf-8")
+    digest = hashlib.sha256(b"x\n").hexdigest()  # matching hashes: only the name checks stop the deletion
+    tampered = {**first.managed, "../lovelace.secret": digest, "README.md": digest}
+    export_dashboards(str(storage), str(out), "yaml", tampered)
+    assert sorted(p.name for p in out.iterdir()) == ["README.md", "lovelace-energy.yaml", "lovelace.yaml"]
     assert (tmp_path / "lovelace.secret").exists()
 
 
@@ -245,3 +249,57 @@ async def test_status_with_a_staged_rename(repo: Path) -> None:
     assert status.files == ["configuration é.yaml"]
     assert status.branch == "main"
     assert status.upstream == "origin/main"
+
+
+def test_export_spares_an_exported_file_the_user_changed(tmp_path: Path) -> None:
+    """An exported YAML reused and edited by the user (YAML-mode dashboard) survives its dashboard's deletion."""
+    storage = _storage(tmp_path, "lovelace", "lovelace.dashboard_x")
+    out = tmp_path / "export"
+    first = export_dashboards(str(storage), str(out), "yaml")
+    (out / "lovelace.dashboard_x.yaml").write_text("views: [{title: Mine}]\n", encoding="utf-8")
+    (storage / "lovelace.dashboard_x").unlink()
+
+    second = export_dashboards(str(storage), str(out), "yaml", first.managed)
+    assert (out / "lovelace.dashboard_x.yaml").read_text(encoding="utf-8") == "views: [{title: Mine}]\n"
+    # No longer the integration's file: never deleted later either.
+    assert set(second.managed) == {"lovelace.yaml"}
+
+
+def test_export_deletes_its_unchanged_stale_file(tmp_path: Path) -> None:
+    """The hash check still lets an untouched file of a deleted dashboard go."""
+    storage = _storage(tmp_path, "lovelace", "lovelace.old")
+    out = tmp_path / "export"
+    first = export_dashboards(str(storage), str(out), "both")
+    (storage / "lovelace.old").unlink()
+    export_dashboards(str(storage), str(out), "both", first.managed)
+    assert sorted(p.name for p in out.iterdir()) == ["lovelace", "lovelace.yaml"]
+
+
+def test_export_does_not_overwrite_a_users_file(tmp_path: Path) -> None:
+    """A file of the user named like an export (lovelace_resources.yaml) is not overwritten."""
+    storage = _storage(tmp_path, "lovelace", "lovelace_resources")
+    out = tmp_path / "export"
+    out.mkdir()
+    (out / "lovelace_resources.yaml").write_text("mine: true\n", encoding="utf-8")
+
+    result = export_dashboards(str(storage), str(out), "yaml")
+    assert (out / "lovelace_resources.yaml").read_text(encoding="utf-8") == "mine: true\n"
+    assert result.files == ["lovelace.yaml"]
+    assert result.skipped == ["lovelace_resources.yaml"]
+    assert set(result.managed) == {"lovelace.yaml"}
+    # Once the export owns a file, it keeps it up to date, even if the user edited it.
+    (out / "lovelace.yaml").write_text("edited\n", encoding="utf-8")
+    again = export_dashboards(str(storage), str(out), "yaml", result.managed)
+    assert "title: lovelace" in (out / "lovelace.yaml").read_text(encoding="utf-8")
+    assert again.skipped == ["lovelace_resources.yaml"]
+
+
+def test_export_adopts_the_files_of_an_older_version(tmp_path: Path) -> None:
+    """First export after an update from a version without manifest: its own old files are refreshed."""
+    storage = _storage(tmp_path, "lovelace")
+    out = tmp_path / "export"
+    out.mkdir()
+    (out / "lovelace.yaml").write_text("views: []\n", encoding="utf-8")
+    result = export_dashboards(str(storage), str(out), "yaml", adopt=True)
+    assert result.skipped == []
+    assert "title: lovelace" in (out / "lovelace.yaml").read_text(encoding="utf-8")
