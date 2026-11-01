@@ -1,0 +1,250 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Git-repository",
+        "description": "Home Assistant-map, met Git geversioneerd en naar een remote gepusht (GitHub, Gitea…).",
+        "data": {
+          "repo_path": "Pad van de repository",
+          "remote": "Remote",
+          "branch": "Branch",
+          "ssh_key": "Persoonlijke SSH-sleutel",
+          "author_name": "Naam van de auteur",
+          "author_email": "E-mail van de auteur"
+        },
+        "data_description": {
+          "repo_path": "Map met de .git-directory, meestal /config.",
+          "remote": "Git-remote om naar te pushen, meestal origin.",
+          "branch": "Doelbranch op de remote. Leeg laten om de huidige branch te pushen.",
+          "ssh_key": "Persoonlijke sleutel voor de push. Maak hem aan met de actie generate_ssh_key en voeg de publieke sleutel toe als deploy key met schrijftoegang.",
+          "author_name": "Optioneel, vervangt user.name / user.email van de repository.",
+          "author_email": "Optioneel, vervangt user.name / user.email van de repository."
+        }
+      },
+      "reconfigure": {
+        "title": "Instellingen van de repository",
+        "data": {
+          "repo_path": "Pad van de repository",
+          "remote": "Remote",
+          "branch": "Branch",
+          "ssh_key": "Persoonlijke SSH-sleutel",
+          "author_name": "Naam van de auteur",
+          "author_email": "E-mail van de auteur"
+        },
+        "data_description": {
+          "repo_path": "Map met de .git-directory, meestal /config.",
+          "remote": "Git-remote om naar te pushen, meestal origin.",
+          "branch": "Doelbranch op de remote. Leeg laten om de huidige branch te pushen.",
+          "ssh_key": "Persoonlijke sleutel voor de push. Maak hem aan met de actie generate_ssh_key en voeg de publieke sleutel toe als deploy key met schrijftoegang.",
+          "author_name": "Optioneel, vervangt user.name / user.email van de repository.",
+          "author_email": "Optioneel, vervangt user.name / user.email van de repository."
+        }
+      }
+    },
+    "error": {
+      "not_a_repository": "Deze map is geen Git-repository.",
+      "unknown_remote": "Deze remote bestaat niet in de repository."
+    },
+    "abort": {
+      "already_configured": "Deze repository is al geconfigureerd.",
+      "reconfigure_successful": "Repository bijgewerkt.",
+      "unique_id_mismatch": "Het pad van de repository kan niet worden gewijzigd: voeg een nieuwe vermelding toe."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Git Sync-opties",
+        "description": "Commitbericht, planning, meldingen en export van de dashboards.",
+        "data": {
+          "ai_task_entity": "AI-taakentiteit",
+          "commit_language": "Taal van het commitbericht",
+          "commit_interval": "Interval van de automatische commit",
+          "status_interval": "Vernieuwingsinterval van de status",
+          "notify_service": "Meldingsactie",
+          "notify_image": "URL van de meldingsafbeelding",
+          "export_enabled": "Dagelijkse export van de dashboards",
+          "export_time": "Tijdstip van de export",
+          "export_dir": "Exportmap",
+          "export_format": "Exportformaat",
+          "export_before_commit": "Dashboards exporteren vóór elke commit"
+        },
+        "data_description": {
+          "ai_task_entity": "Genereert een Conventional Commits-bericht uit de diff. Zonder deze entiteit wordt een algemeen bericht gebruikt.",
+          "commit_interval": "Commit en push elke N minuten als er wijzigingen zijn. 0 schakelt dit uit.",
+          "notify_service": "Bijvoorbeeld notify.mobile_app_telefoon. Leeg laten om uit te schakelen.",
+          "notify_image": "Absolute HTTPS-URL (vereist door iOS).",
+          "export_format": "JSON kopieert de .storage-bestanden ongewijzigd; YAML bewaart alleen de dashboardconfiguratie, beter leesbaar in diffs."
+        }
+      }
+    }
+  },
+  "selector": {
+    "export_format": {
+      "options": {
+        "json": "JSON (ruwe kopie)",
+        "yaml": "YAML (alleen configuratie)",
+        "both": "JSON en YAML"
+      }
+    },
+    "commit_language": {
+      "options": {
+        "en": "Engels",
+        "fr": "Frans",
+        "de": "Duits",
+        "es": "Spaans"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "clean": "Bijgewerkt",
+          "dirty": "Wijzigingen in afwachting",
+          "ahead": "Push in afwachting",
+          "error": "Fout"
+        },
+        "state_attributes": {
+          "branch": {
+            "name": "Branch"
+          },
+          "upstream": {
+            "name": "Remote branch"
+          },
+          "remote_url": {
+            "name": "URL van de remote"
+          },
+          "ahead": {
+            "name": "Commits voor"
+          },
+          "behind": {
+            "name": "Commits achter"
+          },
+          "changed_count": {
+            "name": "Gewijzigde bestanden"
+          },
+          "changed_files": {
+            "name": "Lijst van gewijzigde bestanden"
+          },
+          "last_error": {
+            "name": "Laatste fout"
+          },
+          "ai_task": {
+            "name": "AI-taak"
+          }
+        }
+      },
+      "changed_files": {
+        "name": "Gewijzigde bestanden"
+      },
+      "last_commit": {
+        "name": "Laatste commit",
+        "state_attributes": {
+          "message": {
+            "name": "Bericht"
+          },
+          "sha": {
+            "name": "Commit"
+          },
+          "short_sha": {
+            "name": "Korte commit"
+          }
+        }
+      },
+      "last_push": {
+        "name": "Laatste push",
+        "state_attributes": {
+          "message": {
+            "name": "Bericht"
+          }
+        }
+      },
+      "last_export": {
+        "name": "Laatste export van de dashboards",
+        "state_attributes": {
+          "files": {
+            "name": "Geëxporteerde bestanden"
+          }
+        }
+      },
+      "branch": {
+        "name": "Branch",
+        "state_attributes": {
+          "remote_url": {
+            "name": "URL van de remote"
+          },
+          "upstream": {
+            "name": "Remote branch"
+          }
+        }
+      }
+    },
+    "button": {
+      "commit_push": {
+        "name": "Commit en push"
+      },
+      "export_dashboards": {
+        "name": "Dashboards exporteren"
+      }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entry": {
+      "message": "Er is geen Git Sync-repository geladen."
+    },
+    "no_ai_task": {
+      "message": "Er is geen AI-taakentiteit ingesteld in de Git Sync-opties."
+    },
+    "ai_task_failed": {
+      "message": "De AI-taak gaf geen commitbericht terug."
+    }
+  },
+  "services": {
+    "commit_push": {
+      "name": "Commit en push",
+      "description": "Zet alle wijzigingen klaar, commit met een door AI gegenereerd (of opgegeven) bericht en pusht naar de remote.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Te gebruiken Git Sync-vermelding. Alle repositories als leeg."
+        },
+        "message": {
+          "name": "Bericht",
+          "description": "Commitbericht. Gegenereerd door de AI-taak als leeg."
+        }
+      }
+    },
+    "export_dashboards": {
+      "name": "Dashboards exporteren",
+      "description": "Kopieert de Lovelace-dashboards van .storage naar de exportmap.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Te gebruiken Git Sync-vermelding. Alle repositories als leeg."
+        }
+      }
+    },
+    "generate_ssh_key": {
+      "name": "SSH-sleutel genereren",
+      "description": "Maakt het SSH-sleutelpaar aan als het ontbreekt en geeft de publieke sleutel terug om als deploy key toe te voegen.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Te gebruiken Git Sync-vermelding. De eerste repository als leeg."
+        }
+      }
+    },
+    "generate_message": {
+      "name": "Commitbericht genereren",
+      "description": "Schrijft met de AI-taak een commitbericht voor de huidige wijzigingen, zonder te committen. Geeft null terug als er niets gewijzigd is.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Te gebruiken Git Sync-vermelding. De eerste repository als leeg."
+        }
+      }
+    }
+  }
+}

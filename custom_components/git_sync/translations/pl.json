@@ -1,0 +1,250 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Repozytorium Git",
+        "description": "Folder Home Assistant wersjonowany w Git i wypychany do remote (GitHub, Gitea…).",
+        "data": {
+          "repo_path": "Ścieżka repozytorium",
+          "remote": "Remote",
+          "branch": "Gałąź",
+          "ssh_key": "Prywatny klucz SSH",
+          "author_name": "Imię i nazwisko autora",
+          "author_email": "E-mail autora"
+        },
+        "data_description": {
+          "repo_path": "Folder zawierający katalog .git, zwykle /config.",
+          "remote": "Remote Git, do którego wykonywany jest push, zwykle origin.",
+          "branch": "Docelowa gałąź na remote. Pozostaw puste, aby wypchnąć bieżącą gałąź.",
+          "ssh_key": "Klucz prywatny używany do push. Utwórz go akcją generate_ssh_key, a następnie dodaj klucz publiczny jako deploy key z prawem zapisu.",
+          "author_name": "Opcjonalne, zastępuje user.name / user.email repozytorium.",
+          "author_email": "Opcjonalne, zastępuje user.name / user.email repozytorium."
+        }
+      },
+      "reconfigure": {
+        "title": "Ustawienia repozytorium",
+        "data": {
+          "repo_path": "Ścieżka repozytorium",
+          "remote": "Remote",
+          "branch": "Gałąź",
+          "ssh_key": "Prywatny klucz SSH",
+          "author_name": "Imię i nazwisko autora",
+          "author_email": "E-mail autora"
+        },
+        "data_description": {
+          "repo_path": "Folder zawierający katalog .git, zwykle /config.",
+          "remote": "Remote Git, do którego wykonywany jest push, zwykle origin.",
+          "branch": "Docelowa gałąź na remote. Pozostaw puste, aby wypchnąć bieżącą gałąź.",
+          "ssh_key": "Klucz prywatny używany do push. Utwórz go akcją generate_ssh_key, a następnie dodaj klucz publiczny jako deploy key z prawem zapisu.",
+          "author_name": "Opcjonalne, zastępuje user.name / user.email repozytorium.",
+          "author_email": "Opcjonalne, zastępuje user.name / user.email repozytorium."
+        }
+      }
+    },
+    "error": {
+      "not_a_repository": "Ten folder nie jest repozytorium Git.",
+      "unknown_remote": "Ten remote nie istnieje w repozytorium."
+    },
+    "abort": {
+      "already_configured": "To repozytorium jest już skonfigurowane.",
+      "reconfigure_successful": "Repozytorium zaktualizowane.",
+      "unique_id_mismatch": "Ścieżki repozytorium nie można zmienić: dodaj nowy wpis."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opcje Git Sync",
+        "description": "Wiadomość commita, harmonogramy, powiadomienia i eksport dashboardów.",
+        "data": {
+          "ai_task_entity": "Encja zadania AI",
+          "commit_language": "Język wiadomości commita",
+          "commit_interval": "Interwał automatycznego commita",
+          "status_interval": "Interwał odświeżania stanu",
+          "notify_service": "Akcja powiadomienia",
+          "notify_image": "URL obrazu powiadomienia",
+          "export_enabled": "Codzienny eksport dashboardów",
+          "export_time": "Godzina eksportu",
+          "export_dir": "Folder eksportu",
+          "export_format": "Format eksportu",
+          "export_before_commit": "Eksportuj dashboardy przed każdym commitem"
+        },
+        "data_description": {
+          "ai_task_entity": "Generuje wiadomość Conventional Commits na podstawie diffa. Bez niej używana jest wiadomość ogólna.",
+          "commit_interval": "Commit i push co N minut, gdy są zmiany. 0 wyłącza.",
+          "notify_service": "Na przykład notify.mobile_app_telefon. Pozostaw puste, aby wyłączyć.",
+          "notify_image": "Bezwzględny adres URL HTTPS (wymagany przez iOS).",
+          "export_format": "JSON kopiuje pliki .storage bez zmian; YAML zachowuje tylko konfigurację dashboardu, czytelniejszą w diffach."
+        }
+      }
+    }
+  },
+  "selector": {
+    "export_format": {
+      "options": {
+        "json": "JSON (surowa kopia)",
+        "yaml": "YAML (tylko konfiguracja)",
+        "both": "JSON i YAML"
+      }
+    },
+    "commit_language": {
+      "options": {
+        "en": "Angielski",
+        "fr": "Francuski",
+        "de": "Niemiecki",
+        "es": "Hiszpański"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Stan",
+        "state": {
+          "clean": "Aktualne",
+          "dirty": "Oczekujące zmiany",
+          "ahead": "Oczekuje na push",
+          "error": "Błąd"
+        },
+        "state_attributes": {
+          "branch": {
+            "name": "Gałąź"
+          },
+          "upstream": {
+            "name": "Gałąź zdalna"
+          },
+          "remote_url": {
+            "name": "URL remote"
+          },
+          "ahead": {
+            "name": "Commity do przodu"
+          },
+          "behind": {
+            "name": "Commity w tyle"
+          },
+          "changed_count": {
+            "name": "Zmienione pliki"
+          },
+          "changed_files": {
+            "name": "Lista zmienionych plików"
+          },
+          "last_error": {
+            "name": "Ostatni błąd"
+          },
+          "ai_task": {
+            "name": "Zadanie AI"
+          }
+        }
+      },
+      "changed_files": {
+        "name": "Zmienione pliki"
+      },
+      "last_commit": {
+        "name": "Ostatni commit",
+        "state_attributes": {
+          "message": {
+            "name": "Wiadomość"
+          },
+          "sha": {
+            "name": "Commit"
+          },
+          "short_sha": {
+            "name": "Skrócony commit"
+          }
+        }
+      },
+      "last_push": {
+        "name": "Ostatni push",
+        "state_attributes": {
+          "message": {
+            "name": "Wiadomość"
+          }
+        }
+      },
+      "last_export": {
+        "name": "Ostatni eksport dashboardów",
+        "state_attributes": {
+          "files": {
+            "name": "Wyeksportowane pliki"
+          }
+        }
+      },
+      "branch": {
+        "name": "Gałąź",
+        "state_attributes": {
+          "remote_url": {
+            "name": "URL remote"
+          },
+          "upstream": {
+            "name": "Gałąź zdalna"
+          }
+        }
+      }
+    },
+    "button": {
+      "commit_push": {
+        "name": "Commit i push"
+      },
+      "export_dashboards": {
+        "name": "Eksportuj dashboardy"
+      }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entry": {
+      "message": "Nie załadowano żadnego repozytorium Git Sync."
+    },
+    "no_ai_task": {
+      "message": "W opcjach Git Sync nie ustawiono encji zadania AI."
+    },
+    "ai_task_failed": {
+      "message": "Zadanie AI nie zwróciło wiadomości commita."
+    }
+  },
+  "services": {
+    "commit_push": {
+      "name": "Commit i push",
+      "description": "Dodaje wszystkie zmiany do indeksu, wykonuje commit z wiadomością wygenerowaną przez AI (lub podaną) i wypycha do remote.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozytorium",
+          "description": "Wpis Git Sync do użycia. Wszystkie repozytoria, gdy puste."
+        },
+        "message": {
+          "name": "Wiadomość",
+          "description": "Wiadomość commita. Generowana przez zadanie AI, gdy pusta."
+        }
+      }
+    },
+    "export_dashboards": {
+      "name": "Eksportuj dashboardy",
+      "description": "Kopiuje dashboardy Lovelace z .storage do folderu eksportu.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozytorium",
+          "description": "Wpis Git Sync do użycia. Wszystkie repozytoria, gdy puste."
+        }
+      }
+    },
+    "generate_ssh_key": {
+      "name": "Wygeneruj klucz SSH",
+      "description": "Tworzy parę kluczy SSH, jeśli jej brak, i zwraca klucz publiczny do dodania jako deploy key.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozytorium",
+          "description": "Wpis Git Sync do użycia. Pierwsze repozytorium, gdy puste."
+        }
+      }
+    },
+    "generate_message": {
+      "name": "Wygeneruj wiadomość commita",
+      "description": "Pisze za pomocą zadania AI wiadomość commita dla bieżących zmian, bez wykonywania commita. Zwraca null, gdy nic się nie zmieniło.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozytorium",
+          "description": "Wpis Git Sync do użycia. Pierwsze repozytorium, gdy puste."
+        }
+      }
+    }
+  }
+}
