@@ -5,15 +5,38 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import re
 import shlex
 import shutil
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 
 from .const import CHANGED_FILES_MAX, DIFF_MAX_CHARS, GIT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
+
+# "scheme://user:password@host": the userinfo of a URL, e.g. an HTTPS remote carrying a token.
+_URL_USERINFO = re.compile(r"([a-zA-Z][a-zA-Z0-9+.-]*://)[^/@\s'\"]+@")
+
+
+def redact_credentials(text: str) -> str:
+    """Remove the user and password of every URL in a message (git errors, logs)."""
+    return _URL_USERINFO.sub(r"\1", text)
+
+
+def redact_url(url: str | None) -> str | None:
+    """Return a remote URL without its user and password ("https://token@host/…" → "https://host/…").
+
+    scp-like SSH remotes ("git@github.com:me/repo.git") carry no secret and are kept as they are.
+    """
+    if not url or "://" not in url:
+        return url
+    parts = urlsplit(url)
+    if "@" not in parts.netloc:
+        return url
+    return urlunsplit(parts._replace(netloc=parts.netloc.rpartition("@")[2]))
 
 
 class GitError(Exception):
@@ -29,11 +52,28 @@ class GitStatus:
     ahead: int = 0
     behind: int = 0
     files: list[str] = field(default_factory=list)
+    unborn: bool = False
 
     @property
     def dirty(self) -> bool:
         """Return True when the working tree has changes."""
         return bool(self.files)
+
+    @property
+    def detached(self) -> bool:
+        """Return True when HEAD is not on a branch."""
+        return self.branch is None or self.branch.startswith("HEAD ")
+
+    @property
+    def push_pending(self) -> bool:
+        """Return True when commits are waiting to be pushed.
+
+        A branch without upstream (set up with `git remote add`, never pushed with `-u`) counts as pending:
+        nothing tells it is on the remote, and the push sets the upstream.
+        """
+        if self.ahead:
+            return True
+        return self.upstream is None and not self.detached and not self.unborn
 
 
 @dataclass(slots=True)
@@ -85,6 +125,9 @@ class GitRepo:
         env = dict(os.environ)
         env["GIT_TERMINAL_PROMPT"] = "0"
         env["LC_ALL"] = "C"
+        # The status polling runs outside the commit lock: it must not take index.lock to refresh the index,
+        # or a concurrent `git add -A` fails with "Unable to create '.git/index.lock': File exists".
+        env["GIT_OPTIONAL_LOCKS"] = "0"
         if self.ssh_key:
             key = Path(self.ssh_key)
             known_hosts = key.parent / "known_hosts"
@@ -122,7 +165,7 @@ class GitRepo:
         stdout = out.decode(errors="replace")
         if check and proc.returncode != 0:
             message = err.decode(errors="replace").strip() or stdout.strip()
-            raise GitError(f"git {args[0]} failed: {message}")
+            raise GitError(redact_credentials(f"git {args[0]} failed: {message}"))
         return proc.returncode or 0, stdout
 
     # ------------------------------------------------------------------ queries
@@ -201,10 +244,20 @@ class GitRepo:
         await self.run("commit", "--quiet", "-m", message)
 
     async def push(self) -> None:
-        """Push the current branch to the configured remote."""
-        args = ["push", "--quiet", self.remote]
+        """Push the current branch to the configured remote.
+
+        A branch without upstream (`git remote add` without `push -u`) gets one, so that the next statuses
+        count the commits waiting to be pushed.
+        """
+        status = await self.status()
+        args = ["push", "--quiet"]
+        if status.upstream is None and not status.detached:
+            args.append("--set-upstream")
+        args.append(self.remote)
         if self.branch:
             args.append(f"HEAD:{self.branch}")
+        elif status.upstream is None:
+            args.append("HEAD")
         await self.run(*args)
 
 
@@ -213,6 +266,7 @@ def _parse_branch_line(line: str, status: GitStatus) -> None:
     head, _, tracking = line.partition(" [")
     if head.startswith("No commits yet on "):
         status.branch = head.removeprefix("No commits yet on ")
+        status.unborn = True
         return
     branch, _, upstream = head.partition("...")
     status.branch = branch or None

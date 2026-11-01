@@ -40,6 +40,9 @@ def export_dashboards(storage_dir: str, export_dir: str, export_format: str) -> 
       - yaml: dashboard config only, as readable YAML
       - both: the two side by side
 
+    Files of an earlier export that this one does not produce (a deleted dashboard, a format no longer
+    exported) are removed, so they do not stay in the repository forever.
+
     Returns the list of exported file names (written or already up to date).
     """
     source = Path(storage_dir)
@@ -47,6 +50,8 @@ def export_dashboards(storage_dir: str, export_dir: str, export_format: str) -> 
     target.mkdir(parents=True, exist_ok=True)
 
     exported: list[str] = []
+    # Files to keep although not written this time: the YAML of a dashboard whose file cannot be read now.
+    kept: set[str] = set()
     written = 0
     for file in sorted(source.glob("lovelace*")):
         if not file.is_file():
@@ -61,11 +66,26 @@ def export_dashboards(storage_dir: str, export_dir: str, export_format: str) -> 
         if export_format in ("yaml", "both"):
             config = _dashboard_config(raw)
             if config is None:
+                kept.add(f"{file.name}.yaml")
                 continue
             name = f"{file.name}.yaml"
             content = yaml.safe_dump(config, allow_unicode=True, sort_keys=False, default_flow_style=False, width=120)
             written += _write_if_changed(target / name, content)
             exported.append(name)
 
-    _LOGGER.debug("Exported %d dashboard files to %s (%d changed)", len(exported), target, written)
+    removed = _remove_stale(source, target, set(exported) | kept)
+    _LOGGER.debug("Exported %d dashboard files to %s (%d changed, %d removed)", len(exported), target, written, removed)
     return exported
+
+
+def _remove_stale(source: Path, target: Path, current: set[str]) -> int:
+    """Delete the lovelace* files of the export folder that the export no longer produces."""
+    if target.resolve() == source.resolve():
+        # Exporting into .storage itself: its lovelace* files are the dashboards, never delete them.
+        return 0
+    removed = 0
+    for file in target.glob("lovelace*"):
+        if file.name not in current and file.is_file():
+            file.unlink()
+            removed += 1
+    return removed

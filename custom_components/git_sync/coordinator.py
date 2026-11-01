@@ -52,7 +52,7 @@ from .const import (
     STORAGE_VERSION,
 )
 from .export import export_dashboards
-from .git import GitCommit, GitError, GitRepo, GitStatus, StagedDiff, generate_ssh_key
+from .git import GitCommit, GitError, GitRepo, GitStatus, StagedDiff, generate_ssh_key, redact_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +73,19 @@ class GitSyncData:
     last_export_files: list[str] = field(default_factory=list)
     last_error: str | None = None
     ai_task: str | None = None
+
+
+@dataclass(slots=True, frozen=True)
+class CommitResult:
+    """Outcome of a commit and push: the commit message (None when nothing was committed) and whether it pushed."""
+
+    message: str | None = None
+    pushed: bool = False
+
+    @property
+    def committed(self) -> bool:
+        """Return True when a commit was made."""
+        return self.message is not None
 
 
 def sanitize_message(raw: str) -> str:
@@ -146,7 +159,8 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         try:
             state.git = await self.repo.status()
             state.head = await self.repo.last_commit()
-            state.remote_url = await self.repo.remote_url()
+            # An HTTPS remote may carry a token ("https://user:token@host/…"): never expose it in the state.
+            state.remote_url = redact_url(await self.repo.remote_url())
         except (GitError, OSError) as err:
             raise UpdateFailed(str(err)) from err
 
@@ -156,7 +170,7 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
             state.status = STATUS_DIRTY
         elif state.last_error:
             state.status = STATUS_ERROR
-        elif state.git.ahead:
+        elif state.git.push_pending:
             state.status = STATUS_AHEAD
         else:
             state.status = STATUS_CLEAN
@@ -164,13 +178,20 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
 
     @property
     def dirty(self) -> bool:
-        """Return True when there is something to commit or push."""
-        return self.data is not None and self.data.status in (STATUS_DIRTY, STATUS_AHEAD)
+        """Return True when there is something to commit or push.
+
+        A failed push on a clean tree leaves the status at error with commits still waiting: they count too,
+        so that the automatic commit retries the push instead of waiting for a file to change.
+        """
+        data = self.data
+        if data is None:
+            return False
+        return data.status in (STATUS_DIRTY, STATUS_AHEAD) or (data.status == STATUS_ERROR and data.git.push_pending)
 
     # ------------------------------------------------------------------ commit / push
 
-    async def async_commit_push(self, message: str | None = None) -> str | None:
-        """Stage, commit and push. Return the commit message, None if nothing to do."""
+    async def async_commit_push(self, message: str | None = None) -> CommitResult:
+        """Stage, commit and push; or push the commits left pending by an earlier failure."""
         async with self._lock:
             if self.settings.get(CONF_EXPORT_BEFORE_COMMIT) and self.settings.get(CONF_EXPORT_ENABLED, True):
                 await self._export()
@@ -178,16 +199,15 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
             try:
                 diff = await self.repo.stage_all()
                 if diff is None:
-                    # Nothing new: retry a push left pending by an earlier failure.
-                    if self._state.git.ahead:
-                        await self.repo.push()
-                        self._state.last_error = None
-                        await self.async_refresh()
-                    return None
-
-                commit_message = sanitize_message(message or "") or await self._ai_message(diff)
-                await self.repo.commit(commit_message)
-                await self.repo.push()
+                    # Nothing new: push what an earlier failure (or a never pushed branch) left pending.
+                    if not (await self.repo.status()).push_pending:
+                        return CommitResult()
+                    await self.repo.push()
+                    commit_message = None
+                else:
+                    commit_message = sanitize_message(message or "") or await self._ai_message(diff)
+                    await self.repo.commit(commit_message)
+                    await self.repo.push()
             except GitError as err:
                 self._state.status = STATUS_ERROR
                 self._state.last_error = str(err)
@@ -196,11 +216,14 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
 
             self._state.last_error = None
             self._state.last_push = dt_util.utcnow()
-            self._state.last_push_message = commit_message
-            await self._async_save()
             await self.async_refresh()
+            head = self._state.head
+            self._state.last_push_message = commit_message or (head.message if head else None)
+            await self._async_save()
+            self.async_update_listeners()
 
-        head = self._state.head
+        if diff is None:
+            return CommitResult(pushed=True)
         self.hass.bus.async_fire(
             EVENT_COMMITTED,
             {
@@ -211,7 +234,7 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
             },
         )
         await self._notify(commit_message)
-        return commit_message
+        return CommitResult(message=commit_message, pushed=True)
 
     def _fallback_message(self, diff: StagedDiff) -> str:
         return f"chore: update configuration ({diff.files} file{'s' if diff.files > 1 else ''})"

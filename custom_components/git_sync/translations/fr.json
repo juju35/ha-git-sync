@@ -232,7 +232,7 @@
       "fields": {
         "config_entry_id": {
           "name": "Dépôt",
-          "description": "Entrée Git Sync à utiliser. Tous les dépôts si vide."
+          "description": "Entrée Git Sync à utiliser. Le premier dépôt si vide."
         }
       }
     },

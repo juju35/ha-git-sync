@@ -39,12 +39,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def commit_push(call: ServiceCall) -> ServiceResponse:
         results = []
         for coordinator in _coordinators(hass, call):
-            message = await coordinator.async_commit_push(call.data.get(ATTR_MESSAGE))
+            result = await coordinator.async_commit_push(call.data.get(ATTR_MESSAGE))
             results.append(
                 {
                     "config_entry_id": coordinator.config_entry.entry_id,
-                    "committed": message is not None,
-                    "message": message,
+                    "committed": result.committed,
+                    "pushed": result.pushed,
+                    "message": result.message,
                 }
             )
         return {"results": results}

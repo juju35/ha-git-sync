@@ -42,7 +42,11 @@ It replaces the usual stack of `shell_command`, `command_line` sensor, script an
   cd /config
   git init -b main
   git remote add origin git@github.com:<you>/homeassistant-config.git
+  # after the .gitignore below and a first commit:
+  git push -u origin main
   ```
+
+  Without `push -u`, Git Sync sets the upstream at its first push (0.1.2 or newer).
 
 - A `.gitignore` keeping secrets and runtime files out of the repository, for example:
 
@@ -106,7 +110,7 @@ Copy `custom_components/git_sync/` to `/config/custom_components/git_sync/`, the
 | Notification image URL | none | Absolute HTTPS URL (required by iOS) |
 | Daily dashboard export | on | Export the dashboards every day |
 | Export time | 08:00 | Time of the daily export |
-| Export folder | `/config/dashboards_export` | Where the dashboards are written |
+| Export folder | `/config/dashboards_export` | Where the dashboards are written. Its `lovelace*` files that the export no longer produces (deleted dashboard, format changed) are removed |
 | Export format | JSON | JSON (raw copy of `.storage`), YAML (dashboard configuration only, easier to read in diffs) or both |
 | Export before each commit | off | Also export right before each commit |
 
@@ -119,7 +123,7 @@ Copy `custom_components/git_sync/` to `/config/custom_components/git_sync/`, the
 
 | Entity | Description |
 |---|---|
-| `sensor.git_sync_<repo>_status` | `clean`, `dirty`, `ahead` (committed, push pending) or `error` (last push failed). Attributes: `branch`, `upstream`, `remote_url`, `ahead`, `behind`, `changed_count`, `changed_files` (first 50), `last_error`, `ai_task` |
+| `sensor.git_sync_<repo>_status` | `clean`, `dirty`, `ahead` (committed, push pending, or a branch never pushed) or `error` (last push failed; retried by the automatic commit). Attributes: `branch`, `upstream`, `remote_url` (without the user or token of an HTTPS remote), `ahead`, `behind`, `changed_count`, `changed_files` (first 50), `last_error`, `ai_task` |
 | `sensor.git_sync_<repo>_changed_files` | Number of changed files |
 | `sensor.git_sync_<repo>_last_commit` | Time of the HEAD commit. Attributes: `message`, `sha`, `short_sha` |
 | `sensor.git_sync_<repo>_last_push` | Time of the last push made by Git Sync. Attribute: `message` |
@@ -130,13 +134,13 @@ Copy `custom_components/git_sync/` to `/config/custom_components/git_sync/`, the
 
 ### Action `git_sync.commit_push`
 
-Stages every change, commits and pushes. Without `message`, the AI task writes it. Returns whether a commit was made.
+Stages every change, commits and pushes. Without `message`, the AI task writes it. With nothing to commit, pushes the commits left pending by an earlier failure. Returns whether a commit was made and whether it pushed.
 
 ```yaml
 action: git_sync.commit_push
 data:
   message: "fix(corridor): lower the night light threshold"  # optional
-response_variable: result  # {"results": [{"config_entry_id": "...", "committed": true, "message": "..."}]}
+response_variable: result  # {"results": [{"config_entry_id": "...", "committed": true, "pushed": true, "message": "..."}]}
 ```
 
 ### Action `git_sync.generate_message`
