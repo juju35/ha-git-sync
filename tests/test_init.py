@@ -461,3 +461,59 @@ async def test_failed_commit_keeps_the_error(hass: HomeAssistant, repo: Path) ->
     await coordinator.async_refresh()
     assert _status(hass).state == "dirty"
     assert coordinator.data.last_error == "git commit failed: Author identity unknown"
+
+
+async def test_config_flow_requires_a_git_identity(
+    hass: HomeAssistant, repo: Path, tmp_path: Path, monkeypatch
+) -> None:
+    """Without user.email for git (HA container, empty HOME), the form asks for the author instead of every commit failing."""
+    from custom_components.git_sync.const import CONF_AUTHOR_EMAIL, CONF_AUTHOR_NAME
+
+    home = tmp_path / "home"
+    home.mkdir()
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(home))
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+    for name in ("EMAIL", "GIT_AUTHOR_EMAIL", "GIT_COMMITTER_EMAIL", "GIT_AUTHOR_NAME", "GIT_COMMITTER_NAME"):
+        monkeypatch.delenv(name, raising=False)
+    git(repo, "config", "--unset", "user.email")
+    git(repo, "config", "--unset", "user.name")
+    # No guess from the host name: what the HA container ends up with ("root@<host>.(none)" is refused).
+    git(repo, "config", "user.useConfigOnly", "true")
+
+    data = {CONF_REPO_PATH: str(repo), CONF_REMOTE: "origin", CONF_SSH_KEY: ""}
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    missing = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert missing["type"] is FlowResultType.FORM
+    assert missing["errors"] == {CONF_AUTHOR_EMAIL: "author_required"}
+
+    done = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**data, CONF_AUTHOR_NAME: "Home Assistant", CONF_AUTHOR_EMAIL: "ha@example.com"}
+    )
+    assert done["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_options_reject_an_unknown_notification_action(hass: HomeAssistant, repo: Path) -> None:
+    from custom_components.git_sync.const import CONF_NOTIFY_SERVICE
+
+    entry = _entry(repo)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    hass.services.async_register("notify", "mobile_app_phone", lambda call: None)
+
+    form = await hass.config_entries.options.async_init(entry.entry_id)
+    defaults = _defaults(form["data_schema"])
+    bad = await hass.config_entries.options.async_configure(
+        form["flow_id"], {**defaults, CONF_NOTIFY_SERVICE: "notify.mobile_app_phnoe"}
+    )
+    assert bad["type"] is FlowResultType.FORM
+    assert bad["errors"] == {CONF_NOTIFY_SERVICE: "unknown_notify_service"}
+
+    # Both spellings the notification accepts: "notify.name" and "name".
+    done = await hass.config_entries.options.async_configure(
+        form["flow_id"], {**defaults, CONF_NOTIFY_SERVICE: "mobile_app_phone"}
+    )
+    assert done["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_NOTIFY_SERVICE] == "mobile_app_phone"
+    await hass.async_block_till_done()

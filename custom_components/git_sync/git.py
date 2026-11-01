@@ -178,6 +178,14 @@ class GitRepo:
             return False
         return code == 0 and out.strip() == "true"
 
+    async def has_identity(self) -> bool:
+        """Return True when git can sign a commit here (author settings, repository, global config or host)."""
+        try:
+            code, _ = await self.run("var", "GIT_COMMITTER_IDENT", check=False)
+        except (OSError, GitError):
+            return False
+        return code == 0
+
     async def remote_url(self) -> str | None:
         """Return the URL of the configured remote."""
         code, out = await self.run("remote", "get-url", self.remote, check=False)
