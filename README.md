@@ -251,7 +251,7 @@ python scripts/screenshots.py      # README screenshots (Playwright)
 
 ## Translations
 
-The integration and its card follow the language of Home Assistant (the card picks Serbian Latin when Home Assistant is set to `sr-Latn`, and European Portuguese for `pt-BR`). Currently supported:
+The integration and its card follow the language of Home Assistant (the card picks Serbian Latin when Home Assistant is set to `sr-Latn`). `pt-BR` uses the European Portuguese texts, in the integration and in the card. Currently supported:
 
 | Language | Code |
 |---|---|

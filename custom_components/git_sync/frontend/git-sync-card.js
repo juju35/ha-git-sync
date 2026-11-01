@@ -321,7 +321,7 @@ const GS_I18N = {
     cancel: 'Cancelar',
     committed: 'Commit feito: {m}',
     nothing: 'Nada para fazer commit',
-    pushed: 'Push dos commits pendentes feito',
+    pushed: 'Commits pendentes enviados com push',
     exported_one: '{n} ficheiro de painel exportado',
     exported_many: '{n} ficheiros de painéis exportados',
     failed: 'Falhou: {e}',
@@ -375,13 +375,13 @@ const GS_I18N = {
     ed_entity: 'Czujnik Git Sync',
     ed_entity_helper: 'Czujnik stanu repozytorium; pozostaw puste, aby znaleźć go automatycznie',
     ed_title: 'Tytuł',
-    ed_title_helper: 'Pozostaw puste dla „Git Sync”',
+    ed_title_helper: 'Pozostaw puste, aby użyć „Git Sync”',
     ed_show_files: 'Zmienione pliki',
     ed_show_files_helper: 'Zwijana lista plików jeszcze nieobjętych commitem',
     ed_show_export: 'Eksport dashboardów',
     ed_show_export_helper: 'Czas ostatniego eksportu i przycisk Eksportuj dashboardy',
     ed_language: 'Język',
-    ed_language_helper: 'Pozostaw puste, aby używać języka Home Assistant',
+    ed_language_helper: 'Pozostaw puste, aby używać języka Home Assistanta',
   },
   sr: {
     title: 'Git Sync',
@@ -485,6 +485,15 @@ const gsLang = (hass, config) => {
   if (GS_I18N[raw]) return raw;
   const l = raw.split('-')[0];
   return GS_I18N[l] ? l : 'en';
+};
+
+// Locale for Intl: Home Assistant's full code (pt-PT, nl-BE…) when it is a variant of the card's language,
+// else the card's language. Bare "pt" means Brazilian to Intl, while the card's Portuguese is European.
+const gsLocale = (hass, config) => {
+  const lang = gsLang(hass, config);
+  const full = String(hass?.locale?.language || hass?.language || '');
+  const locale = full && (full === lang || (!GS_I18N[full] && full.split('-')[0] === lang)) ? full : lang;
+  return locale === 'pt' ? 'pt-PT' : locale;
 };
 
 const gsT = (lang, key, vars = {}) =>
@@ -618,7 +627,7 @@ class GitSyncCard extends HTMLElement {
     const m = gsMinutes(iso);
     let rtf;
     try {
-      rtf = new Intl.RelativeTimeFormat(gsLang(this._hass, this._config), { numeric: 'auto' });
+      rtf = new Intl.RelativeTimeFormat(gsLocale(this._hass, this._config), { numeric: 'auto' });
     } catch {
       return '';
     }
@@ -632,7 +641,7 @@ class GitSyncCard extends HTMLElement {
     const d = new Date(iso);
     if (!Number.isFinite(d.getTime())) return '';
     try {
-      return d.toLocaleString(gsLang(this._hass, this._config), { dateStyle: 'medium', timeStyle: 'short' });
+      return d.toLocaleString(gsLocale(this._hass, this._config), { dateStyle: 'medium', timeStyle: 'short' });
     } catch {
       return d.toISOString();
     }
@@ -1044,7 +1053,7 @@ class GitSyncCardEditor extends HTMLElement {
               { value: 'es', label: 'Español' },
               { value: 'it', label: 'Italiano' },
               { value: 'nl', label: 'Nederlands' },
-              { value: 'pt', label: 'Português' },
+              { value: 'pt', label: 'Português (Portugal)' },
               { value: 'pl', label: 'Polski' },
               { value: 'sr', label: 'Српски' },
               { value: 'sr-Latn', label: 'Srpski (latinica)' },

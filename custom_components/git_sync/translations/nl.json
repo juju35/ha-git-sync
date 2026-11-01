@@ -70,7 +70,7 @@
           "export_before_commit": "Dashboards exporteren vóór elke commit"
         },
         "data_description": {
-          "ai_task_entity": "Genereert een Conventional Commits-bericht uit de diff. Zonder wordt een algemeen bericht gebruikt.",
+          "ai_task_entity": "Genereert een Conventional Commits-bericht uit de diff. Zonder deze entiteit wordt een algemeen bericht gebruikt.",
           "commit_interval": "Commit en push elke N minuten als er wijzigingen zijn. 0 schakelt dit uit.",
           "notify_service": "Bijvoorbeeld notify.mobile_app_telefoon. Leeg laten om uit te schakelen.",
           "notify_image": "Absolute HTTPS-URL (vereist door iOS).",

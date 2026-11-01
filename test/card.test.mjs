@@ -86,10 +86,10 @@ const context = {
 };
 vm.createContext(context);
 vm.runInContext(
-  `${source}\nthis.gs = { GitSyncCard, GitSyncCardEditor, GS_I18N, gsEsc, gsLang, gsDevices, gsRepo, GS_DEFAULTS };`,
+  `${source}\nthis.gs = { GitSyncCard, GitSyncCardEditor, GS_I18N, gsEsc, gsLang, gsLocale, gsDevices, gsRepo, GS_DEFAULTS };`,
   context,
 );
-const { GitSyncCard, GitSyncCardEditor, GS_I18N, gsEsc, gsLang, gsDevices, gsRepo } = context.gs;
+const { GitSyncCard, GitSyncCardEditor, GS_I18N, gsEsc, gsLang, gsLocale, gsDevices, gsRepo } = context.gs;
 
 const STATUS = 'sensor.git_sync_config_status';
 const LAST_COMMIT = 'sensor.git_sync_config_last_commit';
@@ -228,6 +228,16 @@ test('Polish: a file count reads right for any number', () => {
   assert.match(html(card), /Ostatni push/);
 });
 
+test('dates use Home Assistant\'s regional locale when it matches the card\'s language', () => {
+  assert.equal(gsLocale({ language: 'pt' }, {}), 'pt-PT');
+  assert.equal(gsLocale({ language: 'pt-BR' }, {}), 'pt-BR');
+  assert.equal(gsLocale({ locale: { language: 'nl-BE' }, language: 'nl' }, {}), 'nl-BE');
+  assert.equal(gsLocale({ language: 'fr-CA' }, { language: 'pt' }), 'pt-PT');
+  assert.equal(gsLocale({ language: 'sr-Latn' }, { language: 'sr' }), 'sr');
+  assert.equal(gsLocale({ language: 'sr-Latn' }, {}), 'sr-Latn');
+  assert.equal(gsLocale({ language: 'ja' }, {}), 'en');
+});
+
 test('European Portuguese wording', () => {
   const card = render({}, makeHass({ language: 'pt-PT', status: 'dirty', files: ['a.yaml', 'b.yaml'] }));
   assert.match(html(card), /2 ficheiros/);
@@ -257,7 +267,7 @@ test('editor offers every language of the card, Italian, Dutch, Portuguese and P
   const labels = Object.fromEntries(options.map((o) => [o.value, o.label]));
   assert.deepEqual(
     JSON.parse(JSON.stringify(['it', 'nl', 'pt', 'pl'].map((l) => labels[l]))),
-    ['Italiano', 'Nederlands', 'Português', 'Polski'],
+    ['Italiano', 'Nederlands', 'Português (Portugal)', 'Polski'],
   );
 });
 
