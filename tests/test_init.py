@@ -369,3 +369,42 @@ async def test_reconfigure_can_empty_branch_and_author(hass: HomeAssistant, repo
     assert done["reason"] == "reconfigure_successful"
     assert (entry.data[CONF_BRANCH], entry.data[CONF_AUTHOR_NAME], entry.data[CONF_AUTHOR_EMAIL]) == ("", "", "")
     await hass.async_block_till_done()
+
+
+async def test_export_cleanup_spares_the_users_files(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    """Across a restart, the export removes a deleted dashboard's file but never the user's lovelace-*.yaml."""
+    import json
+
+    hass.config.config_dir = str(tmp_path / "config")
+    storage = tmp_path / "config" / ".storage"
+    storage.mkdir(parents=True)
+    for name in ("lovelace", "lovelace.old"):
+        (storage / name).write_text(json.dumps({"data": {"config": {"views": []}}}), encoding="utf-8")
+    export_dir = repo / "dashboards"
+    export_dir.mkdir()
+    (export_dir / "lovelace-energy.yaml").write_text("views: []\n", encoding="utf-8")
+    (export_dir / "lovelace_tablet.yaml").write_text("views: []\n", encoding="utf-8")
+
+    entry = _entry(repo, **{CONF_EXPORT_DIR: str(export_dir)})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert await entry.runtime_data.async_export_dashboards() == ["lovelace", "lovelace.old"]
+
+    # Restart: the list of files written by the export survives it.
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    (storage / "lovelace.old").unlink()
+    await hass.services.async_call(DOMAIN, "export_dashboards", {}, blocking=True, return_response=True)
+    assert sorted(p.name for p in export_dir.iterdir()) == ["lovelace", "lovelace-energy.yaml", "lovelace_tablet.yaml"]
+
+    # Another export folder: the manifest of the first one deletes nothing there.
+    other = repo / "other"
+    other.mkdir()
+    (other / "lovelace.old").write_text("mine\n", encoding="utf-8")
+    hass.config_entries.async_update_entry(entry, options={**entry.options, CONF_EXPORT_DIR: str(other)})
+    await hass.async_block_till_done()
+    entry.runtime_data._export_manifest["files"].append("lovelace.old")
+    await entry.runtime_data.async_export_dashboards()
+    assert (other / "lovelace.old").read_text(encoding="utf-8") == "mine\n"
+    await hass.async_block_till_done()

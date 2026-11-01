@@ -74,8 +74,9 @@ def test_export_dashboards(tmp_path: Path) -> None:
     (storage / "core.config").write_text("{}", encoding="utf-8")
     out = tmp_path / "export"
 
-    files = export_dashboards(str(storage), str(out), "both")
-    assert files == ["lovelace", "lovelace.yaml"]
+    result = export_dashboards(str(storage), str(out), "both")
+    assert result.files == ["lovelace", "lovelace.yaml"]
+    assert result.managed == ["lovelace", "lovelace.yaml"]
     assert "title: Home" in (out / "lovelace.yaml").read_text(encoding="utf-8")
     assert not (out / "core.config").exists()
 
@@ -160,28 +161,70 @@ def test_export_removes_stale_files(tmp_path: Path) -> None:
     (out).mkdir()
     (out / "README.md").write_text("mine\n", encoding="utf-8")
 
-    assert export_dashboards(str(storage), str(out), "both") == [
+    first = export_dashboards(str(storage), str(out), "both")
+    assert first.files == [
         "lovelace",
         "lovelace.yaml",
         "lovelace.old",
         "lovelace.old.yaml",
     ]
     (storage / "lovelace.old").unlink()
-    assert export_dashboards(str(storage), str(out), "yaml") == ["lovelace.yaml"]
+    assert export_dashboards(str(storage), str(out), "yaml", first.managed).files == ["lovelace.yaml"]
     assert sorted(p.name for p in out.iterdir()) == ["README.md", "lovelace.yaml"]
 
 
 def test_export_keeps_the_yaml_of_an_unreadable_dashboard(tmp_path: Path) -> None:
     storage = _storage(tmp_path, "lovelace")
     out = tmp_path / "export"
-    export_dashboards(str(storage), str(out), "yaml")
+    first = export_dashboards(str(storage), str(out), "yaml")
     (storage / "lovelace").write_text("{not json", encoding="utf-8")
-    assert export_dashboards(str(storage), str(out), "yaml") == []
+    second = export_dashboards(str(storage), str(out), "yaml", first.managed)
+    assert second.files == []
     assert (out / "lovelace.yaml").exists()
+    # Still the integration's file: removed once the dashboard is gone for good.
+    assert second.managed == ["lovelace.yaml"]
+    (storage / "lovelace").unlink()
+    export_dashboards(str(storage), str(out), "yaml", second.managed)
+    assert not (out / "lovelace.yaml").exists()
 
 
 def test_export_into_the_storage_folder_deletes_nothing(tmp_path: Path) -> None:
     storage = _storage(tmp_path, "lovelace")
-    export_dashboards(str(storage), str(storage), "yaml")
+    first = export_dashboards(str(storage), str(storage), "yaml")
+    export_dashboards(str(storage), str(storage), "json", first.managed)
     assert (storage / "lovelace").exists()
     assert (storage / "lovelace.yaml").exists()
+
+
+def test_export_keeps_the_users_own_lovelace_files(tmp_path: Path) -> None:
+    """Files of the export folder the integration did not write (YAML-mode dashboards) are never deleted."""
+    storage = _storage(tmp_path, "lovelace")
+    out = tmp_path / "export"
+    out.mkdir()
+    (out / "lovelace-energy.yaml").write_text("views: []\n", encoding="utf-8")
+    (out / "lovelace_tablet.yaml").write_text("views: []\n", encoding="utf-8")
+
+    export_dashboards(str(storage), str(out), "json")
+    export_dashboards(str(storage), str(out), "yaml")
+    assert sorted(p.name for p in out.iterdir()) == [
+        "lovelace",
+        "lovelace-energy.yaml",
+        "lovelace.yaml",
+        "lovelace_tablet.yaml",
+    ]
+
+
+def test_export_deletes_only_its_own_stale_files(tmp_path: Path) -> None:
+    """json → yaml: the integration's old JSON goes, the user's files and names outside the folder stay."""
+    storage = _storage(tmp_path, "lovelace")
+    out = tmp_path / "export"
+    out.mkdir()
+    (out / "lovelace-energy.yaml").write_text("views: []\n", encoding="utf-8")
+    (tmp_path / "lovelace.secret").write_text("x\n", encoding="utf-8")
+
+    first = export_dashboards(str(storage), str(out), "json")
+    assert first.managed == ["lovelace"]
+    # A tampered manifest cannot reach outside the folder nor a file that is not a dashboard export.
+    export_dashboards(str(storage), str(out), "yaml", [*first.managed, "../lovelace.secret", "README.md"])
+    assert sorted(p.name for p in out.iterdir()) == ["lovelace-energy.yaml", "lovelace.yaml"]
+    assert (tmp_path / "lovelace.secret").exists()
