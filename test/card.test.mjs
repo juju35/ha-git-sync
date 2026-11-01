@@ -26,8 +26,9 @@ const fakeElement = (root, sel) => ({
     this.handlers.keydown?.(ev);
     return ev;
   },
-  focus() {
+  focus(options) {
     root.activeElement = this;
+    (root.focusCalls ||= []).push({ target: sel, options });
   },
 });
 const fakeNode = () => ({
@@ -461,6 +462,28 @@ test('a Home Assistant update does not lose the keyboard focus', () => {
   assert.equal(card.shadowRoot.activeElement?.id, 'commit');
 });
 
+test('focus given back after a render never scrolls the page (preventScroll)', async () => {
+  const hass = makeHass({
+    status: 'dirty',
+    files: ['a.yaml'],
+    aiTask: 'ai_task.google',
+    response: { message: 'feat: x' },
+  });
+  const card = render({}, hass);
+  const root = card.shadowRoot;
+  root.querySelector('#commit').focus();
+  root.focusCalls = [];
+  // A Home Assistant update re-renders the card while the focus is in it.
+  card.hass = makeHass({ status: 'dirty', files: ['a.yaml', 'b.yaml'], aiTask: 'ai_task.google', response: { message: 'feat: x' } });
+  // The popup opens on the message field, and the field gets the focus back after the generation.
+  root.querySelector('#commit').click();
+  root.querySelector('#generate').click();
+  await new Promise((r) => setTimeout(r, 0));
+  const targets = root.focusCalls.map((c) => c.target);
+  assert.ok(targets.includes('#commit') && targets.includes('#message'), targets.join());
+  for (const call of root.focusCalls) assert.deepEqual({ ...call.options }, { preventScroll: true }, call.target);
+});
+
 test('push pending: the confirmation does not announce 0 changed files', () => {
   const card = render({}, makeHass({ status: 'ahead' }));
   card.shadowRoot.querySelector('#commit').click();
@@ -527,7 +550,10 @@ const cssRule = (css, selector) => {
 test('narrow card: the title truncates, the pill shrinks to its dot, buttons wrap instead of overflowing', () => {
   const out = html(render({}, makeHass({ status: 'ahead' })));
   const css = out.match(/<style>([\s\S]*?)<\/style>/)[1];
-  assert.match(cssRule(css, '.titles'), /flex: 1 1 auto;[\s\S]*min-width: 0/);
+  // Basis 0: the pill keeps its whole label while there is room, the title keeps a few letters.
+  const titles = cssRule(css, '.titles');
+  assert.match(titles, /flex: 1 1 0;/);
+  assert.match(titles, /min-width: [4-9]ch/);
   const title = cssRule(css, '.title');
   assert.match(title, /min-width: \dch/);
   assert.match(title, /white-space: nowrap/);
@@ -535,14 +561,23 @@ test('narrow card: the title truncates, the pill shrinks to its dot, buttons wra
   const pill = cssRule(css, '.pill');
   assert.match(pill, /flex: 0 1 auto/);
   assert.match(pill, /min-width: 0/);
-  assert.match(pill, /max-width: 50%/);
+  assert.doesNotMatch(pill, /max-width/);
   assert.match(cssRule(css, '.pill-text'), /text-overflow: ellipsis/);
-  assert.match(cssRule(css, 'ha-card'), /container-type: inline-size/);
+  // The size container is inside the card, never ha-card: in an inline-block parent or an auto grid column the
+  // card would fall to the width of its padding.
+  assert.doesNotMatch(cssRule(css, 'ha-card'), /container/);
+  assert.match(cssRule(css, ':host'), /display: block/);
+  assert.match(cssRule(css, '.header'), /container-type: inline-size/);
   assert.match(css, /@container \(max-width: \d+px\) \{[\s\S]*?\.pill-text \{ display: none; \}/);
   assert.match(cssRule(css, '.badge'), /flex: none/);
   const button = cssRule(css, 'button.action');
   assert.match(button, /min-width: 0/);
   assert.match(button, /white-space: normal/);
+  // A long value (pl, sr at 6 columns on a phone) goes under its label and wraps, never cut by the card.
+  assert.match(cssRule(css, '.row'), /flex-wrap: wrap/);
+  const value = cssRule(css, '.row .value');
+  assert.match(value, /min-width: 0/);
+  assert.match(value, /overflow-wrap: anywhere/);
   // The pill text stays available when only the dot is shown.
   assert.match(out, /class="pill" title="Push pending" aria-label="Push pending"/);
 });
