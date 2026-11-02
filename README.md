@@ -213,6 +213,29 @@ Every option is in the visual editor:
 | `show_export` | `true` | Last export and the **Export dashboards** button |
 | `language` | Home Assistant's | `en`, `fr`, `de`, `es`, `it`, `nl`, `pt` (European Portuguese), `pl`, `sr` (Serbian, Cyrillic) or `sr-Latn` (Serbian, Latin) |
 
+### Mini card
+
+A compact version for a 6-column slot: status, branch, last commit on one line, number of changed files, last push and **Commit & push** as an icon button. The zoom button at the top right switches it to the full card (same options) and back; a click anywhere else brings back the compact view.
+
+```yaml
+type: custom:git-sync-mini-card
+```
+
+| Changes pending | Up to date | Push failed |
+|---|---|---|
+| ![Mini card](screenshots/mini.png) | ![Mini card, up to date](screenshots/mini-clean.png) | ![Mini card, push failed](screenshots/mini-error.png) |
+| ![Mini card, dark theme](screenshots/mini-dark.png) | ![Mini card, up to date, dark theme](screenshots/mini-clean-dark.png) | ![Mini card, push failed, dark theme](screenshots/mini-error-dark.png) |
+
+| Zoomed in | |
+|---|---|
+| ![Mini card zoomed in to the full card](screenshots/mini-zoomed.png) | ![Mini card zoomed in, dark theme](screenshots/mini-zoomed-dark.png) |
+
+In the compact view **Commit & push** opens the same message box (✨ button included) in place of the content. The mini card takes the options of the full card, plus:
+
+| Option | Default | Description |
+|---|---|---|
+| `zoom` | `true` | Zoom button switching to the full card; `show_files` and `show_export` apply to the full view |
+
 ## Migrating from shell commands
 
 Once Git Sync has pushed once, remove from your configuration:
