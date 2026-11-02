@@ -16,7 +16,8 @@ custom_components/git_sync/
 ├── sensor.py        # status (enum + attributes), changed_files, last_commit, last_push, last_export, branch (diagnostic)
 ├── button.py        # commit_push, export_dashboards
 ├── entity.py        # Service device per entry
-├── frontend/git-sync-card.js   # custom:git-sync-card, finds its entities by platform + translation_key, calls the actions with returnResponse
+├── frontend/git-sync-card.js   # custom:git-sync-card, finds its entities by platform + translation_key, calls the actions with returnResponse;
+│                               # custom:git-sync-mini-card extends it (compact view, zoom button → full card, click elsewhere → back)
 ├── const.py / icons.json / services.yaml / translations/{en,fr,de,es,it,nl,pt,pt-BR,pl,sr,sr-Latn}.json / brand/
 ```
 
@@ -33,4 +34,4 @@ custom_components/git_sync/
 Bump `version` in manifest.json, `VERSION` in const.py and `GIT_SYNC_CARD_VERSION` in the card, and add its CHANGELOG.md section; pushing to main publishes `vX.Y.Z` with `git_sync.zip` when that tag doesn't exist yet. Rerun notes with the "Update release notes" workflow (input `tag`).
 
 ## Tests
-`pip install -r requirements_test.txt && pytest` — real git repositories pushing to a local bare remote (`tests/conftest.py`). Card: `node --test test/*.test.mjs` (the card file is evaluated in a `vm` context with stubs). Screenshots: `python scripts/screenshots.py` (Playwright, mock data, English, 16 px frame). Job `tests` runs on Python 3.14, i.e. the latest Home Assistant; job `pytest-min-ha` runs the suite on HA 2024.12.0. An autouse fixture fails any test during which Home Assistant reports a deprecated call naming `git_sync`.
+`pip install -r requirements_test.txt && pytest` — real git repositories pushing to a local bare remote (`tests/conftest.py`). Card: `node --test test/*.test.mjs` (the card file is evaluated in a `vm` context with stubs). Screenshots: `python scripts/screenshots.py` (Playwright, mock data, English, 16 px frame; card at 460 px, mini card at 300 px). Job `tests` runs on Python 3.14, i.e. the latest Home Assistant; job `pytest-min-ha` runs the suite on HA 2024.12.0. An autouse fixture fails any test during which Home Assistant reports a deprecated call naming `git_sync`.

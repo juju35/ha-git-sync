@@ -87,10 +87,10 @@ const context = {
 };
 vm.createContext(context);
 vm.runInContext(
-  `${source}\nthis.gs = { GitSyncCard, GitSyncCardEditor, GS_I18N, gsEsc, gsLang, gsLocale, gsDevices, gsRepo, GS_DEFAULTS };`,
+  `${source}\nthis.gs = { GitSyncCard, GitSyncCardEditor, GitSyncMiniCard, GitSyncMiniCardEditor, GS_I18N, gsEsc, gsLang, gsLocale, gsDevices, gsRepo, GS_DEFAULTS };`,
   context,
 );
-const { GitSyncCard, GitSyncCardEditor, GS_I18N, gsEsc, gsLang, gsLocale, gsDevices, gsRepo } = context.gs;
+const { GitSyncCard, GitSyncCardEditor, GitSyncMiniCard, GitSyncMiniCardEditor, GS_I18N, gsEsc, gsLang, gsLocale, gsDevices, gsRepo } = context.gs;
 
 const STATUS = 'sensor.git_sync_config_status';
 const LAST_COMMIT = 'sensor.git_sync_config_last_commit';
@@ -142,8 +142,8 @@ function makeHass({ status = 'clean', files = [], error = null, language = 'en',
   };
 }
 
-function render(config, hass) {
-  const card = new GitSyncCard();
+function render(config, hass, Card = GitSyncCard) {
+  const card = new Card();
   card.attachShadow = fakeNode().attachShadow;
   card.style = {};
   card.toasts = [];
@@ -587,4 +587,102 @@ test('pill and error text: state colour mixed with the text colour (readable in 
   const css = out.match(/<style>([\s\S]*?)<\/style>/)[1];
   assert.match(cssRule(css, '.pill'), /color: color-mix\(in srgb, var\(--s\) 40%, var\(--primary-text-color\)\)/);
   assert.match(cssRule(css, '.err'), /color: color-mix\(in srgb, var\(--gs-alert\) 40%, var\(--primary-text-color\)\)/);
+});
+
+// ── Mini card ────────────────────────────────────────────────────────────────
+const mini = (config, hass) => render(config, hass, GitSyncMiniCard);
+
+test('mini card: compact view with the last commit, the changes, the last push and a zoom button', () => {
+  const card = mini({}, makeHass({ status: 'dirty', files: ['a.yaml', 'b.yaml'] }));
+  const out = html(card);
+  assert.match(out, /class="st-dirty compact"/);
+  assert.match(out, /<div class="subtitle">main<\/div>/);
+  assert.match(out, /class="m-msg">feat\(corridor\): lower the night light threshold/);
+  assert.match(out, /class="m-chip changed"[\s\S]*2 files/);
+  assert.match(out, /Last push: 42 minutes ago/);
+  assert.match(out, /class="zoom" title="Show the full card"/);
+  assert.doesNotMatch(out, /id="export"/);
+  assert.doesNotMatch(out, /class="rows"/);
+  assert.doesNotMatch(out, /id="commit"[^>]*disabled/);
+  assert.equal(card.getCardSize(), 2);
+  assert.deepEqual(JSON.parse(JSON.stringify(card.getGridOptions())), { columns: 6, min_columns: 6, rows: 'auto' });
+});
+
+test('mini card: the zoom button switches to the full card and back', () => {
+  const card = mini({}, makeHass());
+  card.shadowRoot.querySelector('.zoom').click();
+  let out = html(card);
+  assert.doesNotMatch(out, / compact"/);
+  assert.match(out, /main → me\/homeassistant-config/);
+  assert.match(out, /id="export"/);
+  assert.match(out, /class="zoom" title="Back to the compact view"/);
+  assert.equal(card.getGridOptions().columns, 12);
+  card.shadowRoot.querySelector('.zoom').click();
+  out = html(card);
+  assert.match(out, / compact"/);
+});
+
+test('mini card: a click elsewhere brings back the compact view, not while writing a commit message', () => {
+  const card = mini({}, makeHass({ status: 'dirty', files: ['a.yaml'] }));
+  const elsewhere = { composedPath: () => [] };
+  card.shadowRoot.querySelector('.zoom').click();
+  card.shadowRoot.querySelector('#commit').click();
+  card._outside(elsewhere);
+  assert.match(html(card), /Commit and push now\?/);
+  assert.doesNotMatch(html(card), / compact"/);
+  card.shadowRoot.querySelector('#cancel').click();
+  card._outside({ composedPath: () => [{ localName: 'ha-more-info-dialog' }] });
+  assert.doesNotMatch(html(card), / compact"/);
+  card._outside(elsewhere);
+  assert.match(html(card), / compact"/);
+});
+
+test('mini card: commit from the compact view, confirmation in place of the content', async () => {
+  const hass = makeHass({ status: 'dirty', files: ['a.yaml'] });
+  const card = mini({}, hass);
+  card.shadowRoot.querySelector('#commit').click();
+  const out = html(card);
+  assert.match(out, /class="popup inline"/);
+  assert.doesNotMatch(out, /class="overlay"/);
+  assert.doesNotMatch(out, /class="m-foot"/);
+  card.shadowRoot.querySelector('#message').handlers.input({ target: { value: 'fix: typo' } });
+  card.shadowRoot.querySelector('#confirm').click();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(hass.calls[0][1], 'commit_push');
+  assert.equal(hass.calls[0][2].message, 'fix: typo');
+  assert.match(html(card), /class="m-foot"/);
+});
+
+test('mini card: clean repository, commit disabled; error shown; zoom: false removes the button', () => {
+  let out = html(mini({}, makeHass()));
+  assert.match(out, /0 files/);
+  assert.match(out, /id="commit"[^>]*disabled/);
+  out = html(mini({ zoom: false }, makeHass({ status: 'error', error: 'push <denied>' })));
+  assert.match(out, /push &lt;denied&gt;/);
+  assert.doesNotMatch(out, /class="zoom"/);
+});
+
+test('mini card: French', () => {
+  const out = html(mini({}, makeHass({ language: 'fr', status: 'dirty', files: ['a.yaml'] })));
+  assert.match(out, /1 fichier/);
+  assert.match(out, /Afficher la carte complète/);
+});
+
+test('mini card editor: zoom toggle, left out of the YAML at its default', () => {
+  const editor = new GitSyncMiniCardEditor();
+  editor.appendChild = () => {};
+  const events = [];
+  editor.dispatchEvent = (ev) => events.push(ev.detail.config);
+  editor.setConfig({});
+  editor.hass = makeHass();
+  assert.ok(editor._form.schema.some((s) => s.name === 'zoom'));
+  assert.equal(editor._form.computeLabel({ name: 'zoom' }), 'Zoom button');
+  editor._form.dispatch({ zoom: true, show_files: true });
+  editor._form.dispatch({ zoom: false });
+  assert.deepEqual(JSON.parse(JSON.stringify(events)), [{}, { zoom: false }]);
+  const full = new GitSyncCardEditor();
+  full.appendChild = () => {};
+  full.setConfig({});
+  full.hass = makeHass();
+  assert.ok(!full._form.schema.some((s) => s.name === 'zoom'));
 });

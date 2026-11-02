@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0 - 2026-11-02
+
+### What's new
+- Mini card (`custom:git-sync-mini-card`): status, branch, last commit on one line, number of changed files, last push and Commit & push as an icon button, sized for 6 columns. Its zoom button at the top right switches it to the full card and back, and a click elsewhere brings back the compact view (not while a commit message is being written). In the compact view the commit message box takes the place of the content. The `zoom` option (visual editor) removes the button. Translated in every language of the card.
+
 ## 1.0.0 - 2026-11-02
 
 First stable release. No change since 0.1.5.

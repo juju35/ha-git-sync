@@ -1,4 +1,4 @@
-"""Render the Git Sync card with mock data and save the README screenshots.
+"""Render the Git Sync card and mini card with mock data and save the README screenshots.
 
 Usage: python scripts/screenshots.py  (needs `pip install playwright` and `playwright install chromium`)
 CHROMIUM_PATH=/path/to/chrome to use another browser. The clock is frozen so the "x min ago" stay the same.
@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CARD_JS = (ROOT / "custom_components/git_sync/frontend/git-sync-card.js").read_text()
 NOW = datetime.fromisoformat("2026-10-31T14:00:00+01:00")
 WIDTH = 460
+MINI_WIDTH = 300  # about 6 columns of a sections view
 
 THEMES = {
     "light": {
@@ -58,6 +59,8 @@ ICONS = {
     "export": "M23,12L19,8V11H10V13H19V16M1,18V6C1,4.89 1.9,4 3,4H15A2,2 0 0,1 17,6V9H15V6H3V18H15V15H17V18A2,2 0 0,1 15,20H3A2,2 0 0,1 1,18Z",
     "close": "M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z",
     "loading": "M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z",
+    "arrow-expand": "M10,21V19H6.41L10.91,14.5L9.5,13.09L5,17.59V14H3V21H10M14.5,10.91L19,6.41V10H21V3H14V5H17.59L13.09,9.5L14.5,10.91Z",
+    "arrow-collapse": "M19.5,3.09L15,7.59V4H13V11H20V9H16.41L20.91,4.5L19.5,3.09M4,13V15H7.59L3.09,19.5L4.5,20.91L9,16.41V20H11V13H4Z",
 }
 
 # Minimal stand-ins for Home Assistant's <ha-card> and <ha-icon>.
@@ -151,34 +154,43 @@ DIRTY = ("dirty", FILES)
 CLEAN = ("clean", [])
 ERROR = ("error", [], "git push failed: Permission denied (publickey).")
 
-# (file, theme, hass, action after mounting)
+# (file, theme, hass, action after mounting, card)
 SHOTS = [
-    ("card", "light", DIRTY, "files"),
-    ("card-dark", "dark", DIRTY, "files"),
-    ("card-clean", "light", CLEAN, None),
-    ("card-clean-dark", "dark", CLEAN, None),
-    ("card-error", "light", ERROR, None),
-    ("card-error-dark", "dark", ERROR, None),
-    ("card-confirm", "light", DIRTY, "confirm"),
-    ("card-confirm-dark", "dark", DIRTY, "confirm"),
+    ("card", "light", DIRTY, "files", "git-sync-card"),
+    ("card-dark", "dark", DIRTY, "files", "git-sync-card"),
+    ("card-clean", "light", CLEAN, None, "git-sync-card"),
+    ("card-clean-dark", "dark", CLEAN, None, "git-sync-card"),
+    ("card-error", "light", ERROR, None, "git-sync-card"),
+    ("card-error-dark", "dark", ERROR, None, "git-sync-card"),
+    ("card-confirm", "light", DIRTY, "confirm", "git-sync-card"),
+    ("card-confirm-dark", "dark", DIRTY, "confirm", "git-sync-card"),
+    ("mini", "light", DIRTY, None, "git-sync-mini-card"),
+    ("mini-dark", "dark", DIRTY, None, "git-sync-mini-card"),
+    ("mini-clean", "light", CLEAN, None, "git-sync-mini-card"),
+    ("mini-clean-dark", "dark", CLEAN, None, "git-sync-mini-card"),
+    ("mini-error", "light", ERROR, None, "git-sync-mini-card"),
+    ("mini-error-dark", "dark", ERROR, None, "git-sync-mini-card"),
+    ("mini-zoomed", "light", DIRTY, "zoom", "git-sync-mini-card"),
+    ("mini-zoomed-dark", "dark", DIRTY, "zoom", "git-sync-mini-card"),
 ]
 
 
-def page_html(theme):
+def page_html(theme, width):
     variables = "".join(f"{k}:{v};" for k, v in {**THEMES[theme], **COMMON}.items())
     return f"""<!doctype html><html><head><meta charset="utf-8"><style>
 :root {{ {variables} }}
 body {{ margin: 0; padding: 16px; background: var(--primary-background-color);
-       font-family: Roboto, "Segoe UI", Helvetica, Arial, sans-serif; width: {WIDTH}px; }}
+       font-family: Roboto, "Segoe UI", Helvetica, Arial, sans-serif; width: {width}px; }}
 </style></head><body><div id="root"></div></body></html>"""
 
 
-MOUNT = """([hass, dark, action]) => {
-    const el = document.createElement("git-sync-card");
-    el.setConfig({ type: "custom:git-sync-card" });
+MOUNT = """([hass, dark, action, card]) => {
+    const el = document.createElement(card);
+    el.setConfig({ type: `custom:${card}` });
     el.hass = { ...hass, themes: { darkMode: dark }, callService: async () => ({}) };
     document.getElementById("root").appendChild(el);
     if (action === "files") el.shadowRoot.querySelector(".toggle").click();
+    if (action === "zoom") el.shadowRoot.querySelector(".zoom").click();
     if (action === "confirm") {
         el.shadowRoot.querySelector("#commit").click();
         // The message written by the sparkle button (AI task) in the field.
@@ -218,17 +230,18 @@ def same_pixels(page, path: Path, png: bytes) -> bool:
 def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(executable_path=os.environ.get("CHROMIUM_PATH") or None)
-        for name, theme, state, action in SHOTS:
+        for name, theme, state, action, card in SHOTS:
+            width = MINI_WIDTH if card == "git-sync-mini-card" else WIDTH
             page = browser.new_page(device_scale_factor=2, viewport={"width": 1000, "height": 1600})
             page.on("pageerror", lambda err, name=name: print(f"{name}: page error: {err}"))
             page.clock.set_fixed_time(NOW.isoformat())
-            page.set_content(page_html(theme))
+            page.set_content(page_html(theme, width))
             page.add_script_tag(content=HA_ELEMENTS)
             page.add_script_tag(content=CARD_JS)
-            page.evaluate(MOUNT, [mock_hass(*state), theme == "dark", action])
+            page.evaluate(MOUNT, [mock_hass(*state), theme == "dark", action, card])
             page.wait_for_timeout(400)
             box = page.locator("#root").bounding_box()
-            clip = {"x": 0, "y": 0, "width": WIDTH + 32, "height": int(box["height"] + 0.999) + 32}
+            clip = {"x": 0, "y": 0, "width": width + 32, "height": int(box["height"] + 0.999) + 32}
             path = ROOT / "screenshots" / f"{name}.png"
             path.parent.mkdir(exist_ok=True)
             png = page.screenshot(clip=clip, animations="disabled")

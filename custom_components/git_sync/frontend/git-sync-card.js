@@ -1,10 +1,11 @@
 /**
  * git-sync-card — the Git status of a Home Assistant configuration (changes, last commit, last push, last
  * dashboard export), with Commit & push and Export dashboards actions.
+ * git-sync-mini-card — the same in a compact card, with a zoom button that switches it to the full card.
  * Served and added to the dashboard resources by the Git Sync integration.
  * https://github.com/juju35/ha-git-sync
  */
-var GIT_SYNC_CARD_VERSION = '1.0.0';
+var GIT_SYNC_CARD_VERSION = '1.1.0';
 
 const GS_I18N = {
   en: {
@@ -43,6 +44,8 @@ const GS_I18N = {
     exported_one: '{n} dashboard file exported',
     exported_many: '{n} dashboard files exported',
     failed: 'Failed: {e}',
+    zoom_in: 'Show the full card',
+    zoom_out: 'Back to the compact view',
     ed_entity: 'Git Sync sensor',
     ed_entity_helper: 'Status sensor of the repository; leave empty to find it automatically',
     ed_title: 'Title',
@@ -51,6 +54,8 @@ const GS_I18N = {
     ed_show_files_helper: 'Collapsible list of the files not committed yet',
     ed_show_export: 'Dashboard export',
     ed_show_export_helper: 'Time of the last export and the Export dashboards button',
+    ed_zoom: 'Zoom button',
+    ed_zoom_helper: 'Switches the mini card to the full card and back',
     ed_language: 'Language',
     ed_language_helper: 'Leave empty to follow Home Assistant',
   },
@@ -90,6 +95,8 @@ const GS_I18N = {
     exported_one: '{n} fichier de dashboard exporté',
     exported_many: '{n} fichiers de dashboard exportés',
     failed: 'Échec : {e}',
+    zoom_in: 'Afficher la carte complète',
+    zoom_out: 'Revenir à la vue compacte',
     ed_entity: 'Capteur Git Sync',
     ed_entity_helper: 'Capteur de statut du dépôt ; laisser vide pour le trouver automatiquement',
     ed_title: 'Titre',
@@ -98,6 +105,8 @@ const GS_I18N = {
     ed_show_files_helper: 'Liste repliable des fichiers pas encore committés',
     ed_show_export: 'Export des dashboards',
     ed_show_export_helper: 'Heure du dernier export et bouton Exporter les dashboards',
+    ed_zoom: 'Bouton zoom',
+    ed_zoom_helper: 'Bascule la mini-carte en carte complète, et inversement',
     ed_language: 'Langue',
     ed_language_helper: 'Laisser vide pour suivre Home Assistant',
   },
@@ -137,6 +146,8 @@ const GS_I18N = {
     exported_one: '{n} Dashboard-Datei exportiert',
     exported_many: '{n} Dashboard-Dateien exportiert',
     failed: 'Fehlgeschlagen: {e}',
+    zoom_in: 'Vollständige Karte anzeigen',
+    zoom_out: 'Zurück zur kompakten Ansicht',
     ed_entity: 'Git-Sync-Sensor',
     ed_entity_helper: 'Statussensor des Repositorys; leer lassen, um ihn automatisch zu finden',
     ed_title: 'Titel',
@@ -145,6 +156,8 @@ const GS_I18N = {
     ed_show_files_helper: 'Aufklappbare Liste der noch nicht committeten Dateien',
     ed_show_export: 'Dashboard-Export',
     ed_show_export_helper: 'Zeit des letzten Exports und die Schaltfläche Dashboards exportieren',
+    ed_zoom: 'Zoom-Schaltfläche',
+    ed_zoom_helper: 'Wechselt von der Mini-Karte zur vollständigen Karte und zurück',
     ed_language: 'Sprache',
     ed_language_helper: 'Leer lassen, um Home Assistant zu folgen',
   },
@@ -184,6 +197,8 @@ const GS_I18N = {
     exported_one: '{n} archivo de panel exportado',
     exported_many: '{n} archivos de panel exportados',
     failed: 'Error: {e}',
+    zoom_in: 'Mostrar la tarjeta completa',
+    zoom_out: 'Volver a la vista compacta',
     ed_entity: 'Sensor de Git Sync',
     ed_entity_helper: 'Sensor de estado del repositorio; déjalo vacío para encontrarlo automáticamente',
     ed_title: 'Título',
@@ -192,6 +207,8 @@ const GS_I18N = {
     ed_show_files_helper: 'Lista plegable de los archivos aún sin commit',
     ed_show_export: 'Exportación de paneles',
     ed_show_export_helper: 'Hora de la última exportación y el botón Exportar paneles',
+    ed_zoom: 'Botón de zoom',
+    ed_zoom_helper: 'Cambia la minitarjeta a la tarjeta completa y viceversa',
     ed_language: 'Idioma',
     ed_language_helper: 'Déjalo vacío para seguir a Home Assistant',
   },
@@ -231,6 +248,8 @@ const GS_I18N = {
     exported_one: '{n} file di dashboard esportato',
     exported_many: '{n} file di dashboard esportati',
     failed: 'Non riuscito: {e}',
+    zoom_in: 'Mostra la scheda completa',
+    zoom_out: 'Torna alla vista compatta',
     ed_entity: 'Sensore Git Sync',
     ed_entity_helper: 'Sensore di stato del repository; lascia vuoto per trovarlo automaticamente',
     ed_title: 'Titolo',
@@ -239,6 +258,8 @@ const GS_I18N = {
     ed_show_files_helper: 'Elenco comprimibile dei file non ancora inclusi in un commit',
     ed_show_export: 'Esportazione dashboard',
     ed_show_export_helper: 'Ora dell’ultima esportazione e pulsante Esporta dashboard',
+    ed_zoom: 'Pulsante zoom',
+    ed_zoom_helper: 'Passa dalla mini scheda alla scheda completa e viceversa',
     ed_language: 'Lingua',
     ed_language_helper: 'Lascia vuoto per seguire Home Assistant',
   },
@@ -278,6 +299,8 @@ const GS_I18N = {
     exported_one: '{n} dashboardbestand geëxporteerd',
     exported_many: '{n} dashboardbestanden geëxporteerd',
     failed: 'Mislukt: {e}',
+    zoom_in: 'Volledige kaart weergeven',
+    zoom_out: 'Terug naar de compacte weergave',
     ed_entity: 'Git Sync-sensor',
     ed_entity_helper: 'Statussensor van de repository; leeg laten om hem automatisch te vinden',
     ed_title: 'Titel',
@@ -286,6 +309,8 @@ const GS_I18N = {
     ed_show_files_helper: 'Inklapbare lijst van de nog niet gecommitte bestanden',
     ed_show_export: 'Dashboardexport',
     ed_show_export_helper: 'Tijdstip van de laatste export en de knop Dashboards exporteren',
+    ed_zoom: 'Zoomknop',
+    ed_zoom_helper: 'Schakelt de minikaart over naar de volledige kaart en terug',
     ed_language: 'Taal',
     ed_language_helper: 'Leeg laten om Home Assistant te volgen',
   },
@@ -325,6 +350,8 @@ const GS_I18N = {
     exported_one: '{n} ficheiro de painel exportado',
     exported_many: '{n} ficheiros de painéis exportados',
     failed: 'Falhou: {e}',
+    zoom_in: 'Mostrar o cartão completo',
+    zoom_out: 'Voltar à vista compacta',
     ed_entity: 'Sensor do Git Sync',
     ed_entity_helper: 'Sensor de estado do repositório; deixe vazio para o encontrar automaticamente',
     ed_title: 'Título',
@@ -333,6 +360,8 @@ const GS_I18N = {
     ed_show_files_helper: 'Lista recolhível dos ficheiros ainda sem commit',
     ed_show_export: 'Exportação de painéis',
     ed_show_export_helper: 'Hora da última exportação e o botão Exportar painéis',
+    ed_zoom: 'Botão de zoom',
+    ed_zoom_helper: 'Alterna o minicartão para o cartão completo e vice-versa',
     ed_language: 'Idioma',
     ed_language_helper: 'Deixe vazio para seguir o Home Assistant',
   },
@@ -372,6 +401,8 @@ const GS_I18N = {
     exported_one: 'Wyeksportowano {n} plik dashboardu',
     exported_many: 'Wyeksportowane pliki dashboardów: {n}',
     failed: 'Niepowodzenie: {e}',
+    zoom_in: 'Pokaż pełną kartę',
+    zoom_out: 'Wróć do widoku kompaktowego',
     ed_entity: 'Czujnik Git Sync',
     ed_entity_helper: 'Czujnik stanu repozytorium; pozostaw puste, aby znaleźć go automatycznie',
     ed_title: 'Tytuł',
@@ -380,6 +411,8 @@ const GS_I18N = {
     ed_show_files_helper: 'Zwijana lista plików jeszcze nieobjętych commitem',
     ed_show_export: 'Eksport dashboardów',
     ed_show_export_helper: 'Czas ostatniego eksportu i przycisk Eksportuj dashboardy',
+    ed_zoom: 'Przycisk powiększenia',
+    ed_zoom_helper: 'Przełącza minikartę na pełną kartę i z powrotem',
     ed_language: 'Język',
     ed_language_helper: 'Pozostaw puste, aby używać języka Home Assistanta',
   },
@@ -419,6 +452,8 @@ const GS_I18N = {
     exported_one: '{n} датотека контролне табле је извезена',
     exported_many: 'Извезено датотека контролних табли: {n}',
     failed: 'Није успело: {e}',
+    zoom_in: 'Прикажи целу картицу',
+    zoom_out: 'Назад на компактни приказ',
     ed_entity: 'Git Sync сензор',
     ed_entity_helper: 'Сензор статуса репозиторијума; остави празно за аутоматско проналажење',
     ed_title: 'Наслов',
@@ -427,6 +462,8 @@ const GS_I18N = {
     ed_show_files_helper: 'Склопива листа датотека које још нису commit-оване',
     ed_show_export: 'Извоз контролних табли',
     ed_show_export_helper: 'Време последњег извоза и дугме „Извези контролне табле“',
+    ed_zoom: 'Дугме за увећање',
+    ed_zoom_helper: 'Пребацује мини картицу на пун приказ и назад',
     ed_language: 'Језик',
     ed_language_helper: 'Остави празно да прати језик Home Assistant-а',
   },
@@ -466,6 +503,8 @@ const GS_I18N = {
     exported_one: '{n} datoteka kontrolne table je izvezena',
     exported_many: 'Izvezeno datoteka kontrolnih tabli: {n}',
     failed: 'Nije uspelo: {e}',
+    zoom_in: 'Prikaži celu karticu',
+    zoom_out: 'Nazad na kompaktni prikaz',
     ed_entity: 'Git Sync senzor',
     ed_entity_helper: 'Senzor statusa repozitorijuma; ostavi prazno za automatsko pronalaženje',
     ed_title: 'Naslov',
@@ -474,6 +513,8 @@ const GS_I18N = {
     ed_show_files_helper: 'Sklopiva lista datoteka koje još nisu commit-ovane',
     ed_show_export: 'Izvoz kontrolnih tabli',
     ed_show_export_helper: 'Vreme poslednjeg izvoza i dugme „Izvezi kontrolne table“',
+    ed_zoom: 'Dugme za uvećanje',
+    ed_zoom_helper: 'Prebacuje mini karticu na pun prikaz i nazad',
     ed_language: 'Jezik',
     ed_language_helper: 'Ostavi prazno da prati jezik Home Assistant-a',
   },
@@ -506,6 +547,7 @@ const gsEsc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 const GS_DEFAULTS = { show_files: true, show_export: true };
+const GS_MINI_DEFAULTS = { ...GS_DEFAULTS, zoom: true };
 const GS_FILES_SHOWN = 30;
 const GS_STATUSES = ['clean', 'dirty', 'ahead', 'error'];
 
@@ -539,6 +581,10 @@ function gsDevices(registry) {
   return devices;
 }
 
+// A click in a dialog opened from the card (more-info…) is not a click elsewhere.
+const gsInDialog = (ev) =>
+  (ev.composedPath?.() || []).some((n) => ['ha-more-info-dialog', 'ha-dialog', 'dialog'].includes(n?.localName));
+
 // "git@github.com:me/homeassistant-config.git" → "me/homeassistant-config".
 const gsRepo = (url) => {
   if (!url) return '';
@@ -563,10 +609,10 @@ class GitSyncCard extends HTMLElement {
     this._busy = null;
     this._draft = '';
     this._generating = false;
+    // A click elsewhere folds the changed files (and brings the mini card back to its compact view).
     this._outside = (ev) => {
-      if (!this._filesOpen || ev.composedPath?.().includes(this)) return;
-      this._filesOpen = false;
-      this._render();
+      if (ev.composedPath?.().includes(this) || gsInDialog(ev)) return;
+      if (this._collapse()) this._render();
     };
   }
 
@@ -576,6 +622,23 @@ class GitSyncCard extends HTMLElement {
 
   disconnectedCallback() {
     document.removeEventListener?.('click', this._outside, true);
+  }
+
+  // Folds what a click elsewhere folds; true when something changed.
+  _collapse() {
+    if (!this._filesOpen) return false;
+    this._filesOpen = false;
+    return true;
+  }
+
+  // The mini card's compact view (see GitSyncMiniCard).
+  _compact() {
+    return false;
+  }
+
+  // Button at the far right of the header: only the mini card has one.
+  _zoomButton() {
+    return '';
   }
 
   setConfig(config) {
@@ -738,6 +801,7 @@ class GitSyncCard extends HTMLElement {
       root.querySelector('#message')?.focus?.({ preventScroll: true });
     });
     on('#export', () => this._call('export_dashboards'));
+    on('.zoom', () => this._toggleZoom?.());
     const close = () => {
       this._confirm = false;
       this._draft = '';
@@ -763,6 +827,7 @@ class GitSyncCard extends HTMLElement {
     const el = this.shadowRoot?.activeElement;
     if (!el) return null;
     if (el.id) return `#${el.id}`;
+    if (el.classList?.contains('zoom')) return '.zoom';
     return el.classList?.contains('toggle') ? '.toggle' : null;
   }
 
@@ -796,7 +861,9 @@ class GitSyncCard extends HTMLElement {
     const pushObj = hass.states[ids.last_push];
     const exportObj = hass.states[ids.last_export];
     const busy = this._busy;
-    const subtitle = [a.branch, gsRepo(a.remote_url)].filter(Boolean).map(gsEsc).join(' → ');
+    const compact = this._compact();
+    // Compact view: the branch alone, the remote repository is in the full card.
+    const subtitle = [a.branch, compact ? '' : gsRepo(a.remote_url)].filter(Boolean).map(gsEsc).join(' → ');
 
     const commit = valid(commitObj)
       ? `<div class="commit">
@@ -847,9 +914,10 @@ class GitSyncCard extends HTMLElement {
         )
       : '';
 
+    // Compact view: the confirmation takes the place of the content (no room for a popup over it).
     const popup = this._confirm
-      ? `<div class="overlay"></div>
-        <div class="popup" role="dialog" aria-modal="true">
+      ? `${compact ? '' : '<div class="overlay"></div>'}
+        <div class="popup${compact ? ' inline' : ''}" role="dialog" aria-modal="true">
           <div class="p-title">${gsEsc(this._t('confirm_title'))}</div>
           <div class="p-text">${gsEsc(count > 0 ? this._n('confirm_text', count) : this._t('confirm_push'))}</div>
           <div class="field${this._generating ? ' generating' : ''}">
@@ -876,9 +944,47 @@ class GitSyncCard extends HTMLElement {
         <ha-icon icon="${busy === service ? 'mdi:loading' : icon}"></ha-icon>${gsEsc(label)}</button>`;
 
     const pillText = busy ? this._t('working') : this._t(status);
+    const error = a.last_error ? `<div class="err">${gsEsc(a.last_error)}</div>` : '';
+    let body;
+    if (compact && this._confirm) body = popup;
+    else if (compact) {
+      // Compact view: the last commit on one line, the changes and the last push, Commit & push as an icon.
+      const commitLine = valid(commitObj)
+        ? `<div class="m-commit" title="${gsEsc(this._absolute(commitObj.state))}">
+            <span class="m-msg">${gsEsc(commitObj.attributes?.message)}</span>
+            <span class="m-ago">${gsEsc(this._ago(commitObj.state))}</span>
+          </div>`
+        : '';
+      const pushText = valid(pushObj) ? this._ago(pushObj.state) : this._t('never');
+      // "0 files" rather than "Working tree clean": fits beside the last push on a 6-column card.
+      const changesText = this._n('files', count);
+      const commitLabel = busy === 'commit_push' ? this._t('working') : this._t('commit');
+      body = `${commitLine}${error}
+        <div class="m-foot">
+          <span class="m-chip${count > 0 ? ' changed' : ''}" title="${gsEsc(this._t('changes'))}: ${gsEsc(changesText)}">
+            <ha-icon icon="mdi:file-document-multiple-outline"></ha-icon><span class="m-txt">${gsEsc(changesText)}</span></span>
+          <span class="m-chip" title="${gsEsc(this._t('last_push'))}: ${gsEsc(pushText)}">
+            <ha-icon icon="mdi:cloud-check-outline"></ha-icon><span class="m-txt">${gsEsc(pushText)}</span></span>
+          <button class="icon-btn${busy === 'commit_push' ? ' busy' : ''}" id="commit" title="${gsEsc(commitLabel)}" aria-label="${gsEsc(commitLabel)}" ${canCommit ? '' : 'disabled'}>
+            <ha-icon icon="${busy === 'commit_push' ? 'mdi:loading' : 'mdi:source-commit-end'}"></ha-icon></button>
+        </div>`;
+    } else {
+      body = `${commit}
+        <div class="rows">
+          ${changes}
+          ${timeRow('mdi:cloud-check-outline', this._t('last_push'), pushObj)}
+          ${exportRow}
+        </div>
+        ${error}
+        <div class="actions">
+          ${button('commit', 'commit_push', 'mdi:source-commit-end', this._t('commit'), canCommit)}
+          ${c.show_export ? button('export', 'export_dashboards', 'mdi:export', this._t('export'), !busy) : ''}
+        </div>
+        ${popup}`;
+    }
     this.shadowRoot.innerHTML = `
       <style>${this._css()}</style>
-      <ha-card class="st-${status}">
+      <ha-card class="st-${status}${compact ? ' compact' : ''}">
         <div class="header">
           <div class="badge"><ha-icon icon="mdi:git"></ha-icon></div>
           <div class="titles">
@@ -886,19 +992,9 @@ class GitSyncCard extends HTMLElement {
             <div class="subtitle">${subtitle}</div>
           </div>
           <span class="pill${busy ? ' busy' : ''}" title="${gsEsc(pillText)}" aria-label="${gsEsc(pillText)}"><span class="pill-text">${gsEsc(pillText)}</span></span>
+          ${this._zoomButton()}
         </div>
-        ${commit}
-        <div class="rows">
-          ${changes}
-          ${timeRow('mdi:cloud-check-outline', this._t('last_push'), pushObj)}
-          ${exportRow}
-        </div>
-        ${a.last_error ? `<div class="err">${gsEsc(a.last_error)}</div>` : ''}
-        <div class="actions">
-          ${button('commit', 'commit_push', 'mdi:source-commit-end', this._t('commit'), canCommit)}
-          ${c.show_export ? button('export', 'export_dashboards', 'mdi:export', this._t('export'), !busy) : ''}
-        </div>
-        ${popup}
+        ${body}
       </ha-card>`;
     this._bind();
   }
@@ -1018,20 +1114,118 @@ class GitSyncCard extends HTMLElement {
       .hint { margin-top: 4px; font-size: 11px; color: var(--secondary-text-color); }
       .popup .actions { margin-top: 14px; }
 
+      /* Mini card: zoom button at the far right of the header. */
+      .zoom { flex: none; align-self: flex-start; width: 24px; height: 24px; margin: 0 -4px 0 -2px; padding: 0;
+              border: none; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+              background: transparent; color: var(--secondary-text-color); transition: background .15s ease; }
+      .zoom ha-icon { --mdc-icon-size: 16px; }
+      .zoom:hover { background: color-mix(in srgb, var(--secondary-text-color) 16%, transparent); color: var(--primary-text-color); }
+      .zoom:focus-visible { outline: 2px solid var(--gs-accent); outline-offset: 1px; }
+
+      /* Compact view: 32 px badge, the last commit on one line, the changes and the last push beside an icon button. */
+      ha-card.compact { padding: 12px; }
+      .compact .badge { width: 32px; height: 32px; }
+      .compact .badge ha-icon { --mdc-icon-size: 20px; }
+      .m-commit { margin-top: 10px; display: flex; align-items: baseline; gap: 8px; min-width: 0; font-size: 13px; }
+      .m-msg { flex: 1 1 auto; min-width: 0; color: var(--primary-text-color);
+               white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .m-ago { flex: none; font-size: 12px; color: var(--secondary-text-color); }
+      .compact .err { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+      .m-foot { margin-top: 8px; display: flex; align-items: center; gap: 12px; min-width: 0; container-type: inline-size; }
+      .m-chip { flex: 0 1 auto; min-width: 0; display: inline-flex; align-items: center; gap: 4px;
+                font-size: 12px; color: var(--secondary-text-color); }
+      .m-chip ha-icon { --mdc-icon-size: 16px; flex: none; }
+      .m-chip.changed { color: color-mix(in srgb, var(--gs-warn) 40%, var(--primary-text-color)); }
+      .m-chip.changed ha-icon { color: var(--gs-warn); }
+      .m-txt { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      /* Very narrow mini card (6 columns on a phone): the chips keep their icon, their text stays in the tooltip. */
+      @container (max-width: 150px) { .m-chip .m-txt { display: none; } }
+      button.icon-btn { flex: none; margin-left: auto; width: 36px; height: 36px; padding: 0; border-radius: 10px;
+                        display: grid; place-items: center; cursor: pointer; color: var(--gs-accent); background: transparent;
+                        border: 1px solid color-mix(in srgb, var(--gs-accent) 45%, transparent); transition: background .15s ease; }
+      button.icon-btn ha-icon { --mdc-icon-size: 18px; }
+      button.icon-btn:hover:not([disabled]) { background: color-mix(in srgb, var(--gs-accent) 10%, transparent); }
+      button.icon-btn:focus-visible { outline: 2px solid var(--gs-accent); outline-offset: 2px; }
+      button.icon-btn[disabled] { cursor: default; opacity: .45; }
+      button.icon-btn.busy ha-icon { animation: gs-spin 1s linear infinite; }
+      /* The confirmation in the flow of the compact card, instead of a popup over its content. */
+      .popup.inline { position: static; margin-top: 12px; padding: 0; border: none; border-radius: 0; box-shadow: none;
+                      background: transparent; }
+
       @keyframes gs-spin { to { transform: rotate(360deg); } }
       @keyframes gs-pulse { 50% { opacity: .3; } }
       @media (prefers-reduced-motion: reduce) {
-        .pill.busy::before, button.action.busy ha-icon, .generating .gen ha-icon { animation: none; }
-        .chevron, button.action, .gen { transition: none; }
+        .pill.busy::before, button.action.busy ha-icon, button.icon-btn.busy ha-icon, .generating .gen ha-icon { animation: none; }
+        .chevron, button.action, button.icon-btn, .gen, .zoom { transition: none; }
       }
     `;
   }
 }
 
+// ── Mini card ────────────────────────────────────────────────────────────────
+// The mini card extends the full card: its zoom button (top right, `zoom: false` removes it) switches it to the
+// full card's content, same configuration, and back; a click anywhere outside the card brings it back too.
+class GitSyncMiniCard extends GitSyncCard {
+  static getConfigElement() {
+    return document.createElement('git-sync-mini-card-editor');
+  }
+
+  constructor() {
+    super();
+    this._zoomed = false;
+  }
+
+  setConfig(config) {
+    super.setConfig({ ...GS_MINI_DEFAULTS, ...config });
+  }
+
+  getCardSize() {
+    return this._zoomed ? super.getCardSize() : 2;
+  }
+
+  getGridOptions() {
+    return this._zoomed ? super.getGridOptions() : { columns: 6, min_columns: 6, rows: 'auto' };
+  }
+
+  _compact() {
+    return !this._zoomed;
+  }
+
+  _toggleZoom() {
+    this._zoomed = !this._zoomed;
+    this._filesOpen = false;
+    this._render();
+  }
+
+  // A click elsewhere also leaves the full view, unless a commit message is being written.
+  _collapse() {
+    const folded = super._collapse();
+    if (!this._zoomed || this._confirm) return folded;
+    this._zoomed = false;
+    return true;
+  }
+
+  _zoomButton() {
+    if (this._config.zoom === false) return '';
+    const label = this._t(this._zoomed ? 'zoom_out' : 'zoom_in');
+    return `<button class="zoom" title="${gsEsc(label)}" aria-label="${gsEsc(label)}" aria-expanded="${this._zoomed}">
+      <ha-icon icon="${this._zoomed ? 'mdi:arrow-collapse' : 'mdi:arrow-expand'}"></ha-icon></button>`;
+  }
+}
+
 // ── Editor ───────────────────────────────────────────────────────────────────
-const GS_HELPERS = ['entity', 'title', 'show_files', 'show_export', 'language'];
+const GS_HELPERS = ['entity', 'title', 'zoom', 'show_files', 'show_export', 'language'];
 
 class GitSyncCardEditor extends HTMLElement {
+  // Options of the card; the mini card's editor adds the zoom button.
+  _defaults() {
+    return GS_DEFAULTS;
+  }
+
+  _options() {
+    return [];
+  }
+
   setConfig(config) {
     this._config = config;
     this._update();
@@ -1053,7 +1247,7 @@ class GitSyncCardEditor extends HTMLElement {
         const config = { ...ev.detail.value };
         // Options left at their default are not written to the YAML.
         for (const k of Object.keys(config)) {
-          if (config[k] === '' || config[k] == null || GS_DEFAULTS[k] === config[k]) delete config[k];
+          if (config[k] === '' || config[k] == null || this._defaults()[k] === config[k]) delete config[k];
         }
         this.dispatchEvent(new CustomEvent('config-changed', { detail: { config }, bubbles: true, composed: true }));
       });
@@ -1065,10 +1259,11 @@ class GitSyncCardEditor extends HTMLElement {
     // Reassigning the schema at every Home Assistant update would re-render ha-form while the user is typing.
     if (this._deps && this._deps.config === c && this._deps.lang === lang) return;
     this._deps = { config: c, lang };
-    this._form.data = { ...GS_DEFAULTS, ...c };
+    this._form.data = { ...this._defaults(), ...c };
     this._form.schema = [
       { name: 'entity', selector: { entity: { filter: { integration: 'git_sync', domain: 'sensor' } } } },
       { name: 'title', selector: { text: {} } },
+      ...this._options(),
       { name: 'show_files', selector: { boolean: {} } },
       { name: 'show_export', selector: { boolean: {} } },
       {
@@ -1095,16 +1290,37 @@ class GitSyncCardEditor extends HTMLElement {
   }
 }
 
+class GitSyncMiniCardEditor extends GitSyncCardEditor {
+  _defaults() {
+    return GS_MINI_DEFAULTS;
+  }
+
+  _options() {
+    return [{ name: 'zoom', selector: { boolean: {} } }];
+  }
+}
+
 if (!customElements.get('git-sync-card')) {
   customElements.define('git-sync-card', GitSyncCard);
   customElements.define('git-sync-card-editor', GitSyncCardEditor);
+  customElements.define('git-sync-mini-card', GitSyncMiniCard);
+  customElements.define('git-sync-mini-card-editor', GitSyncMiniCardEditor);
   window.customCards = window.customCards || [];
-  window.customCards.push({
-    type: 'git-sync-card',
-    name: 'Git Sync Card',
-    description: 'Git status of the configuration, Commit & push and dashboard export',
-    preview: true,
-    documentationURL: 'https://github.com/juju35/ha-git-sync',
-  });
+  window.customCards.push(
+    {
+      type: 'git-sync-card',
+      name: 'Git Sync Card',
+      description: 'Git status of the configuration, Commit & push and dashboard export',
+      preview: true,
+      documentationURL: 'https://github.com/juju35/ha-git-sync',
+    },
+    {
+      type: 'git-sync-mini-card',
+      name: 'Git Sync Mini Card',
+      description: 'Compact Git status with Commit & push; its zoom button shows the full card',
+      preview: true,
+      documentationURL: 'https://github.com/juju35/ha-git-sync',
+    },
+  );
   console.info(`%c GIT-SYNC-CARD %c v${GIT_SYNC_CARD_VERSION} `, 'background:#f05133;color:#fff;font-weight:700', '');
 }
