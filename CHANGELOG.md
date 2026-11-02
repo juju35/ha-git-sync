@@ -2,7 +2,9 @@
 
 ## 1.0.0 - 2026-11-02
 
-First stable release.
+First stable release. No change since 0.1.5.
+
+## 0.1.5 - 2026-11-01
 
 ### Fixes
 - Dashboard export: the cleanup only removes the files an earlier export wrote into the export folder. Before, it deleted every `lovelace*` file of the folder it had not just written, including your own YAML-mode dashboards such as `lovelace-energy.yaml`, and the automatic commit pushed the deletion. Nothing is removed from a folder the export never wrote to, nor on the first export after this update. A file the export wrote and you edited since (for example reused as a YAML-mode dashboard) is no longer deleted with its dashboard, and a file of yours that has the name of an export (`lovelace_resources.yaml`…) is no longer overwritten: it is skipped with a warning in the log.
