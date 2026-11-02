@@ -162,20 +162,32 @@ def _options_schema(hass: HomeAssistant, options: dict[str, Any]) -> vol.Schema:
 
 
 async def _validate(data: dict[str, Any]) -> dict[str, str]:
-    """Check that the path is a git work tree with the given remote."""
+    """Check that the path is a git work tree with the given remote, and that git knows the commit author."""
     repo = GitRepo(
         data[CONF_REPO_PATH],
         remote=data[CONF_REMOTE],
         branch=data.get(CONF_BRANCH, ""),
         ssh_key=data[CONF_SSH_KEY],
-        author_name="",
-        author_email="",
+        author_name=data.get(CONF_AUTHOR_NAME) or "",
+        author_email=data.get(CONF_AUTHOR_EMAIL) or "",
     )
     if not await repo.is_repository():
         return {CONF_REPO_PATH: "not_a_repository"}
     if await repo.remote_url() is None:
         return {CONF_REMOTE: "unknown_remote"}
+    # The Home Assistant container does not see the `git config --global` made in the Terminal add-on: without
+    # an identity, every commit would fail with "Author identity unknown".
+    if not await repo.has_identity():
+        return {CONF_AUTHOR_NAME if data.get(CONF_AUTHOR_EMAIL) else CONF_AUTHOR_EMAIL: "author_required"}
     return {}
+
+
+def _notify_service_exists(hass: HomeAssistant, service: str) -> bool:
+    """Same reading as the notification sent after a commit: "notify.name", "domain.name" or "name"."""
+    domain, _, name = service.strip().partition(".")
+    if not name:
+        domain, name = "notify", domain
+    return hass.services.has_service(domain, name)
 
 
 class GitSyncConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -235,14 +247,22 @@ class GitSyncOptionsFlow(OptionsFlow):
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Edit the options."""
+        errors: dict[str, str] = {}
         if user_input is not None:
             for key in (CONF_COMMIT_INTERVAL, CONF_STATUS_INTERVAL):
                 user_input[key] = int(user_input[key])
             # An emptied field is left out of user_input: store it empty so it isn't suggested again.
             user_input.setdefault(CONF_AI_TASK_ENTITY, None)
             _fill_empty(user_input, _OPTIONS_OPTIONAL)
-            return self.async_create_entry(data=user_input)
+            service = user_input[CONF_NOTIFY_SERVICE].strip()
+            if service and not _notify_service_exists(self.hass, service):
+                errors[CONF_NOTIFY_SERVICE] = "unknown_notify_service"
+            else:
+                return self.async_create_entry(data=user_input)
 
+        schema = _options_schema(self.hass, dict(self.config_entry.options))
         return self.async_show_form(
-            step_id="init", data_schema=_options_schema(self.hass, dict(self.config_entry.options))
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(schema, user_input) if user_input else schema,
+            errors=errors,
         )

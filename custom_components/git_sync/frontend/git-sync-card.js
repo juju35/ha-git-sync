@@ -4,7 +4,7 @@
  * Served and added to the dashboard resources by the Git Sync integration.
  * https://github.com/juju35/ha-git-sync
  */
-var GIT_SYNC_CARD_VERSION = '0.1.4';
+var GIT_SYNC_CARD_VERSION = '0.1.5';
 
 const GS_I18N = {
   en: {
@@ -653,7 +653,8 @@ class GitSyncCard extends HTMLElement {
     const devices = gsDevices(hass?.entities);
     if (this._config.entity) {
       const device = hass?.entities?.[this._config.entity]?.device_id || '';
-      return { ...(devices[device] || {}), status: this._config.entity, device };
+      // The editor offers every sensor of the integration: any of them leads to its device's status sensor.
+      return { ...(devices[device] || {}), status: devices[device]?.status || this._config.entity, device };
     }
     const [device, ids] = Object.entries(devices).find(([, d]) => d.status) || [];
     return ids ? { ...ids, device } : null;
@@ -713,7 +714,7 @@ class GitSyncCard extends HTMLElement {
       this._generating = false;
       if (this._confirm) {
         this._render();
-        this.shadowRoot.querySelector('#message')?.focus?.();
+        this.shadowRoot.querySelector('#message')?.focus?.({ preventScroll: true });
       }
     }
   }
@@ -734,7 +735,7 @@ class GitSyncCard extends HTMLElement {
     on('#commit', () => {
       this._confirm = true;
       this._render();
-      root.querySelector('#message')?.focus?.();
+      root.querySelector('#message')?.focus?.({ preventScroll: true });
     });
     on('#export', () => this._call('export_dashboards'));
     const close = () => {
@@ -768,7 +769,7 @@ class GitSyncCard extends HTMLElement {
   _render() {
     const focused = this._focused();
     this._paint();
-    if (focused) this.shadowRoot.querySelector(focused)?.focus?.();
+    if (focused) this.shadowRoot.querySelector(focused)?.focus?.({ preventScroll: true });
   }
 
   _paint() {
@@ -874,6 +875,7 @@ class GitSyncCard extends HTMLElement {
       `<button class="action${busy === service ? ' busy' : ''}" id="${id}" ${enabled ? '' : 'disabled'}>
         <ha-icon icon="${busy === service ? 'mdi:loading' : icon}"></ha-icon>${gsEsc(label)}</button>`;
 
+    const pillText = busy ? this._t('working') : this._t(status);
     this.shadowRoot.innerHTML = `
       <style>${this._css()}</style>
       <ha-card class="st-${status}">
@@ -883,7 +885,7 @@ class GitSyncCard extends HTMLElement {
             <div class="title">${gsEsc(c.title || this._t('title'))}</div>
             <div class="subtitle">${subtitle}</div>
           </div>
-          <span class="pill${busy ? ' busy' : ''}">${gsEsc(busy ? this._t('working') : this._t(status))}</span>
+          <span class="pill${busy ? ' busy' : ''}" title="${gsEsc(pillText)}" aria-label="${gsEsc(pillText)}"><span class="pill-text">${gsEsc(pillText)}</span></span>
         </div>
         ${commit}
         <div class="rows">
@@ -903,9 +905,11 @@ class GitSyncCard extends HTMLElement {
 
   _css() {
     return `
-      :host { --gs-ok: var(--success-color, #43a047); --gs-warn: var(--warning-color, #ffa600);
+      :host { display: block; --gs-ok: var(--success-color, #43a047); --gs-warn: var(--warning-color, #ffa600);
               --gs-info: var(--info-color, #039be5); --gs-alert: var(--error-color, #db4437);
               --gs-off: var(--disabled-text-color, #9e9e9e); --gs-accent: var(--primary-color, #03a9f4); }
+      /* No size container on ha-card itself: its intrinsic width would drop to its padding in an inline-block
+         parent, a grid column sized auto, layout-card or button-card. Only the header is one (see .header). */
       ha-card { position: relative; overflow: hidden; padding: 16px; --s: var(--gs-off); }
       ha-card.st-clean { --s: var(--gs-ok); }
       ha-card.st-dirty { --s: var(--gs-warn); }
@@ -913,18 +917,33 @@ class GitSyncCard extends HTMLElement {
       ha-card.st-error { --s: var(--gs-alert); }
       .empty { padding: 8px 0; color: var(--secondary-text-color); }
 
-      .header { display: flex; align-items: center; gap: 12px; }
+      /* Same header as the other cards: the title keeps a few letters, the pill shrinks, nothing leaves the card. */
+      /* Gap 6px on the narrowest cards (6 columns of a phone): room for four letters of the title. */
+      .header { display: flex; align-items: center; gap: clamp(6px, 100% - 140px, 10px); min-width: 0;
+                container-type: inline-size; }
       .badge { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
                color: var(--s); background: color-mix(in srgb, var(--s) 18%, transparent); }
-      .badge ha-icon { --mdc-icon-size: 22px; }
-      .titles { flex: 1; min-width: 0; }
-      .title { font-size: 16px; font-weight: 500; line-height: 22px; color: var(--primary-text-color); }
+      .badge ha-icon { --mdc-icon-size: 24px; }
+      /* Basis 0: the title takes what the pill leaves, the pill keeps its whole label while there is room. */
+      /* 5ch: four letters and the ellipsis of a proportional font ("Git S…"). */
+      .titles { flex: 1 1 0; min-width: 5ch; font-size: 16px; }
+      .title { min-width: 4ch; font-size: 16px; font-weight: 500; line-height: 22px; color: var(--primary-text-color);
+               white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .subtitle { font-size: 12px; line-height: 16px; color: var(--secondary-text-color);
                   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .pill { flex: none; align-self: flex-start; margin-top: 2px; display: inline-flex; align-items: center; gap: 6px;
-              padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 500;
-              color: var(--s); background: color-mix(in srgb, var(--s) 14%, transparent); }
-      .pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--s); }
+      /* Text: the state colour mixed with the text colour, readable on the tinted background in both themes. */
+      .pill { flex: 0 1 auto; min-width: 0; box-sizing: border-box; align-self: flex-start; margin-top: 2px;
+              display: inline-flex; align-items: center; gap: 6px; padding: 1px 8px; border-radius: 999px;
+              font-size: 11px; line-height: 18px; font-weight: 500;
+              color: color-mix(in srgb, var(--s) 40%, var(--primary-text-color));
+              background: color-mix(in srgb, var(--s) 14%, transparent); }
+      .pill::before { content: ''; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--s); }
+      .pill-text { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      /* Narrow card: the pill keeps its dot only, its text stays in title / aria-label. */
+      @container (max-width: 200px) {
+        .pill { gap: 0; padding: 4px; }
+        .pill-text { display: none; }
+      }
       .pill.busy::before { animation: gs-pulse 1s ease-in-out infinite; }
 
       .commit { margin-top: 14px; padding: 10px 12px; border-radius: 12px;
@@ -935,10 +954,14 @@ class GitSyncCard extends HTMLElement {
       .sha { font-family: var(--code-font-family, monospace); }
 
       .rows { margin-top: 10px; display: flex; flex-direction: column; }
-      .row { display: flex; align-items: center; gap: 10px; min-height: 36px; font-size: 14px; }
+      /* A value that does not fit beside its label goes under it, and wraps: never cut by the card. */
+      /* The gap narrows to 4px on the narrowest cards (6 columns of a phone) so a long word fits beside the icon. */
+      .row { display: flex; flex-wrap: wrap; align-items: center; column-gap: clamp(4px, 100% - 120px, 10px);
+             min-height: 36px; font-size: 14px; }
       .row ha-icon { --mdc-icon-size: 20px; color: var(--secondary-text-color); flex: none; }
-      .row .label { flex: 1; color: var(--primary-text-color); }
-      .row .value { color: var(--secondary-text-color); text-align: right; }
+      .row .label { flex: 1 1 0; min-width: min(7em, 100% - 24px); overflow-wrap: break-word; color: var(--primary-text-color); }
+      .row .value { flex: 0 1 auto; min-width: 0; margin-left: auto; overflow-wrap: anywhere;
+                    color: var(--secondary-text-color); text-align: right; }
       .row.toggle { cursor: pointer; user-select: none; }
       .row.toggle:focus-visible { outline: 2px solid var(--gs-accent); outline-offset: 2px; border-radius: 6px; }
       .chevron { transition: transform .2s ease; }
@@ -948,14 +971,21 @@ class GitSyncCard extends HTMLElement {
       .files li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
       .err { margin-top: 8px; padding: 8px 10px; border-radius: 10px; font-size: 12px; word-break: break-word;
-             color: var(--gs-alert); background: color-mix(in srgb, var(--gs-alert) 10%, transparent); }
+             color: color-mix(in srgb, var(--gs-alert) 40%, var(--primary-text-color));
+             background: color-mix(in srgb, var(--gs-alert) 10%, transparent); }
 
-      .actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
-      button.action { flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-                      white-space: nowrap; min-height: 38px; padding: 0 14px; border-radius: 10px; cursor: pointer;
+      .actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; container-type: inline-size; }
+      /* min-width 0 and wrapping: a long label (pl, sr) wraps instead of leaving a narrow card. */
+      button.action { flex: 1 1 auto; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+                      white-space: normal; overflow-wrap: anywhere; text-align: center; line-height: 18px;
+                      min-height: 38px; padding: 4px 12px; border-radius: 10px; cursor: pointer;
                       font: inherit; font-size: 14px; font-weight: 500; color: var(--gs-accent); background: transparent;
                       border: 1px solid color-mix(in srgb, var(--gs-accent) 45%, transparent); transition: background .15s ease; }
       button.action ha-icon { --mdc-icon-size: 18px; flex: none; }
+      /* Very narrow card (6 columns on a phone): less padding, so a word such as "dashboardy" fits on its line. */
+      @container (max-width: 140px) {
+        button.action { padding: 4px 6px; gap: 4px; }
+      }
       button.action:hover:not([disabled]) { background: color-mix(in srgb, var(--gs-accent) 10%, transparent); }
       button.action:focus-visible { outline: 2px solid var(--gs-accent); outline-offset: 2px; }
       button.action[disabled] { cursor: default; opacity: .45; }

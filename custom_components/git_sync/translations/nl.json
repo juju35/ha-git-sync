@@ -43,7 +43,8 @@
     },
     "error": {
       "not_a_repository": "Deze map is geen Git-repository.",
-      "unknown_remote": "Deze remote bestaat niet in de repository."
+      "unknown_remote": "Deze remote bestaat niet in de repository.",
+      "author_required": "Git weet hier niet wie de commits ondertekent: vul het e-mailadres (en de naam) van de auteur in."
     },
     "abort": {
       "already_configured": "Deze repository is al geconfigureerd.",
@@ -77,6 +78,9 @@
           "export_format": "JSON kopieert de .storage-bestanden ongewijzigd; YAML bewaart alleen de dashboardconfiguratie, beter leesbaar in diffs."
         }
       }
+    },
+    "error": {
+      "unknown_notify_service": "Deze meldingsactie bestaat niet."
     }
   },
   "selector": {

@@ -43,7 +43,8 @@
     },
     "error": {
       "not_a_repository": "Ова фасцикла није Git радно стабло.",
-      "unknown_remote": "Овај remote не постоји у репозиторијуму."
+      "unknown_remote": "Овај remote не постоји у репозиторијуму.",
+      "author_required": "Git овде не зна ко потписује commit-ове: унесите имејл (и име) аутора."
     },
     "abort": {
       "already_configured": "Овај репозиторијум је већ подешен.",
@@ -77,6 +78,9 @@
           "export_format": "JSON копира датотеке из .storage какве јесу; YAML задржава само конфигурацију контролне табле, лакшу за читање у diff-овима."
         }
       }
+    },
+    "error": {
+      "unknown_notify_service": "Ова радња обавештења не постоји."
     }
   },
   "selector": {

@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from functools import partial
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -121,6 +123,9 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         self._store = self._make_store(hass, entry)
         self._lock = asyncio.Lock()
         self._state = GitSyncData(ai_task=self.settings.get(CONF_AI_TASK_ENTITY) or None)
+        # Per export folder, the files the integration itself wrote there and the hash of what it wrote: the only
+        # files a later export may overwrite, or delete while unchanged.
+        self._export_manifest: dict[str, dict[str, str]] = {}
 
     @staticmethod
     def _make_store(hass: HomeAssistant, entry: ConfigEntry) -> Store[dict[str, Any]]:
@@ -142,6 +147,13 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         if value := stored.get("last_export"):
             self._state.last_export = dt_util.parse_datetime(value)
         self._state.last_export_files = stored.get("last_export_files", [])
+        manifest = stored.get("export_manifest")
+        if isinstance(manifest, dict):
+            self._export_manifest = {
+                folder: {name: digest for name, digest in files.items() if isinstance(digest, str)}
+                for folder, files in manifest.items()
+                if isinstance(folder, str) and isinstance(files, dict)
+            }
 
     async def _async_save(self) -> None:
         state = self._state
@@ -151,6 +163,7 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
                 "last_push_message": state.last_push_message,
                 "last_export": state.last_export.isoformat() if state.last_export else None,
                 "last_export_files": state.last_export_files,
+                "export_manifest": self._export_manifest,
             }
         )
 
@@ -166,6 +179,12 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
 
         # last_error only holds commit/push failures; it is cleared by the next
         # successful push, so a failed push stays visible until it is fixed.
+        # It is also cleared once nothing is left to commit or push, e.g. after a `git push` run in a terminal:
+        # a failed commit leaves its files staged (dirty), a failed push leaves commits ahead (push_pending).
+        # A detached HEAD cannot tell whether its commits reached the remote: its error is kept.
+        git_state = state.git
+        if state.last_error and not (git_state.dirty or git_state.push_pending or git_state.detached):
+            state.last_error = None
         if state.git.dirty:
             state.status = STATUS_DIRTY
         elif state.last_error:
@@ -317,16 +336,28 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         return files
 
     async def _export(self) -> list[str]:
+        export_dir = os.path.normpath(self.settings.get(CONF_EXPORT_DIR) or DEFAULT_EXPORT_DIR)
+        # Files written by an earlier export into this same folder. Nothing is deleted from a folder the export
+        # never wrote to, nor on the first export after an update from a version without manifest; that first
+        # export (an export was done, no manifest) refreshes the old version's files instead of skipping them.
+        previous = self._export_manifest.get(export_dir, {})
+        adopt = not self._export_manifest and self._state.last_export is not None
         try:
-            files = await self.hass.async_add_executor_job(
-                export_dashboards,
-                self.hass.config.path(".storage"),
-                self.settings.get(CONF_EXPORT_DIR) or DEFAULT_EXPORT_DIR,
-                self.settings.get(CONF_EXPORT_FORMAT) or DEFAULT_EXPORT_FORMAT,
+            result = await self.hass.async_add_executor_job(
+                partial(
+                    export_dashboards,
+                    self.hass.config.path(".storage"),
+                    export_dir,
+                    self.settings.get(CONF_EXPORT_FORMAT) or DEFAULT_EXPORT_FORMAT,
+                    previous,
+                    adopt=adopt,
+                )
             )
         except OSError as err:
             raise HomeAssistantError(f"Dashboard export failed: {err}") from err
 
+        files = result.files
+        self._export_manifest[export_dir] = result.managed
         self._state.last_export = dt_util.utcnow()
         self._state.last_export_files = files
         await self._async_save()
