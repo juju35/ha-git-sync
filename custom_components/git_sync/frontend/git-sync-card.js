@@ -5,7 +5,7 @@
  * Served and added to the dashboard resources by the Git Sync integration.
  * https://github.com/juju35/ha-git-sync
  */
-var GIT_SYNC_CARD_VERSION = '1.1.1';
+var GIT_SYNC_CARD_VERSION = '1.1.2';
 
 const GS_I18N = {
   en: {
