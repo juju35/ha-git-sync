@@ -96,7 +96,25 @@
         "en": "Inglés",
         "fr": "Francés",
         "de": "Alemán",
-        "es": "Español"
+        "es": "Español",
+        "sr": "Serbio (cirílico)",
+        "sr-latn": "Serbio (latino)",
+        "it": "Italiano",
+        "nl": "Neerlandés",
+        "pt": "Portugués (Portugal)",
+        "pl": "Polaco",
+        "ro": "Rumano",
+        "da": "Danés",
+        "sv": "Sueco",
+        "bg": "Búlgaro",
+        "ru": "Ruso",
+        "uk": "Ucraniano",
+        "hu": "Húngaro",
+        "sk": "Eslovaco",
+        "cs": "Checo",
+        "sl": "Esloveno",
+        "lv": "Letón",
+        "el": "Griego"
       }
     }
   },

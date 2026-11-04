@@ -96,7 +96,25 @@
         "en": "Engels",
         "fr": "Frans",
         "de": "Duits",
-        "es": "Spaans"
+        "es": "Spaans",
+        "sr": "Servisch (Cyrillisch)",
+        "sr-latn": "Servisch (Latijns)",
+        "it": "Italiaans",
+        "nl": "Nederlands",
+        "pt": "Portugees (Portugal)",
+        "pl": "Pools",
+        "ro": "Roemeens",
+        "da": "Deens",
+        "sv": "Zweeds",
+        "bg": "Bulgaars",
+        "ru": "Russisch",
+        "uk": "Oekraïens",
+        "hu": "Hongaars",
+        "sk": "Slowaaks",
+        "cs": "Tsjechisch",
+        "sl": "Sloveens",
+        "lv": "Lets",
+        "el": "Grieks"
       }
     }
   },

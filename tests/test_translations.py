@@ -10,7 +10,30 @@ from pathlib import Path
 import pytest
 
 TRANSLATIONS = Path(__file__).parent.parent / "custom_components" / "git_sync" / "translations"
-LANGUAGES = ["de", "es", "fr", "it", "nl", "pl", "pt", "pt-BR", "sr", "sr-Latn"]
+LANGUAGES = [
+    "bg",
+    "cs",
+    "da",
+    "de",
+    "el",
+    "es",
+    "fr",
+    "hu",
+    "it",
+    "lv",
+    "nl",
+    "pl",
+    "pt",
+    "pt-BR",
+    "ro",
+    "ru",
+    "sk",
+    "sl",
+    "sr",
+    "sr-Latn",
+    "sv",
+    "uk",
+]
 
 
 def _flatten(data: dict, prefix: str = "") -> dict[str, str]:
@@ -75,3 +98,22 @@ def test_serbian_cyrillic_keeps_latin_for_names_only():
     for key, text in _load("sr").items():
         for word in re.findall(r"[A-Za-z]+", text):
             assert word.lower() in english, f"{key}: {word}"
+
+
+@pytest.mark.parametrize("language", ["bg", "el", "ru", "uk"])
+def test_cyrillic_and_greek_keep_latin_for_names_only(language: str):
+    """The Latin words left in bg, el, ru and uk (Git, commit, push, JSON, Home Assistant…) are taken from en.json."""
+    english = " ".join(_load("en").values()).lower()
+    for key, text in _load(language).items():
+        for word in re.findall(r"[A-Za-z]+", text):
+            assert word.lower() in english, f"{key}: {word}"
+
+
+def test_every_commit_language_has_a_name_and_a_label():
+    """Each commit language has an English name for the AI prompt and a label in every translation."""
+    from custom_components.git_sync.const import COMMIT_LANGUAGES, LANGUAGE_NAMES
+
+    assert sorted(LANGUAGE_NAMES) == sorted(COMMIT_LANGUAGES)
+    for language in ["en", *LANGUAGES]:
+        data = json.loads((TRANSLATIONS / f"{language}.json").read_text(encoding="utf-8"))
+        assert list(data["selector"]["commit_language"]["options"]) == COMMIT_LANGUAGES, language

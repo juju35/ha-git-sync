@@ -1,0 +1,272 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Git-repository",
+        "description": "Home Assistant-mappe versioneret med Git og pushet til en remote (GitHub, Gitea…).",
+        "data": {
+          "repo_path": "Sti til repository",
+          "remote": "Remote",
+          "branch": "Gren",
+          "ssh_key": "Privat SSH-nøgle",
+          "author_name": "Forfatterens navn",
+          "author_email": "Forfatterens e-mail"
+        },
+        "data_description": {
+          "repo_path": "Mappe, der indeholder .git-mappen, normalt /config.",
+          "remote": "Git-remote, der skal pushes til, normalt origin.",
+          "branch": "Målgren på remoten. Lad feltet være tomt for at pushe den aktuelle gren.",
+          "ssh_key": "Privat nøgle til push. Opret den med handlingen generate_ssh_key, og tilføj derefter den offentlige nøgle som deploy key med skriveadgang.",
+          "author_name": "Valgfrit, tilsidesætter repositoriets git user.name / user.email.",
+          "author_email": "Valgfrit, tilsidesætter repositoriets git user.name / user.email."
+        }
+      },
+      "reconfigure": {
+        "title": "Indstillinger for repository",
+        "data": {
+          "repo_path": "Sti til repository",
+          "remote": "Remote",
+          "branch": "Gren",
+          "ssh_key": "Privat SSH-nøgle",
+          "author_name": "Forfatterens navn",
+          "author_email": "Forfatterens e-mail"
+        },
+        "data_description": {
+          "repo_path": "Mappe, der indeholder .git-mappen, normalt /config.",
+          "remote": "Git-remote, der skal pushes til, normalt origin.",
+          "branch": "Målgren på remoten. Lad feltet være tomt for at pushe den aktuelle gren.",
+          "ssh_key": "Privat nøgle til push. Opret den med handlingen generate_ssh_key, og tilføj derefter den offentlige nøgle som deploy key med skriveadgang.",
+          "author_name": "Valgfrit, tilsidesætter repositoriets git user.name / user.email.",
+          "author_email": "Valgfrit, tilsidesætter repositoriets git user.name / user.email."
+        }
+      }
+    },
+    "error": {
+      "not_a_repository": "Denne mappe er ikke et Git-arbejdstræ.",
+      "unknown_remote": "Denne remote findes ikke i repositoriet.",
+      "author_required": "Git ved ikke, hvem der signerer commits her: angiv forfatterens e-mail (og navn)."
+    },
+    "abort": {
+      "already_configured": "Dette repository er allerede konfigureret.",
+      "reconfigure_successful": "Repository opdateret.",
+      "unique_id_mismatch": "Stien til repositoriet kan ikke ændres: tilføj i stedet en ny post."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Git Sync-indstillinger",
+        "description": "Commitbesked, tidsplaner, notifikationer og dashboardeksport.",
+        "data": {
+          "ai_task_entity": "AI-opgaveentitet",
+          "commit_language": "Sprog for commitbeskeder",
+          "commit_interval": "Interval for automatisk commit",
+          "status_interval": "Interval for statusopdatering",
+          "notify_service": "Notifikationshandling",
+          "notify_image": "Billed-URL til notifikation",
+          "export_enabled": "Daglig dashboardeksport",
+          "export_time": "Eksporttidspunkt",
+          "export_dir": "Eksportmappe",
+          "export_format": "Eksportformat",
+          "export_before_commit": "Eksportér dashboards før hvert commit"
+        },
+        "data_description": {
+          "ai_task_entity": "Genererer en Conventional Commits-besked ud fra diffen. Uden den bruges en generisk besked.",
+          "commit_interval": "Commit og push hvert N. minut, når der er ændringer. 0 deaktiverer det.",
+          "notify_service": "For eksempel notify.mobile_app_telefon. Lad feltet være tomt for at deaktivere.",
+          "notify_image": "Absolut HTTPS-URL (krævet af iOS).",
+          "export_format": "JSON kopierer .storage-filerne som de er; YAML beholder kun dashboardets konfiguration, som er lettere at læse i diffs."
+        }
+      }
+    },
+    "error": {
+      "unknown_notify_service": "Denne notifikationshandling findes ikke."
+    }
+  },
+  "selector": {
+    "export_format": {
+      "options": {
+        "json": "JSON (rå kopi)",
+        "yaml": "YAML (kun konfiguration)",
+        "both": "JSON og YAML"
+      }
+    },
+    "commit_language": {
+      "options": {
+        "en": "Engelsk",
+        "fr": "Fransk",
+        "de": "Tysk",
+        "es": "Spansk",
+        "sr": "Serbisk (kyrillisk)",
+        "sr-latn": "Serbisk (latinsk)",
+        "it": "Italiensk",
+        "nl": "Nederlandsk",
+        "pt": "Portugisisk (Portugal)",
+        "pl": "Polsk",
+        "ro": "Rumænsk",
+        "da": "Dansk",
+        "sv": "Svensk",
+        "bg": "Bulgarsk",
+        "ru": "Russisk",
+        "uk": "Ukrainsk",
+        "hu": "Ungarsk",
+        "sk": "Slovakisk",
+        "cs": "Tjekkisk",
+        "sl": "Slovensk",
+        "lv": "Lettisk",
+        "el": "Græsk"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "clean": "Opdateret",
+          "dirty": "Ændringer afventer",
+          "ahead": "Push afventer",
+          "error": "Fejl"
+        },
+        "state_attributes": {
+          "branch": {
+            "name": "Gren"
+          },
+          "upstream": {
+            "name": "Upstream"
+          },
+          "remote_url": {
+            "name": "Remote-URL"
+          },
+          "ahead": {
+            "name": "Commits foran"
+          },
+          "behind": {
+            "name": "Commits bagud"
+          },
+          "changed_count": {
+            "name": "Ændrede filer"
+          },
+          "changed_files": {
+            "name": "Liste over ændrede filer"
+          },
+          "last_error": {
+            "name": "Seneste fejl"
+          },
+          "ai_task": {
+            "name": "AI-opgave"
+          }
+        }
+      },
+      "changed_files": {
+        "name": "Ændrede filer"
+      },
+      "last_commit": {
+        "name": "Seneste commit",
+        "state_attributes": {
+          "message": {
+            "name": "Besked"
+          },
+          "sha": {
+            "name": "Commit"
+          },
+          "short_sha": {
+            "name": "Kort commit"
+          }
+        }
+      },
+      "last_push": {
+        "name": "Seneste push",
+        "state_attributes": {
+          "message": {
+            "name": "Besked"
+          }
+        }
+      },
+      "last_export": {
+        "name": "Seneste dashboardeksport",
+        "state_attributes": {
+          "files": {
+            "name": "Eksporterede filer"
+          }
+        }
+      },
+      "branch": {
+        "name": "Gren",
+        "state_attributes": {
+          "remote_url": {
+            "name": "Remote-URL"
+          },
+          "upstream": {
+            "name": "Upstream"
+          }
+        }
+      }
+    },
+    "button": {
+      "commit_push": {
+        "name": "Commit og push"
+      },
+      "export_dashboards": {
+        "name": "Eksportér dashboards"
+      }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entry": {
+      "message": "Intet Git Sync-repository er indlæst."
+    },
+    "no_ai_task": {
+      "message": "Der er ikke angivet en AI-opgaveentitet i Git Sync-indstillingerne."
+    },
+    "ai_task_failed": {
+      "message": "AI-opgaven returnerede ingen commitbesked."
+    }
+  },
+  "services": {
+    "commit_push": {
+      "name": "Commit og push",
+      "description": "Stager alle ændringer, committer med en AI-genereret (eller angivet) besked og pusher til remoten.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Git Sync-post, der skal bruges. Alle repositories, hvis tom."
+        },
+        "message": {
+          "name": "Besked",
+          "description": "Commitbesked. Genereres af AI-opgaven, hvis tom."
+        }
+      }
+    },
+    "export_dashboards": {
+      "name": "Eksportér dashboards",
+      "description": "Kopierer Lovelace-dashboards fra .storage til eksportmappen.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Git Sync-post, der skal bruges. Alle repositories, hvis tom."
+        }
+      }
+    },
+    "generate_ssh_key": {
+      "name": "Generér SSH-nøgle",
+      "description": "Opretter SSH-nøgleparret, hvis det mangler, og returnerer den offentlige nøgle, der skal tilføjes som deploy key.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Git Sync-post, der skal bruges. Det første repository, hvis tom."
+        }
+      }
+    },
+    "generate_message": {
+      "name": "Generér commitbesked",
+      "description": "Skriver med AI-opgaven en commitbesked til de aktuelle ændringer uden at committe. Returnerer null, hvis intet er ændret.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Git Sync-post, der skal bruges. Det første repository, hvis tom."
+        }
+      }
+    }
+  }
+}

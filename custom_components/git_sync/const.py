@@ -7,7 +7,7 @@ from typing import Final
 DOMAIN: Final = "git_sync"
 NAME: Final = "Git Sync"
 # Same as manifest.json and the card: the card URL carries it, so that browsers load a new release.
-VERSION: Final = "1.1.0"
+VERSION: Final = "1.1.1"
 
 # Config entry data / options
 CONF_REPO_PATH: Final = "repo_path"
@@ -40,7 +40,30 @@ DEFAULT_EXPORT_DIR: Final = "/config/dashboards_export"
 DEFAULT_EXPORT_FORMAT: Final = "json"
 
 EXPORT_FORMATS: Final = ["json", "yaml", "both"]
-COMMIT_LANGUAGES: Final = ["en", "fr", "de", "es"]
+COMMIT_LANGUAGES: Final = [
+    "en",
+    "fr",
+    "de",
+    "es",
+    "sr",
+    "sr-latn",
+    "it",
+    "nl",
+    "pt",
+    "pl",
+    "ro",
+    "da",
+    "sv",
+    "bg",
+    "ru",
+    "uk",
+    "hu",
+    "sk",
+    "cs",
+    "sl",
+    "lv",
+    "el",
+]
 
 # Git output limits
 DIFF_MAX_CHARS: Final = 8000
@@ -77,6 +100,24 @@ LANGUAGE_NAMES: Final = {
     "fr": "French",
     "de": "German",
     "es": "Spanish",
+    "sr": "Serbian (Cyrillic script)",
+    "sr-latn": "Serbian (Latin script)",
+    "it": "Italian",
+    "nl": "Dutch",
+    "pt": "European Portuguese",
+    "pl": "Polish",
+    "ro": "Romanian",
+    "da": "Danish",
+    "sv": "Swedish",
+    "bg": "Bulgarian",
+    "ru": "Russian",
+    "uk": "Ukrainian",
+    "hu": "Hungarian",
+    "sk": "Slovak",
+    "cs": "Czech",
+    "sl": "Slovenian",
+    "lv": "Latvian",
+    "el": "Greek",
 }
 
 AI_INSTRUCTIONS: Final = (

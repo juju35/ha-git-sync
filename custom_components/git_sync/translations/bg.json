@@ -1,0 +1,272 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Git хранилище",
+        "description": "Папка на Home Assistant, версионирана с Git и изпращана към remote (GitHub, Gitea…).",
+        "data": {
+          "repo_path": "Път до хранилището",
+          "remote": "Remote",
+          "branch": "Клон",
+          "ssh_key": "Частен SSH ключ",
+          "author_name": "Име на автора",
+          "author_email": "Имейл на автора"
+        },
+        "data_description": {
+          "repo_path": "Папка, съдържаща директорията .git, обикновено /config.",
+          "remote": "Git remote, към който се прави push, обикновено origin.",
+          "branch": "Целеви клон в remote. Оставете празно, за да се изпрати текущият клон.",
+          "ssh_key": "Частен ключ, използван за push. Създайте го с действието generate_ssh_key, след това добавете публичния ключ като deploy key с право на запис.",
+          "author_name": "По избор, заменя git user.name / user.email на хранилището.",
+          "author_email": "По избор, заменя git user.name / user.email на хранилището."
+        }
+      },
+      "reconfigure": {
+        "title": "Настройки на хранилището",
+        "data": {
+          "repo_path": "Път до хранилището",
+          "remote": "Remote",
+          "branch": "Клон",
+          "ssh_key": "Частен SSH ключ",
+          "author_name": "Име на автора",
+          "author_email": "Имейл на автора"
+        },
+        "data_description": {
+          "repo_path": "Папка, съдържаща директорията .git, обикновено /config.",
+          "remote": "Git remote, към който се прави push, обикновено origin.",
+          "branch": "Целеви клон в remote. Оставете празно, за да се изпрати текущият клон.",
+          "ssh_key": "Частен ключ, използван за push. Създайте го с действието generate_ssh_key, след това добавете публичния ключ като deploy key с право на запис.",
+          "author_name": "По избор, заменя git user.name / user.email на хранилището.",
+          "author_email": "По избор, заменя git user.name / user.email на хранилището."
+        }
+      }
+    },
+    "error": {
+      "not_a_repository": "Тази папка не е работно дърво на Git.",
+      "unknown_remote": "Този remote не съществува в хранилището.",
+      "author_required": "Git не знае кой подписва commit-ите тук: въведете имейла (и името) на автора."
+    },
+    "abort": {
+      "already_configured": "Това хранилище вече е конфигурирано.",
+      "reconfigure_successful": "Хранилището е актуализирано.",
+      "unique_id_mismatch": "Пътят до хранилището не може да бъде променен: добавете нов запис вместо това."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Опции на Git Sync",
+        "description": "Commit съобщение, графици, известия и експорт на таблата.",
+        "data": {
+          "ai_task_entity": "Обект за AI задача",
+          "commit_language": "Език на commit съобщенията",
+          "commit_interval": "Интервал на автоматичния commit",
+          "status_interval": "Интервал на опресняване на състоянието",
+          "notify_service": "Действие за известие",
+          "notify_image": "URL на изображение за известие",
+          "export_enabled": "Ежедневен експорт на таблата",
+          "export_time": "Час на експорта",
+          "export_dir": "Папка за експорт",
+          "export_format": "Формат на експорта",
+          "export_before_commit": "Експортиране на таблата преди всеки commit"
+        },
+        "data_description": {
+          "ai_task_entity": "Генерира съобщение във формат Conventional Commits от diff-а. Без него се използва общо съобщение.",
+          "commit_interval": "Commit и push на всеки N минути, когато има промени. 0 го изключва.",
+          "notify_service": "Например notify.mobile_app_phone. Оставете празно, за да изключите.",
+          "notify_image": "Абсолютен HTTPS URL (изисква се от iOS).",
+          "export_format": "JSON копира файловете от .storage без промяна; YAML запазва само конфигурацията на таблото, по-лесна за четене в diff-ове."
+        }
+      }
+    },
+    "error": {
+      "unknown_notify_service": "Това действие за известие не съществува."
+    }
+  },
+  "selector": {
+    "export_format": {
+      "options": {
+        "json": "JSON (сурово копие)",
+        "yaml": "YAML (само конфигурация)",
+        "both": "JSON и YAML"
+      }
+    },
+    "commit_language": {
+      "options": {
+        "en": "Английски",
+        "fr": "Френски",
+        "de": "Немски",
+        "es": "Испански",
+        "sr": "Сръбски (кирилица)",
+        "sr-latn": "Сръбски (латиница)",
+        "it": "Италиански",
+        "nl": "Нидерландски",
+        "pt": "Португалски (Португалия)",
+        "pl": "Полски",
+        "ro": "Румънски",
+        "da": "Датски",
+        "sv": "Шведски",
+        "bg": "Български",
+        "ru": "Руски",
+        "uk": "Украински",
+        "hu": "Унгарски",
+        "sk": "Словашки",
+        "cs": "Чешки",
+        "sl": "Словенски",
+        "lv": "Латвийски",
+        "el": "Гръцки"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Състояние",
+        "state": {
+          "clean": "Актуално",
+          "dirty": "Чакащи промени",
+          "ahead": "Чакащ push",
+          "error": "Грешка"
+        },
+        "state_attributes": {
+          "branch": {
+            "name": "Клон"
+          },
+          "upstream": {
+            "name": "Upstream"
+          },
+          "remote_url": {
+            "name": "Remote URL"
+          },
+          "ahead": {
+            "name": "Commit-и напред"
+          },
+          "behind": {
+            "name": "Commit-и назад"
+          },
+          "changed_count": {
+            "name": "Променени файлове"
+          },
+          "changed_files": {
+            "name": "Списък на променените файлове"
+          },
+          "last_error": {
+            "name": "Последна грешка"
+          },
+          "ai_task": {
+            "name": "AI задача"
+          }
+        }
+      },
+      "changed_files": {
+        "name": "Променени файлове"
+      },
+      "last_commit": {
+        "name": "Последен commit",
+        "state_attributes": {
+          "message": {
+            "name": "Съобщение"
+          },
+          "sha": {
+            "name": "Commit"
+          },
+          "short_sha": {
+            "name": "Кратък commit"
+          }
+        }
+      },
+      "last_push": {
+        "name": "Последен push",
+        "state_attributes": {
+          "message": {
+            "name": "Съобщение"
+          }
+        }
+      },
+      "last_export": {
+        "name": "Последен експорт на таблата",
+        "state_attributes": {
+          "files": {
+            "name": "Експортирани файлове"
+          }
+        }
+      },
+      "branch": {
+        "name": "Клон",
+        "state_attributes": {
+          "remote_url": {
+            "name": "Remote URL"
+          },
+          "upstream": {
+            "name": "Upstream"
+          }
+        }
+      }
+    },
+    "button": {
+      "commit_push": {
+        "name": "Commit и push"
+      },
+      "export_dashboards": {
+        "name": "Експортиране на таблата"
+      }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entry": {
+      "message": "Не е заредено хранилище на Git Sync."
+    },
+    "no_ai_task": {
+      "message": "В опциите на Git Sync не е зададен обект за AI задача."
+    },
+    "ai_task_failed": {
+      "message": "AI задачата не върна commit съобщение."
+    }
+  },
+  "services": {
+    "commit_push": {
+      "name": "Commit и push",
+      "description": "Добавя всички промени в индекса, прави commit със съобщение, генерирано от AI (или зададено), и push към remote.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Хранилище",
+          "description": "Запис на Git Sync, който да се използва. Всички хранилища, ако е празно."
+        },
+        "message": {
+          "name": "Съобщение",
+          "description": "Commit съобщение. Генерира се от AI задачата, ако е празно."
+        }
+      }
+    },
+    "export_dashboards": {
+      "name": "Експортиране на таблата",
+      "description": "Копира таблата на Lovelace от .storage в папката за експорт.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Хранилище",
+          "description": "Запис на Git Sync, който да се използва. Всички хранилища, ако е празно."
+        }
+      }
+    },
+    "generate_ssh_key": {
+      "name": "Генериране на SSH ключ",
+      "description": "Създава двойката SSH ключове, ако липсва, и връща публичния ключ за добавяне като deploy key.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Хранилище",
+          "description": "Запис на Git Sync, който да се използва. Първото хранилище, ако е празно."
+        }
+      }
+    },
+    "generate_message": {
+      "name": "Генериране на commit съобщение",
+      "description": "Пише с AI задачата commit съобщение за текущите промени, без да прави commit. Връща null, ако няма промени.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Хранилище",
+          "description": "Запис на Git Sync, който да се използва. Първото хранилище, ако е празно."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,272 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Repozitár Git",
+        "description": "Priečinok Home Assistanta verzovaný v Gite a odosielaný na remote (GitHub, Gitea…).",
+        "data": {
+          "repo_path": "Cesta k repozitáru",
+          "remote": "Remote",
+          "branch": "Vetva",
+          "ssh_key": "Súkromný kľúč SSH",
+          "author_name": "Meno autora",
+          "author_email": "E-mail autora"
+        },
+        "data_description": {
+          "repo_path": "Priečinok obsahujúci adresár .git, zvyčajne /config.",
+          "remote": "Git remote, na ktorý sa robí push, zvyčajne origin.",
+          "branch": "Cieľová vetva na remote. Nechajte prázdne, ak sa má odoslať aktuálna vetva.",
+          "ssh_key": "Súkromný kľúč používaný na push. Vytvorte ho akciou generate_ssh_key a potom pridajte verejný kľúč ako deploy key s právom zápisu.",
+          "author_name": "Voliteľné, nahrádza git user.name / user.email repozitára.",
+          "author_email": "Voliteľné, nahrádza git user.name / user.email repozitára."
+        }
+      },
+      "reconfigure": {
+        "title": "Nastavenia repozitára",
+        "data": {
+          "repo_path": "Cesta k repozitáru",
+          "remote": "Remote",
+          "branch": "Vetva",
+          "ssh_key": "Súkromný kľúč SSH",
+          "author_name": "Meno autora",
+          "author_email": "E-mail autora"
+        },
+        "data_description": {
+          "repo_path": "Priečinok obsahujúci adresár .git, zvyčajne /config.",
+          "remote": "Git remote, na ktorý sa robí push, zvyčajne origin.",
+          "branch": "Cieľová vetva na remote. Nechajte prázdne, ak sa má odoslať aktuálna vetva.",
+          "ssh_key": "Súkromný kľúč používaný na push. Vytvorte ho akciou generate_ssh_key a potom pridajte verejný kľúč ako deploy key s právom zápisu.",
+          "author_name": "Voliteľné, nahrádza git user.name / user.email repozitára.",
+          "author_email": "Voliteľné, nahrádza git user.name / user.email repozitára."
+        }
+      }
+    },
+    "error": {
+      "not_a_repository": "Tento priečinok nie je pracovný strom Gitu.",
+      "unknown_remote": "Tento remote v repozitári neexistuje.",
+      "author_required": "Git nevie, kto tu podpisuje commity: zadajte e-mail (a meno) autora."
+    },
+    "abort": {
+      "already_configured": "Tento repozitár je už nakonfigurovaný.",
+      "reconfigure_successful": "Repozitár bol aktualizovaný.",
+      "unique_id_mismatch": "Cestu k repozitáru nemožno zmeniť: namiesto toho pridajte novú položku."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Možnosti Git Sync",
+        "description": "Správa commitu, plány, oznámenia a export dashboardov.",
+        "data": {
+          "ai_task_entity": "Entita úlohy AI",
+          "commit_language": "Jazyk správ commitov",
+          "commit_interval": "Interval automatického commitu",
+          "status_interval": "Interval obnovenia stavu",
+          "notify_service": "Akcia oznámenia",
+          "notify_image": "URL obrázka oznámenia",
+          "export_enabled": "Denný export dashboardov",
+          "export_time": "Čas exportu",
+          "export_dir": "Priečinok exportu",
+          "export_format": "Formát exportu",
+          "export_before_commit": "Exportovať dashboardy pred každým commitom"
+        },
+        "data_description": {
+          "ai_task_entity": "Vygeneruje správu Conventional Commits z diffu. Bez nej sa použije všeobecná správa.",
+          "commit_interval": "Commit a push každých N minút, keď sú zmeny. 0 to vypne.",
+          "notify_service": "Napríklad notify.mobile_app_telefon. Nechajte prázdne na vypnutie.",
+          "notify_image": "Absolútna URL HTTPS (vyžaduje iOS).",
+          "export_format": "JSON skopíruje súbory .storage bez zmeny; YAML ponechá iba konfiguráciu dashboardu, ktorá sa v diffoch ľahšie číta."
+        }
+      }
+    },
+    "error": {
+      "unknown_notify_service": "Táto akcia oznámenia neexistuje."
+    }
+  },
+  "selector": {
+    "export_format": {
+      "options": {
+        "json": "JSON (surová kópia)",
+        "yaml": "YAML (iba konfigurácia)",
+        "both": "JSON a YAML"
+      }
+    },
+    "commit_language": {
+      "options": {
+        "en": "Angličtina",
+        "fr": "Francúzština",
+        "de": "Nemčina",
+        "es": "Španielčina",
+        "sr": "Srbčina (cyrilika)",
+        "sr-latn": "Srbčina (latinka)",
+        "it": "Taliančina",
+        "nl": "Holandčina",
+        "pt": "Portugalčina (Portugalsko)",
+        "pl": "Poľština",
+        "ro": "Rumunčina",
+        "da": "Dánčina",
+        "sv": "Švédčina",
+        "bg": "Bulharčina",
+        "ru": "Ruština",
+        "uk": "Ukrajinčina",
+        "hu": "Maďarčina",
+        "sk": "Slovenčina",
+        "cs": "Čeština",
+        "sl": "Slovinčina",
+        "lv": "Lotyština",
+        "el": "Gréčtina"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Stav",
+        "state": {
+          "clean": "Aktuálne",
+          "dirty": "Čakajúce zmeny",
+          "ahead": "Čaká na push",
+          "error": "Chyba"
+        },
+        "state_attributes": {
+          "branch": {
+            "name": "Vetva"
+          },
+          "upstream": {
+            "name": "Upstream"
+          },
+          "remote_url": {
+            "name": "URL remote"
+          },
+          "ahead": {
+            "name": "Commity vpred"
+          },
+          "behind": {
+            "name": "Commity pozadu"
+          },
+          "changed_count": {
+            "name": "Zmenené súbory"
+          },
+          "changed_files": {
+            "name": "Zoznam zmenených súborov"
+          },
+          "last_error": {
+            "name": "Posledná chyba"
+          },
+          "ai_task": {
+            "name": "Úloha AI"
+          }
+        }
+      },
+      "changed_files": {
+        "name": "Zmenené súbory"
+      },
+      "last_commit": {
+        "name": "Posledný commit",
+        "state_attributes": {
+          "message": {
+            "name": "Správa"
+          },
+          "sha": {
+            "name": "Commit"
+          },
+          "short_sha": {
+            "name": "Krátky commit"
+          }
+        }
+      },
+      "last_push": {
+        "name": "Posledný push",
+        "state_attributes": {
+          "message": {
+            "name": "Správa"
+          }
+        }
+      },
+      "last_export": {
+        "name": "Posledný export dashboardov",
+        "state_attributes": {
+          "files": {
+            "name": "Exportované súbory"
+          }
+        }
+      },
+      "branch": {
+        "name": "Vetva",
+        "state_attributes": {
+          "remote_url": {
+            "name": "URL remote"
+          },
+          "upstream": {
+            "name": "Upstream"
+          }
+        }
+      }
+    },
+    "button": {
+      "commit_push": {
+        "name": "Commit a push"
+      },
+      "export_dashboards": {
+        "name": "Exportovať dashboardy"
+      }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entry": {
+      "message": "Nie je načítaný žiadny repozitár Git Sync."
+    },
+    "no_ai_task": {
+      "message": "V možnostiach Git Sync nie je nastavená entita úlohy AI."
+    },
+    "ai_task_failed": {
+      "message": "Úloha AI nevrátila žiadnu správu commitu."
+    }
+  },
+  "services": {
+    "commit_push": {
+      "name": "Commit a push",
+      "description": "Pridá všetky zmeny do indexu, vykoná commit so správou vygenerovanou AI (alebo zadanou) a push na remote.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozitár",
+          "description": "Položka Git Sync, ktorá sa má použiť. Ak je prázdne, všetky repozitáre."
+        },
+        "message": {
+          "name": "Správa",
+          "description": "Správa commitu. Ak je prázdna, vygeneruje ju úloha AI."
+        }
+      }
+    },
+    "export_dashboards": {
+      "name": "Exportovať dashboardy",
+      "description": "Skopíruje dashboardy Lovelace z .storage do priečinka exportu.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozitár",
+          "description": "Položka Git Sync, ktorá sa má použiť. Ak je prázdne, všetky repozitáre."
+        }
+      }
+    },
+    "generate_ssh_key": {
+      "name": "Vygenerovať kľúč SSH",
+      "description": "Vytvorí pár kľúčov SSH, ak chýba, a vráti verejný kľúč na pridanie ako deploy key.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozitár",
+          "description": "Položka Git Sync, ktorá sa má použiť. Ak je prázdne, prvý repozitár."
+        }
+      }
+    },
+    "generate_message": {
+      "name": "Vygenerovať správu commitu",
+      "description": "Pomocou úlohy AI napíše správu commitu pre aktuálne zmeny bez vykonania commitu. Vráti null, ak sa nič nezmenilo.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozitár",
+          "description": "Položka Git Sync, ktorá sa má použiť. Ak je prázdne, prvý repozitár."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,272 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Git-förråd",
+        "description": "Home Assistant-mapp versionshanterad med Git och pushad till en remote (GitHub, Gitea…).",
+        "data": {
+          "repo_path": "Sökväg till förrådet",
+          "remote": "Remote",
+          "branch": "Gren",
+          "ssh_key": "Privat SSH-nyckel",
+          "author_name": "Författarens namn",
+          "author_email": "Författarens e-post"
+        },
+        "data_description": {
+          "repo_path": "Mapp som innehåller .git-katalogen, vanligtvis /config.",
+          "remote": "Git-remote att pusha till, vanligtvis origin.",
+          "branch": "Målgren på remoten. Lämna tomt för att pusha den aktuella grenen.",
+          "ssh_key": "Privat nyckel som används för push. Skapa den med åtgärden generate_ssh_key och lägg sedan till den publika nyckeln som deploy key med skrivbehörighet.",
+          "author_name": "Valfritt, ersätter förrådets git user.name / user.email.",
+          "author_email": "Valfritt, ersätter förrådets git user.name / user.email."
+        }
+      },
+      "reconfigure": {
+        "title": "Inställningar för förrådet",
+        "data": {
+          "repo_path": "Sökväg till förrådet",
+          "remote": "Remote",
+          "branch": "Gren",
+          "ssh_key": "Privat SSH-nyckel",
+          "author_name": "Författarens namn",
+          "author_email": "Författarens e-post"
+        },
+        "data_description": {
+          "repo_path": "Mapp som innehåller .git-katalogen, vanligtvis /config.",
+          "remote": "Git-remote att pusha till, vanligtvis origin.",
+          "branch": "Målgren på remoten. Lämna tomt för att pusha den aktuella grenen.",
+          "ssh_key": "Privat nyckel som används för push. Skapa den med åtgärden generate_ssh_key och lägg sedan till den publika nyckeln som deploy key med skrivbehörighet.",
+          "author_name": "Valfritt, ersätter förrådets git user.name / user.email.",
+          "author_email": "Valfritt, ersätter förrådets git user.name / user.email."
+        }
+      }
+    },
+    "error": {
+      "not_a_repository": "Den här mappen är inte ett Git-arbetsträd.",
+      "unknown_remote": "Den här remoten finns inte i förrådet.",
+      "author_required": "Git vet inte vem som signerar commitarna här: ange författarens e-post (och namn)."
+    },
+    "abort": {
+      "already_configured": "Det här förrådet är redan konfigurerat.",
+      "reconfigure_successful": "Förrådet har uppdaterats.",
+      "unique_id_mismatch": "Sökvägen till förrådet kan inte ändras: lägg till en ny post i stället."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Alternativ för Git Sync",
+        "description": "Commitmeddelande, scheman, aviseringar och export av instrumentpaneler.",
+        "data": {
+          "ai_task_entity": "AI-uppgiftsentitet",
+          "commit_language": "Språk för commitmeddelanden",
+          "commit_interval": "Intervall för automatisk commit",
+          "status_interval": "Intervall för statusuppdatering",
+          "notify_service": "Aviseringsåtgärd",
+          "notify_image": "Bild-URL för avisering",
+          "export_enabled": "Daglig export av instrumentpaneler",
+          "export_time": "Exporttid",
+          "export_dir": "Exportmapp",
+          "export_format": "Exportformat",
+          "export_before_commit": "Exportera instrumentpaneler före varje commit"
+        },
+        "data_description": {
+          "ai_task_entity": "Genererar ett Conventional Commits-meddelande utifrån diffen. Utan den används ett generiskt meddelande.",
+          "commit_interval": "Commit och push var N:e minut när det finns ändringar. 0 inaktiverar.",
+          "notify_service": "Till exempel notify.mobile_app_telefon. Lämna tomt för att inaktivera.",
+          "notify_image": "Absolut HTTPS-URL (krävs av iOS).",
+          "export_format": "JSON kopierar .storage-filerna som de är; YAML behåller bara instrumentpanelens konfiguration, som är lättare att läsa i diffar."
+        }
+      }
+    },
+    "error": {
+      "unknown_notify_service": "Den här aviseringsåtgärden finns inte."
+    }
+  },
+  "selector": {
+    "export_format": {
+      "options": {
+        "json": "JSON (rå kopia)",
+        "yaml": "YAML (endast konfiguration)",
+        "both": "JSON och YAML"
+      }
+    },
+    "commit_language": {
+      "options": {
+        "en": "Engelska",
+        "fr": "Franska",
+        "de": "Tyska",
+        "es": "Spanska",
+        "sr": "Serbiska (kyrilliska)",
+        "sr-latn": "Serbiska (latinska)",
+        "it": "Italienska",
+        "nl": "Nederländska",
+        "pt": "Portugisiska (Portugal)",
+        "pl": "Polska",
+        "ro": "Rumänska",
+        "da": "Danska",
+        "sv": "Svenska",
+        "bg": "Bulgariska",
+        "ru": "Ryska",
+        "uk": "Ukrainska",
+        "hu": "Ungerska",
+        "sk": "Slovakiska",
+        "cs": "Tjeckiska",
+        "sl": "Slovenska",
+        "lv": "Lettiska",
+        "el": "Grekiska"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "clean": "Uppdaterad",
+          "dirty": "Ändringar väntar",
+          "ahead": "Push väntar",
+          "error": "Fel"
+        },
+        "state_attributes": {
+          "branch": {
+            "name": "Gren"
+          },
+          "upstream": {
+            "name": "Upstream"
+          },
+          "remote_url": {
+            "name": "Remote-URL"
+          },
+          "ahead": {
+            "name": "Commits före"
+          },
+          "behind": {
+            "name": "Commits efter"
+          },
+          "changed_count": {
+            "name": "Ändrade filer"
+          },
+          "changed_files": {
+            "name": "Lista över ändrade filer"
+          },
+          "last_error": {
+            "name": "Senaste fel"
+          },
+          "ai_task": {
+            "name": "AI-uppgift"
+          }
+        }
+      },
+      "changed_files": {
+        "name": "Ändrade filer"
+      },
+      "last_commit": {
+        "name": "Senaste commit",
+        "state_attributes": {
+          "message": {
+            "name": "Meddelande"
+          },
+          "sha": {
+            "name": "Commit"
+          },
+          "short_sha": {
+            "name": "Kort commit"
+          }
+        }
+      },
+      "last_push": {
+        "name": "Senaste push",
+        "state_attributes": {
+          "message": {
+            "name": "Meddelande"
+          }
+        }
+      },
+      "last_export": {
+        "name": "Senaste export av instrumentpaneler",
+        "state_attributes": {
+          "files": {
+            "name": "Exporterade filer"
+          }
+        }
+      },
+      "branch": {
+        "name": "Gren",
+        "state_attributes": {
+          "remote_url": {
+            "name": "Remote-URL"
+          },
+          "upstream": {
+            "name": "Upstream"
+          }
+        }
+      }
+    },
+    "button": {
+      "commit_push": {
+        "name": "Commit och push"
+      },
+      "export_dashboards": {
+        "name": "Exportera instrumentpaneler"
+      }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entry": {
+      "message": "Inget Git Sync-förråd är inläst."
+    },
+    "no_ai_task": {
+      "message": "Ingen AI-uppgiftsentitet är angiven i alternativen för Git Sync."
+    },
+    "ai_task_failed": {
+      "message": "AI-uppgiften returnerade inget commitmeddelande."
+    }
+  },
+  "services": {
+    "commit_push": {
+      "name": "Commit och push",
+      "description": "Lägger till alla ändringar i indexet, gör commit med ett AI-genererat (eller angivet) meddelande och pushar till remoten.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Förråd",
+          "description": "Git Sync-post som ska användas. Alla förråd om tomt."
+        },
+        "message": {
+          "name": "Meddelande",
+          "description": "Commitmeddelande. Genereras av AI-uppgiften om tomt."
+        }
+      }
+    },
+    "export_dashboards": {
+      "name": "Exportera instrumentpaneler",
+      "description": "Kopierar Lovelace-instrumentpanelerna från .storage till exportmappen.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Förråd",
+          "description": "Git Sync-post som ska användas. Alla förråd om tomt."
+        }
+      }
+    },
+    "generate_ssh_key": {
+      "name": "Generera SSH-nyckel",
+      "description": "Skapar SSH-nyckelparet om det saknas och returnerar den publika nyckeln som ska läggas till som deploy key.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Förråd",
+          "description": "Git Sync-post som ska användas. Det första förrådet om tomt."
+        }
+      }
+    },
+    "generate_message": {
+      "name": "Generera commitmeddelande",
+      "description": "Skriver med AI-uppgiften ett commitmeddelande för de aktuella ändringarna, utan att göra commit. Returnerar null när inget har ändrats.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Förråd",
+          "description": "Git Sync-post som ska användas. Det första förrådet om tomt."
+        }
+      }
+    }
+  }
+}

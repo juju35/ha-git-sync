@@ -1,0 +1,272 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Git-tároló",
+        "description": "Gittel verziókezelt Home Assistant-mappa, amely egy remote-ra kerül pusholásra (GitHub, Gitea…).",
+        "data": {
+          "repo_path": "Tároló elérési útja",
+          "remote": "Remote",
+          "branch": "Ág",
+          "ssh_key": "Privát SSH-kulcs",
+          "author_name": "Szerző neve",
+          "author_email": "Szerző e-mail-címe"
+        },
+        "data_description": {
+          "repo_path": "A .git könyvtárat tartalmazó mappa, általában /config.",
+          "remote": "A Git remote, ahová a push történik, általában origin.",
+          "branch": "Célág a remote-on. Hagyja üresen az aktuális ág pusholásához.",
+          "ssh_key": "A pushhoz használt privát kulcs. Hozza létre a generate_ssh_key művelettel, majd adja hozzá a nyilvános kulcsot írási joggal rendelkező deploy keyként.",
+          "author_name": "Opcionális, felülírja a tároló git user.name / user.email beállítását.",
+          "author_email": "Opcionális, felülírja a tároló git user.name / user.email beállítását."
+        }
+      },
+      "reconfigure": {
+        "title": "Tároló beállításai",
+        "data": {
+          "repo_path": "Tároló elérési útja",
+          "remote": "Remote",
+          "branch": "Ág",
+          "ssh_key": "Privát SSH-kulcs",
+          "author_name": "Szerző neve",
+          "author_email": "Szerző e-mail-címe"
+        },
+        "data_description": {
+          "repo_path": "A .git könyvtárat tartalmazó mappa, általában /config.",
+          "remote": "A Git remote, ahová a push történik, általában origin.",
+          "branch": "Célág a remote-on. Hagyja üresen az aktuális ág pusholásához.",
+          "ssh_key": "A pushhoz használt privát kulcs. Hozza létre a generate_ssh_key művelettel, majd adja hozzá a nyilvános kulcsot írási joggal rendelkező deploy keyként.",
+          "author_name": "Opcionális, felülírja a tároló git user.name / user.email beállítását.",
+          "author_email": "Opcionális, felülírja a tároló git user.name / user.email beállítását."
+        }
+      }
+    },
+    "error": {
+      "not_a_repository": "Ez a mappa nem Git munkafa.",
+      "unknown_remote": "Ez a remote nem létezik a tárolóban.",
+      "author_required": "A Git nem tudja, ki írja alá itt a commitokat: adja meg a szerző e-mail-címét (és nevét)."
+    },
+    "abort": {
+      "already_configured": "Ez a tároló már be van állítva.",
+      "reconfigure_successful": "Tároló frissítve.",
+      "unique_id_mismatch": "A tároló elérési útja nem módosítható: adjon hozzá helyette új bejegyzést."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Git Sync beállítások",
+        "description": "Commitüzenet, ütemezések, értesítések és irányítópult-exportálás.",
+        "data": {
+          "ai_task_entity": "MI-feladat entitás",
+          "commit_language": "Commitüzenet nyelve",
+          "commit_interval": "Automatikus commit időköze",
+          "status_interval": "Állapotfrissítés időköze",
+          "notify_service": "Értesítési művelet",
+          "notify_image": "Értesítési kép URL-je",
+          "export_enabled": "Napi irányítópult-exportálás",
+          "export_time": "Exportálás időpontja",
+          "export_dir": "Exportálási mappa",
+          "export_format": "Exportálási formátum",
+          "export_before_commit": "Irányítópultok exportálása minden commit előtt"
+        },
+        "data_description": {
+          "ai_task_entity": "Conventional Commits üzenetet generál a diffből. Nélküle általános üzenet készül.",
+          "commit_interval": "Commit és push N percenként, ha vannak módosítások. 0 letiltja.",
+          "notify_service": "Például notify.mobile_app_telefon. Hagyja üresen a letiltáshoz.",
+          "notify_image": "Abszolút HTTPS URL (az iOS megköveteli).",
+          "export_format": "A JSON változatlanul másolja a .storage fájlokat; a YAML csak az irányítópult konfigurációját tartja meg, ami a diffekben könnyebben olvasható."
+        }
+      }
+    },
+    "error": {
+      "unknown_notify_service": "Ez az értesítési művelet nem létezik."
+    }
+  },
+  "selector": {
+    "export_format": {
+      "options": {
+        "json": "JSON (nyers másolat)",
+        "yaml": "YAML (csak konfiguráció)",
+        "both": "JSON és YAML"
+      }
+    },
+    "commit_language": {
+      "options": {
+        "en": "Angol",
+        "fr": "Francia",
+        "de": "Német",
+        "es": "Spanyol",
+        "sr": "Szerb (Cirill)",
+        "sr-latn": "Szerb (Latin)",
+        "it": "Olasz",
+        "nl": "Holland",
+        "pt": "Portugál (Portugália)",
+        "pl": "Lengyel",
+        "ro": "Román",
+        "da": "Dán",
+        "sv": "Svéd",
+        "bg": "Bolgár",
+        "ru": "Orosz",
+        "uk": "Ukrán",
+        "hu": "Magyar",
+        "sk": "Szlovák",
+        "cs": "Cseh",
+        "sl": "Szlovén",
+        "lv": "Lett",
+        "el": "Görög"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Állapot",
+        "state": {
+          "clean": "Naprakész",
+          "dirty": "Függőben lévő módosítások",
+          "ahead": "Push függőben",
+          "error": "Hiba"
+        },
+        "state_attributes": {
+          "branch": {
+            "name": "Ág"
+          },
+          "upstream": {
+            "name": "Upstream"
+          },
+          "remote_url": {
+            "name": "Remote URL"
+          },
+          "ahead": {
+            "name": "Commitok előre"
+          },
+          "behind": {
+            "name": "Commitok lemaradva"
+          },
+          "changed_count": {
+            "name": "Módosított fájlok"
+          },
+          "changed_files": {
+            "name": "Módosított fájlok listája"
+          },
+          "last_error": {
+            "name": "Utolsó hiba"
+          },
+          "ai_task": {
+            "name": "MI-feladat"
+          }
+        }
+      },
+      "changed_files": {
+        "name": "Módosított fájlok"
+      },
+      "last_commit": {
+        "name": "Utolsó commit",
+        "state_attributes": {
+          "message": {
+            "name": "Üzenet"
+          },
+          "sha": {
+            "name": "Commit"
+          },
+          "short_sha": {
+            "name": "Rövid commit"
+          }
+        }
+      },
+      "last_push": {
+        "name": "Utolsó push",
+        "state_attributes": {
+          "message": {
+            "name": "Üzenet"
+          }
+        }
+      },
+      "last_export": {
+        "name": "Utolsó irányítópult-exportálás",
+        "state_attributes": {
+          "files": {
+            "name": "Exportált fájlok"
+          }
+        }
+      },
+      "branch": {
+        "name": "Ág",
+        "state_attributes": {
+          "remote_url": {
+            "name": "Remote URL"
+          },
+          "upstream": {
+            "name": "Upstream"
+          }
+        }
+      }
+    },
+    "button": {
+      "commit_push": {
+        "name": "Commit és push"
+      },
+      "export_dashboards": {
+        "name": "Irányítópultok exportálása"
+      }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entry": {
+      "message": "Nincs betöltött Git Sync-tároló."
+    },
+    "no_ai_task": {
+      "message": "Nincs MI-feladat entitás megadva a Git Sync beállításaiban."
+    },
+    "ai_task_failed": {
+      "message": "Az MI-feladat nem adott vissza commitüzenetet."
+    }
+  },
+  "services": {
+    "commit_push": {
+      "name": "Commit és push",
+      "description": "Minden módosítást az indexbe tesz, commitol egy MI által generált (vagy megadott) üzenettel, és pushol a remote-ra.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Tároló",
+          "description": "A használandó Git Sync-bejegyzés. Üresen hagyva az összes tároló."
+        },
+        "message": {
+          "name": "Üzenet",
+          "description": "Commitüzenet. Üresen hagyva az MI-feladat generálja."
+        }
+      }
+    },
+    "export_dashboards": {
+      "name": "Irányítópultok exportálása",
+      "description": "Átmásolja a Lovelace irányítópultokat a .storage mappából az exportálási mappába.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Tároló",
+          "description": "A használandó Git Sync-bejegyzés. Üresen hagyva az összes tároló."
+        }
+      }
+    },
+    "generate_ssh_key": {
+      "name": "SSH-kulcs generálása",
+      "description": "Létrehozza az SSH-kulcspárt, ha hiányzik, és visszaadja a deploy keyként hozzáadandó nyilvános kulcsot.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Tároló",
+          "description": "A használandó Git Sync-bejegyzés. Üresen hagyva az első tároló."
+        }
+      }
+    },
+    "generate_message": {
+      "name": "Commitüzenet generálása",
+      "description": "Az MI-feladattal commitüzenetet ír az aktuális módosításokhoz, commit nélkül. null értéket ad vissza, ha semmi sem változott.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Tároló",
+          "description": "A használandó Git Sync-bejegyzés. Üresen hagyva az első tároló."
+        }
+      }
+    }
+  }
+}
