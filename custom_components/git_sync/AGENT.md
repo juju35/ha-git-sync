@@ -18,7 +18,7 @@ custom_components/git_sync/
 ├── entity.py        # Service device per entry
 ├── frontend/git-sync-card.js   # custom:git-sync-card, finds its entities by platform + translation_key, calls the actions with returnResponse;
 │                               # custom:git-sync-mini-card extends it (compact view, zoom button → full card, click elsewhere → back)
-├── const.py / icons.json / services.yaml / translations/{en,fr,de,es,it,nl,pt,pt-BR,pl,ro,da,sv,bg,ru,uk,hu,ga,sk,cs,sl,mt,lv,el,sr,sr-Latn}.json / brand/
+├── const.py / icons.json / services.yaml / translations/{en,fr,de,es,it,nl,pt,pt-BR,pl,ro,da,sv,bg,ru,uk,hu,sk,cs,sl,lv,el,sr,sr-Latn}.json / brand/
 ```
 
 ## Rules

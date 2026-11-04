@@ -160,7 +160,7 @@ test('every language has the English keys and placeholders', () => {
   const placeholders = (s) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
   assert.deepEqual(
     Object.keys(GS_I18N).sort(),
-    ['bg', 'cs', 'da', 'de', 'el', 'en', 'es', 'fr', 'ga', 'hu', 'it', 'lv', 'mt', 'nl', 'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sr', 'sr-Latn', 'sv', 'uk'],
+    ['bg', 'cs', 'da', 'de', 'el', 'en', 'es', 'fr', 'hu', 'it', 'lv', 'nl', 'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sr', 'sr-Latn', 'sv', 'uk'],
   );
   for (const [lang, strings] of Object.entries(GS_I18N)) {
     assert.deepEqual(Object.keys(strings).sort(), keys, lang);
@@ -248,8 +248,8 @@ test('European Portuguese wording', () => {
   assert.doesNotMatch(Object.values(GS_I18N.pt).join(' '), /arquivo|tela|usuário|configurações/i);
 });
 
-test('language: the fourteen languages added in 1.1.1, regional variants included', () => {
-  for (const lang of ['ro', 'da', 'sv', 'bg', 'ru', 'uk', 'hu', 'ga', 'sk', 'cs', 'sl', 'mt', 'lv', 'el']) {
+test('language: the twelve languages added in 1.1.1, regional variants included', () => {
+  for (const lang of ['ro', 'da', 'sv', 'bg', 'ru', 'uk', 'hu', 'sk', 'cs', 'sl', 'lv', 'el']) {
     assert.equal(gsLang({ language: lang }, {}), lang);
   }
   assert.equal(gsLang({ language: 'sv-FI' }, {}), 'sv');
@@ -259,9 +259,9 @@ test('language: the fourteen languages added in 1.1.1, regional variants include
   assert.equal(gsLocale({ language: 'en' }, { language: 'uk' }), 'uk');
 });
 
-test('Slavic, Baltic, Romanian, Irish and Maltese: a file count reads right for any number', () => {
+test('Slavic, Baltic and Romanian: a file count reads right for any number', () => {
   // As for Polish and Serbian, the noun changes form with the number: the count goes after a colon.
-  for (const lang of ['ro', 'ru', 'uk', 'sk', 'cs', 'sl', 'lv', 'ga', 'mt']) {
+  for (const lang of ['ro', 'ru', 'uk', 'sk', 'cs', 'sl', 'lv']) {
     assert.match(GS_I18N[lang].files_many, /: \{n\}$/, lang);
     for (const key of ['confirm_text_many', 'exported_many']) assert.match(GS_I18N[lang][key], /: \{n\}\.?$/, `${lang}.${key}`);
   }
@@ -312,7 +312,7 @@ test('editor offers every language of the card, Italian, Dutch, Portuguese and P
   );
 });
 
-test('editor offers the fourteen languages added in 1.1.1 under their own names', () => {
+test('editor offers the twelve languages added in 1.1.1 under their own names', () => {
   const editor = new GitSyncCardEditor();
   editor.appendChild = () => {};
   editor.setConfig({});
@@ -320,8 +320,8 @@ test('editor offers the fourteen languages added in 1.1.1 under their own names'
   const options = editor._form.schema.find((s) => s.name === 'language').selector.select.options;
   const labels = Object.fromEntries(options.map((o) => [o.value, o.label]));
   assert.deepEqual(
-    JSON.parse(JSON.stringify(['ro', 'da', 'sv', 'bg', 'ru', 'uk', 'hu', 'ga', 'sk', 'cs', 'sl', 'mt', 'lv', 'el'].map((l) => labels[l]))),
-    ['Română', 'Dansk', 'Svenska', 'Български', 'Русский', 'Українська', 'Magyar', 'Gaeilge', 'Slovenčina', 'Čeština', 'Slovenščina', 'Malti', 'Latviešu', 'Ελληνικά'],
+    JSON.parse(JSON.stringify(['ro', 'da', 'sv', 'bg', 'ru', 'uk', 'hu', 'sk', 'cs', 'sl', 'lv', 'el'].map((l) => labels[l]))),
+    ['Română', 'Dansk', 'Svenska', 'Български', 'Русский', 'Українська', 'Magyar', 'Slovenčina', 'Čeština', 'Slovenščina', 'Latviešu', 'Ελληνικά'],
   );
 });
 
