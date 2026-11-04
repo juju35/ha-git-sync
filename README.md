@@ -191,13 +191,13 @@ type: custom:git-sync-card
 
 | Changes pending | Up to date |
 |---|---|
-| ![Card](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card.png) | ![Card, up to date](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-clean.png) |
-| ![Card, dark theme](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-dark.png) | ![Card, up to date, dark theme](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-clean-dark.png) |
+| <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card.png" alt="Card" width="400"> | <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-clean.png" alt="Card, up to date" width="400"> |
+| <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-dark.png" alt="Card, dark theme" width="400"> | <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-clean-dark.png" alt="Card, up to date, dark theme" width="400"> |
 
 | Push failed | Commit & push, message written by the ✨ button |
 |---|---|
-| ![Card, push failed](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-error.png) | ![Card, commit confirmation](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-confirm.png) |
-| ![Card, push failed, dark theme](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-error-dark.png) | ![Card, commit confirmation, dark theme](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-confirm-dark.png) |
+| <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-error.png" alt="Card, push failed" width="400"> | <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-confirm.png" alt="Card, commit confirmation" width="400"> |
+| <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-error-dark.png" alt="Card, push failed, dark theme" width="400"> | <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-confirm-dark.png" alt="Card, commit confirmation, dark theme" width="400"> |
 
 - **Header**: status (up to date, changes, push pending, error, working…), branch and remote repository
 - **Last commit**: message, short hash and how long ago
@@ -225,12 +225,12 @@ type: custom:git-sync-mini-card
 
 | Changes pending | Up to date | Push failed |
 |---|---|---|
-| ![Mini card](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini.png) | ![Mini card, up to date](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-clean.png) | ![Mini card, push failed](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-error.png) |
-| ![Mini card, dark theme](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-dark.png) | ![Mini card, up to date, dark theme](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-clean-dark.png) | ![Mini card, push failed, dark theme](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-error-dark.png) |
+| <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini.png" alt="Mini card" width="400"> | <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-clean.png" alt="Mini card, up to date" width="400"> | <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-error.png" alt="Mini card, push failed" width="400"> |
+| <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-dark.png" alt="Mini card, dark theme" width="400"> | <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-clean-dark.png" alt="Mini card, up to date, dark theme" width="400"> | <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-error-dark.png" alt="Mini card, push failed, dark theme" width="400"> |
 
 | Zoomed in | |
 |---|---|
-| ![Mini card zoomed in to the full card](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-zoomed.png) | ![Mini card zoomed in, dark theme](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-zoomed-dark.png) |
+| <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-zoomed.png" alt="Mini card zoomed in to the full card" width="389"> | <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-zoomed-dark.png" alt="Mini card zoomed in, dark theme" width="389"> |
 
 In the compact view **Commit & push** opens the same message box (✨ button included) in place of the content. The mini card takes the options of the full card, plus:
 
