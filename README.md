@@ -5,16 +5,16 @@
 [![Validate](https://github.com/juju35/ha-git-sync/actions/workflows/validate.yml/badge.svg)](https://github.com/juju35/ha-git-sync/actions/workflows/validate.yml)
 [![Lint](https://github.com/juju35/ha-git-sync/actions/workflows/lint.yml/badge.svg)](https://github.com/juju35/ha-git-sync/actions/workflows/lint.yml)
 [![Release](https://img.shields.io/github/v/release/juju35/ha-git-sync)](https://github.com/juju35/ha-git-sync/releases/latest)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/juju35/ha-git-sync/blob/main/LICENSE)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/julienstep9)
 
-<p align="center"><img src="custom_components/git_sync/brand/icon.png" alt="Git Sync" width="120"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/custom_components/git_sync/brand/icon.png" alt="Git Sync" width="120"></p>
 
 Home Assistant integration that versions your configuration with Git: it commits and pushes the changes on a schedule with an AI-written commit message, exports your dashboards out of `.storage`, and comes with a Lovelace card to follow and drive it all.
 
 <p align="center">
-  <img src="screenshots/card.png" alt="Git Sync card with changes pending" width="420">
-  <img src="screenshots/card-dark.png" alt="Git Sync card, dark theme" width="420">
+  <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card.png" alt="Git Sync card with changes pending" width="420">
+  <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-dark.png" alt="Git Sync card, dark theme" width="420">
 </p>
 
 It replaces the usual stack of `shell_command`, `command_line` sensor, script and automations around `git`, with nothing to write in YAML.
@@ -191,13 +191,13 @@ type: custom:git-sync-card
 
 | Changes pending | Up to date |
 |---|---|
-| ![Card](screenshots/card.png) | ![Card, up to date](screenshots/card-clean.png) |
-| ![Card, dark theme](screenshots/card-dark.png) | ![Card, up to date, dark theme](screenshots/card-clean-dark.png) |
+| ![Card](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card.png) | ![Card, up to date](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-clean.png) |
+| ![Card, dark theme](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-dark.png) | ![Card, up to date, dark theme](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-clean-dark.png) |
 
 | Push failed | Commit & push, message written by the ✨ button |
 |---|---|
-| ![Card, push failed](screenshots/card-error.png) | ![Card, commit confirmation](screenshots/card-confirm.png) |
-| ![Card, push failed, dark theme](screenshots/card-error-dark.png) | ![Card, commit confirmation, dark theme](screenshots/card-confirm-dark.png) |
+| ![Card, push failed](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-error.png) | ![Card, commit confirmation](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-confirm.png) |
+| ![Card, push failed, dark theme](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-error-dark.png) | ![Card, commit confirmation, dark theme](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-confirm-dark.png) |
 
 - **Header**: status (up to date, changes, push pending, error, working…), branch and remote repository
 - **Last commit**: message, short hash and how long ago
@@ -225,12 +225,12 @@ type: custom:git-sync-mini-card
 
 | Changes pending | Up to date | Push failed |
 |---|---|---|
-| ![Mini card](screenshots/mini.png) | ![Mini card, up to date](screenshots/mini-clean.png) | ![Mini card, push failed](screenshots/mini-error.png) |
-| ![Mini card, dark theme](screenshots/mini-dark.png) | ![Mini card, up to date, dark theme](screenshots/mini-clean-dark.png) | ![Mini card, push failed, dark theme](screenshots/mini-error-dark.png) |
+| ![Mini card](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini.png) | ![Mini card, up to date](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-clean.png) | ![Mini card, push failed](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-error.png) |
+| ![Mini card, dark theme](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-dark.png) | ![Mini card, up to date, dark theme](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-clean-dark.png) | ![Mini card, push failed, dark theme](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-error-dark.png) |
 
 | Zoomed in | |
 |---|---|
-| ![Mini card zoomed in to the full card](screenshots/mini-zoomed.png) | ![Mini card zoomed in, dark theme](screenshots/mini-zoomed-dark.png) |
+| ![Mini card zoomed in to the full card](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-zoomed.png) | ![Mini card zoomed in, dark theme](https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/mini-zoomed-dark.png) |
 
 In the compact view **Commit & push** opens the same message box (✨ button included) in place of the content. The mini card takes the options of the full card, plus:
 
@@ -271,7 +271,7 @@ python scripts/screenshots.py      # README screenshots (Playwright)
 ### Releasing
 
 1. Bump the version in `custom_components/git_sync/manifest.json`, `const.py` (`VERSION`) and the card (`GIT_SYNC_CARD_VERSION`)
-2. Add a `## <version>` section at the top of [CHANGELOG.md](CHANGELOG.md)
+2. Add a `## <version>` section at the top of [CHANGELOG.md](https://github.com/juju35/ha-git-sync/blob/main/CHANGELOG.md)
 3. Push to `main`: the **Release** workflow creates the tag and the GitHub release with the changelog section as notes
 
 ## Translations
@@ -307,7 +307,7 @@ Contributions for additional languages are welcome!
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/juju35/ha-git-sync/blob/main/LICENSE)
 
 ## Support
 
