@@ -158,7 +158,10 @@ const html = (card) => card.shadowRoot.innerHTML;
 test('every language has the English keys and placeholders', () => {
   const keys = Object.keys(GS_I18N.en).sort();
   const placeholders = (s) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
-  assert.deepEqual(Object.keys(GS_I18N).sort(), ['de', 'en', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'sr', 'sr-Latn']);
+  assert.deepEqual(
+    Object.keys(GS_I18N).sort(),
+    ['bg', 'cs', 'da', 'de', 'el', 'en', 'es', 'fr', 'ga', 'hu', 'it', 'lv', 'mt', 'nl', 'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sr', 'sr-Latn', 'sv', 'uk'],
+  );
   for (const [lang, strings] of Object.entries(GS_I18N)) {
     assert.deepEqual(Object.keys(strings).sort(), keys, lang);
     for (const key of keys) {
@@ -245,6 +248,43 @@ test('European Portuguese wording', () => {
   assert.doesNotMatch(Object.values(GS_I18N.pt).join(' '), /arquivo|tela|usuário|configurações/i);
 });
 
+test('language: the fourteen languages added in 1.1.1, regional variants included', () => {
+  for (const lang of ['ro', 'da', 'sv', 'bg', 'ru', 'uk', 'hu', 'ga', 'sk', 'cs', 'sl', 'mt', 'lv', 'el']) {
+    assert.equal(gsLang({ language: lang }, {}), lang);
+  }
+  assert.equal(gsLang({ language: 'sv-FI' }, {}), 'sv');
+  assert.equal(gsLang({ language: 'ru-UA' }, {}), 'ru');
+  assert.equal(gsLang({ language: 'el-CY' }, {}), 'el');
+  assert.equal(gsLocale({ language: 'sv-FI' }, {}), 'sv-FI');
+  assert.equal(gsLocale({ language: 'en' }, { language: 'uk' }), 'uk');
+});
+
+test('Slavic, Baltic, Romanian, Irish and Maltese: a file count reads right for any number', () => {
+  // As for Polish and Serbian, the noun changes form with the number: the count goes after a colon.
+  for (const lang of ['ro', 'ru', 'uk', 'sk', 'cs', 'sl', 'lv', 'ga', 'mt']) {
+    assert.match(GS_I18N[lang].files_many, /: \{n\}$/, lang);
+    for (const key of ['confirm_text_many', 'exported_many']) assert.match(GS_I18N[lang][key], /: \{n\}\.?$/, `${lang}.${key}`);
+  }
+  const card = render({}, makeHass({ language: 'ru', status: 'dirty', files: ['a.yaml', 'b.yaml', 'c.yaml', 'd.yaml', 'e.yaml'] }));
+  assert.match(html(card), /Файлы: 5/);
+  assert.match(html(card), /Последний push/);
+});
+
+test('Cyrillic and Greek cards are in their own script, Serbian Latin stays Latin', () => {
+  // Latin words left are names and Git terms of the English card (Git Sync, commit, push, Enter, AI…).
+  const english = Object.values(GS_I18N.en).join(' ').toLowerCase();
+  for (const lang of ['bg', 'ru', 'uk', 'el']) {
+    for (const [key, text] of Object.entries(GS_I18N[lang])) {
+      for (const word of text.match(/[A-Za-z]+/g) || []) assert.ok(english.includes(word.toLowerCase()), `${lang}.${key}: ${word}`);
+    }
+  }
+  assert.match(Object.values(GS_I18N.el).join(' '), /[\u0370-\u03ff]/);
+  const card = render({}, makeHass({ language: 'el', status: 'dirty', files: ['a.yaml', 'b.yaml'] }));
+  assert.match(html(card), /2 αρχεία/);
+  const lat = render({}, makeHass({ language: 'sr-Latn', status: 'dirty', files: ['a.yaml', 'b.yaml'] }));
+  assert.doesNotMatch(html(lat).replace(/<style[\s\S]*?<\/style>/g, ''), /[\u0370-\u04ff]/);
+});
+
 test('Serbian Latin: the card, its dates and relative times are in Latin script', () => {
   const card = render({}, makeHass({ language: 'sr-Latn', status: 'dirty', files: ['a.yaml', 'b.yaml'] }));
   const out = html(card);
@@ -269,6 +309,19 @@ test('editor offers every language of the card, Italian, Dutch, Portuguese and P
   assert.deepEqual(
     JSON.parse(JSON.stringify(['it', 'nl', 'pt', 'pl'].map((l) => labels[l]))),
     ['Italiano', 'Nederlands', 'Português (Portugal)', 'Polski'],
+  );
+});
+
+test('editor offers the fourteen languages added in 1.1.1 under their own names', () => {
+  const editor = new GitSyncCardEditor();
+  editor.appendChild = () => {};
+  editor.setConfig({});
+  editor.hass = makeHass();
+  const options = editor._form.schema.find((s) => s.name === 'language').selector.select.options;
+  const labels = Object.fromEntries(options.map((o) => [o.value, o.label]));
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(['ro', 'da', 'sv', 'bg', 'ru', 'uk', 'hu', 'ga', 'sk', 'cs', 'sl', 'mt', 'lv', 'el'].map((l) => labels[l]))),
+    ['Română', 'Dansk', 'Svenska', 'Български', 'Русский', 'Українська', 'Magyar', 'Gaeilge', 'Slovenčina', 'Čeština', 'Slovenščina', 'Malti', 'Latviešu', 'Ελληνικά'],
   );
 });
 

@@ -10,7 +10,32 @@ from pathlib import Path
 import pytest
 
 TRANSLATIONS = Path(__file__).parent.parent / "custom_components" / "git_sync" / "translations"
-LANGUAGES = ["de", "es", "fr", "it", "nl", "pl", "pt", "pt-BR", "sr", "sr-Latn"]
+LANGUAGES = [
+    "bg",
+    "cs",
+    "da",
+    "de",
+    "el",
+    "es",
+    "fr",
+    "ga",
+    "hu",
+    "it",
+    "lv",
+    "mt",
+    "nl",
+    "pl",
+    "pt",
+    "pt-BR",
+    "ro",
+    "ru",
+    "sk",
+    "sl",
+    "sr",
+    "sr-Latn",
+    "sv",
+    "uk",
+]
 
 
 def _flatten(data: dict, prefix: str = "") -> dict[str, str]:
@@ -73,5 +98,14 @@ def test_serbian_cyrillic_keeps_latin_for_names_only():
     """The Latin words left in sr (Git, commit, push, JSON, Home Assistant…) are names and terms taken from en.json."""
     english = " ".join(_load("en").values()).lower()
     for key, text in _load("sr").items():
+        for word in re.findall(r"[A-Za-z]+", text):
+            assert word.lower() in english, f"{key}: {word}"
+
+
+@pytest.mark.parametrize("language", ["bg", "el", "ru", "uk"])
+def test_cyrillic_and_greek_keep_latin_for_names_only(language: str):
+    """The Latin words left in bg, el, ru and uk (Git, commit, push, JSON, Home Assistant…) are taken from en.json."""
+    english = " ".join(_load("en").values()).lower()
+    for key, text in _load(language).items():
         for word in re.findall(r"[A-Za-z]+", text):
             assert word.lower() in english, f"{key}: {word}"

@@ -31,7 +31,7 @@ It replaces the usual stack of `shell_command`, `command_line` sensor, script an
 - A failed push stays visible on the status until a later push succeeds, and is retried at the next commit
 - `git_sync_committed` and `git_sync_exported` **events**
 - **Lovelace card** bundled with the integration: status, last commit, changed files, last push and export, Commit & push and Export dashboards
-- English, French, German, Spanish, Italian, Dutch, European Portuguese, Polish and Serbian (Cyrillic and Latin)
+- English, French, German, Spanish, Italian, Dutch, European Portuguese, Polish, Romanian, Danish, Swedish, Bulgarian, Russian, Ukrainian, Hungarian, Irish, Slovak, Czech, Slovenian, Maltese, Latvian, Greek and Serbian (Cyrillic and Latin)
 
 ## Prerequisites
 
@@ -212,7 +212,7 @@ Every option is in the visual editor:
 | `title` | Git Sync | Card title |
 | `show_files` | `true` | Collapsible list of the changed files |
 | `show_export` | `true` | Last export and the **Export dashboards** button |
-| `language` | Home Assistant's | `en`, `fr`, `de`, `es`, `it`, `nl`, `pt` (European Portuguese), `pl`, `sr` (Serbian, Cyrillic) or `sr-Latn` (Serbian, Latin) |
+| `language` | Home Assistant's | `en`, `fr`, `de`, `es`, `it`, `nl`, `pt` (European Portuguese), `pl`, `ro`, `da`, `sv`, `bg`, `ru`, `uk`, `hu`, `ga`, `sk`, `cs`, `sl`, `mt`, `lv`, `el`, `sr` (Serbian, Cyrillic) or `sr-Latn` (Serbian, Latin) |
 
 ### Mini card
 
@@ -287,6 +287,20 @@ The integration and its card follow the language of Home Assistant (the card pic
 | Nederlands | `nl` |
 | Português (Portugal) | `pt` |
 | Polski | `pl` |
+| Română | `ro` |
+| Dansk | `da` |
+| Svenska | `sv` |
+| Български | `bg` |
+| Русский | `ru` |
+| Українська | `uk` |
+| Magyar | `hu` |
+| Gaeilge | `ga` |
+| Slovenčina | `sk` |
+| Čeština | `cs` |
+| Slovenščina | `sl` |
+| Malti | `mt` |
+| Latviešu | `lv` |
+| Ελληνικά | `el` |
 | Српски (Serbian, Cyrillic) | `sr` |
 | Srpski (Serbian, Latin) | `sr-Latn` |
 

@@ -1,0 +1,254 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Repożitorju Git",
+        "description": "Folder ta’ Home Assistant b’verżjonijiet f’Git u mibgħut lil remote (GitHub, Gitea…).",
+        "data": {
+          "repo_path": "Il-path tar-repożitorju",
+          "remote": "Remote",
+          "branch": "Fergħa",
+          "ssh_key": "Ċavetta privata SSH",
+          "author_name": "Isem l-awtur",
+          "author_email": "Email tal-awtur"
+        },
+        "data_description": {
+          "repo_path": "Il-folder li fih id-direttorju .git, normalment /config.",
+          "remote": "Ir-remote Git fejn isir il-push, normalment origin.",
+          "branch": "Il-fergħa fil-mira fuq ir-remote. Ħallih vojt biex tagħmel push tal-fergħa kurrenti.",
+          "ssh_key": "Ċavetta privata użata għall-push. Oħloqha bl-azzjoni generate_ssh_key, imbagħad żid iċ-ċavetta pubblika bħala deploy key b’aċċess għall-kitba.",
+          "author_name": "Għażla, tissostitwixxi l-git user.name / user.email tar-repożitorju.",
+          "author_email": "Għażla, tissostitwixxi l-git user.name / user.email tar-repożitorju."
+        }
+      },
+      "reconfigure": {
+        "title": "Settings tar-repożitorju",
+        "data": {
+          "repo_path": "Il-path tar-repożitorju",
+          "remote": "Remote",
+          "branch": "Fergħa",
+          "ssh_key": "Ċavetta privata SSH",
+          "author_name": "Isem l-awtur",
+          "author_email": "Email tal-awtur"
+        },
+        "data_description": {
+          "repo_path": "Il-folder li fih id-direttorju .git, normalment /config.",
+          "remote": "Ir-remote Git fejn isir il-push, normalment origin.",
+          "branch": "Il-fergħa fil-mira fuq ir-remote. Ħallih vojt biex tagħmel push tal-fergħa kurrenti.",
+          "ssh_key": "Ċavetta privata użata għall-push. Oħloqha bl-azzjoni generate_ssh_key, imbagħad żid iċ-ċavetta pubblika bħala deploy key b’aċċess għall-kitba.",
+          "author_name": "Għażla, tissostitwixxi l-git user.name / user.email tar-repożitorju.",
+          "author_email": "Għażla, tissostitwixxi l-git user.name / user.email tar-repożitorju."
+        }
+      }
+    },
+    "error": {
+      "not_a_repository": "Dan il-folder mhuwiex work tree ta’ Git.",
+      "unknown_remote": "Dan ir-remote ma jeżistix fir-repożitorju.",
+      "author_required": "Git ma jafx min jiffirma l-commits hawn: daħħal l-email (u l-isem) tal-awtur."
+    },
+    "abort": {
+      "already_configured": "Dan ir-repożitorju diġà kkonfigurat.",
+      "reconfigure_successful": "Ir-repożitorju ġie aġġornat.",
+      "unique_id_mismatch": "Il-path tar-repożitorju ma jistax jinbidel: żid entrata ġdida minflok."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Għażliet ta’ Git Sync",
+        "description": "Messaġġ tal-commit, skedi, notifiki u esportazzjoni tad-dashboards.",
+        "data": {
+          "ai_task_entity": "Entità tal-kompitu tal-AI",
+          "commit_language": "Lingwa tal-messaġġ tal-commit",
+          "commit_interval": "Intervall tal-commit awtomatiku",
+          "status_interval": "Intervall tal-aġġornament tal-istatus",
+          "notify_service": "Azzjoni tan-notifika",
+          "notify_image": "URL tal-immaġni tan-notifika",
+          "export_enabled": "Esportazzjoni ta’ kuljum tad-dashboards",
+          "export_time": "Ħin tal-esportazzjoni",
+          "export_dir": "Folder tal-esportazzjoni",
+          "export_format": "Format tal-esportazzjoni",
+          "export_before_commit": "Esporta d-dashboards qabel kull commit"
+        },
+        "data_description": {
+          "ai_task_entity": "Jiġġenera messaġġ Conventional Commits mid-diff. Mingħajrha, jintuża messaġġ ġeneriku.",
+          "commit_interval": "Commit u push kull N minuti meta jkun hemm bidliet. 0 jiddiżattivah.",
+          "notify_service": "Pereżempju notify.mobile_app_telefon. Ħallih vojt biex tiddiżattiva.",
+          "notify_image": "URL HTTPS assolut (meħtieġ minn iOS).",
+          "export_format": "JSON jikkopja l-fajls ta’ .storage kif inhuma; YAML iżomm biss il-konfigurazzjoni tad-dashboard, aktar faċli biex tinqara fid-diffs."
+        }
+      }
+    },
+    "error": {
+      "unknown_notify_service": "Din l-azzjoni tan-notifika ma teżistix."
+    }
+  },
+  "selector": {
+    "export_format": {
+      "options": {
+        "json": "JSON (kopja mhux ipproċessata)",
+        "yaml": "YAML (konfigurazzjoni biss)",
+        "both": "JSON u YAML"
+      }
+    },
+    "commit_language": {
+      "options": {
+        "en": "Ingliż",
+        "fr": "Franċiż",
+        "de": "Ġermaniż",
+        "es": "Spanjol"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "clean": "Aġġornat",
+          "dirty": "Bidliet pendenti",
+          "ahead": "Push pendenti",
+          "error": "Żball"
+        },
+        "state_attributes": {
+          "branch": {
+            "name": "Fergħa"
+          },
+          "upstream": {
+            "name": "Upstream"
+          },
+          "remote_url": {
+            "name": "URL tar-remote"
+          },
+          "ahead": {
+            "name": "Commits ’il quddiem"
+          },
+          "behind": {
+            "name": "Commits lura"
+          },
+          "changed_count": {
+            "name": "Fajls mibdula"
+          },
+          "changed_files": {
+            "name": "Lista tal-fajls mibdula"
+          },
+          "last_error": {
+            "name": "L-aħħar żball"
+          },
+          "ai_task": {
+            "name": "Kompitu tal-AI"
+          }
+        }
+      },
+      "changed_files": {
+        "name": "Fajls mibdula"
+      },
+      "last_commit": {
+        "name": "L-aħħar commit",
+        "state_attributes": {
+          "message": {
+            "name": "Messaġġ"
+          },
+          "sha": {
+            "name": "Commit"
+          },
+          "short_sha": {
+            "name": "Commit qasir"
+          }
+        }
+      },
+      "last_push": {
+        "name": "L-aħħar push",
+        "state_attributes": {
+          "message": {
+            "name": "Messaġġ"
+          }
+        }
+      },
+      "last_export": {
+        "name": "L-aħħar esportazzjoni tad-dashboards",
+        "state_attributes": {
+          "files": {
+            "name": "Fajls esportati"
+          }
+        }
+      },
+      "branch": {
+        "name": "Fergħa",
+        "state_attributes": {
+          "remote_url": {
+            "name": "URL tar-remote"
+          },
+          "upstream": {
+            "name": "Upstream"
+          }
+        }
+      }
+    },
+    "button": {
+      "commit_push": {
+        "name": "Commit u push"
+      },
+      "export_dashboards": {
+        "name": "Esporta d-dashboards"
+      }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entry": {
+      "message": "L-ebda repożitorju Git Sync mhu mgħobbi."
+    },
+    "no_ai_task": {
+      "message": "L-ebda entità tal-kompitu tal-AI mhi ssettjata fl-għażliet ta’ Git Sync."
+    },
+    "ai_task_failed": {
+      "message": "Il-kompitu tal-AI ma rritorna l-ebda messaġġ tal-commit."
+    }
+  },
+  "services": {
+    "commit_push": {
+      "name": "Commit u push",
+      "description": "Iżżid il-bidliet kollha fl-index, tagħmel commit b’messaġġ iġġenerat mill-AI (jew mogħti) u push lir-remote.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repożitorju",
+          "description": "L-entrata ta’ Git Sync li għandha tintuża. Ir-repożitorji kollha jekk vojt."
+        },
+        "message": {
+          "name": "Messaġġ",
+          "description": "Messaġġ tal-commit. Iġġenerat mill-kompitu tal-AI jekk vojt."
+        }
+      }
+    },
+    "export_dashboards": {
+      "name": "Esporta d-dashboards",
+      "description": "Tikkopja d-dashboards ta’ Lovelace minn .storage għall-folder tal-esportazzjoni.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repożitorju",
+          "description": "L-entrata ta’ Git Sync li għandha tintuża. Ir-repożitorji kollha jekk vojt."
+        }
+      }
+    },
+    "generate_ssh_key": {
+      "name": "Iġġenera ċavetta SSH",
+      "description": "Toħloq il-par ta’ ċwievet SSH jekk ikun nieqes u tirritorna ċ-ċavetta pubblika biex tiżdied bħala deploy key.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repożitorju",
+          "description": "L-entrata ta’ Git Sync li għandha tintuża. L-ewwel repożitorju jekk vojt."
+        }
+      }
+    },
+    "generate_message": {
+      "name": "Iġġenera messaġġ tal-commit",
+      "description": "Tikteb messaġġ tal-commit għall-bidliet kurrenti bil-kompitu tal-AI, mingħajr commit. Tirritorna null meta ma nbidel xejn.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repożitorju",
+          "description": "L-entrata ta’ Git Sync li għandha tintuża. L-ewwel repożitorju jekk vojt."
+        }
+      }
+    }
+  }
+}

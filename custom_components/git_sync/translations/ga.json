@@ -1,0 +1,254 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Stór Git",
+        "description": "Fillteán Home Assistant faoi rialú leagan Git agus brúite chuig remote (GitHub, Gitea…).",
+        "data": {
+          "repo_path": "Conair an stórais",
+          "remote": "Remote",
+          "branch": "Brainse",
+          "ssh_key": "Eochair phríobháideach SSH",
+          "author_name": "Ainm an údair",
+          "author_email": "Ríomhphost an údair"
+        },
+        "data_description": {
+          "repo_path": "An fillteán ina bhfuil an chomhadlann .git, /config de ghnáth.",
+          "remote": "An remote Git ar a ndéantar push, origin de ghnáth.",
+          "branch": "An spriocbhrainse ar an remote. Fág folamh chun push a dhéanamh ar an mbrainse reatha.",
+          "ssh_key": "An eochair phríobháideach a úsáidtear le haghaidh push. Cruthaigh í leis an ngníomh generate_ssh_key, ansin cuir an eochair phoiblí leis mar deploy key le cead scríbhneoireachta.",
+          "author_name": "Roghnach, sáraíonn sé git user.name / user.email an stórais.",
+          "author_email": "Roghnach, sáraíonn sé git user.name / user.email an stórais."
+        }
+      },
+      "reconfigure": {
+        "title": "Socruithe an stórais",
+        "data": {
+          "repo_path": "Conair an stórais",
+          "remote": "Remote",
+          "branch": "Brainse",
+          "ssh_key": "Eochair phríobháideach SSH",
+          "author_name": "Ainm an údair",
+          "author_email": "Ríomhphost an údair"
+        },
+        "data_description": {
+          "repo_path": "An fillteán ina bhfuil an chomhadlann .git, /config de ghnáth.",
+          "remote": "An remote Git ar a ndéantar push, origin de ghnáth.",
+          "branch": "An spriocbhrainse ar an remote. Fág folamh chun push a dhéanamh ar an mbrainse reatha.",
+          "ssh_key": "An eochair phríobháideach a úsáidtear le haghaidh push. Cruthaigh í leis an ngníomh generate_ssh_key, ansin cuir an eochair phoiblí leis mar deploy key le cead scríbhneoireachta.",
+          "author_name": "Roghnach, sáraíonn sé git user.name / user.email an stórais.",
+          "author_email": "Roghnach, sáraíonn sé git user.name / user.email an stórais."
+        }
+      }
+    },
+    "error": {
+      "not_a_repository": "Ní crann oibre Git é an fillteán seo.",
+      "unknown_remote": "Níl an remote seo sa stór.",
+      "author_required": "Níl a fhios ag Git cé a shíníonn na commits anseo: cuir isteach ríomhphost (agus ainm) an údair."
+    },
+    "abort": {
+      "already_configured": "Tá an stór seo cumraithe cheana féin.",
+      "reconfigure_successful": "Stór nuashonraithe.",
+      "unique_id_mismatch": "Ní féidir conair an stórais a athrú: cuir iontráil nua leis ina ionad."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Roghanna Git Sync",
+        "description": "Teachtaireacht commit, sceidil, fógraí agus easpórtáil painéal.",
+        "data": {
+          "ai_task_entity": "Aonán an taisc AI",
+          "commit_language": "Teanga na teachtaireachta commit",
+          "commit_interval": "Eatramh commit uathoibríoch",
+          "status_interval": "Eatramh athnuachana stádais",
+          "notify_service": "Gníomh fógra",
+          "notify_image": "URL íomhá an fhógra",
+          "export_enabled": "Easpórtáil laethúil painéal",
+          "export_time": "Am easpórtála",
+          "export_dir": "Fillteán easpórtála",
+          "export_format": "Formáid easpórtála",
+          "export_before_commit": "Easpórtáil painéil roimh gach commit"
+        },
+        "data_description": {
+          "ai_task_entity": "Gineann sé teachtaireacht Conventional Commits ón diff. Gan é, úsáidtear teachtaireacht ghinearálta.",
+          "commit_interval": "Commit agus push gach N nóiméad nuair a bhíonn athruithe ann. Díchumasaíonn 0 é.",
+          "notify_service": "Mar shampla notify.mobile_app_fon. Fág folamh chun é a dhíchumasú.",
+          "notify_image": "URL HTTPS absalóideach (ag teastáil ó iOS).",
+          "export_format": "Cóipeálann JSON na comhaid .storage mar atá; ní choinníonn YAML ach cumraíocht an phainéil, níos éasca le léamh i diffs."
+        }
+      }
+    },
+    "error": {
+      "unknown_notify_service": "Níl an gníomh fógra seo ann."
+    }
+  },
+  "selector": {
+    "export_format": {
+      "options": {
+        "json": "JSON (cóip amh)",
+        "yaml": "YAML (cumraíocht amháin)",
+        "both": "JSON agus YAML"
+      }
+    },
+    "commit_language": {
+      "options": {
+        "en": "Béarla",
+        "fr": "Fraincis",
+        "de": "Gearmáinis",
+        "es": "Spáinnis"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Stádas",
+        "state": {
+          "clean": "Cothrom le dáta",
+          "dirty": "Athruithe ar feitheamh",
+          "ahead": "Push ar feitheamh",
+          "error": "Earráid"
+        },
+        "state_attributes": {
+          "branch": {
+            "name": "Brainse"
+          },
+          "upstream": {
+            "name": "Upstream"
+          },
+          "remote_url": {
+            "name": "URL an remote"
+          },
+          "ahead": {
+            "name": "Commits chun tosaigh"
+          },
+          "behind": {
+            "name": "Commits taobh thiar"
+          },
+          "changed_count": {
+            "name": "Comhaid athraithe"
+          },
+          "changed_files": {
+            "name": "Liosta na gcomhad athraithe"
+          },
+          "last_error": {
+            "name": "Earráid dheireanach"
+          },
+          "ai_task": {
+            "name": "Tasc AI"
+          }
+        }
+      },
+      "changed_files": {
+        "name": "Comhaid athraithe"
+      },
+      "last_commit": {
+        "name": "Commit deireanach",
+        "state_attributes": {
+          "message": {
+            "name": "Teachtaireacht"
+          },
+          "sha": {
+            "name": "Commit"
+          },
+          "short_sha": {
+            "name": "Commit gearr"
+          }
+        }
+      },
+      "last_push": {
+        "name": "Push deireanach",
+        "state_attributes": {
+          "message": {
+            "name": "Teachtaireacht"
+          }
+        }
+      },
+      "last_export": {
+        "name": "Easpórtáil deireanach painéal",
+        "state_attributes": {
+          "files": {
+            "name": "Comhaid easpórtáilte"
+          }
+        }
+      },
+      "branch": {
+        "name": "Brainse",
+        "state_attributes": {
+          "remote_url": {
+            "name": "URL an remote"
+          },
+          "upstream": {
+            "name": "Upstream"
+          }
+        }
+      }
+    },
+    "button": {
+      "commit_push": {
+        "name": "Commit agus push"
+      },
+      "export_dashboards": {
+        "name": "Easpórtáil painéil"
+      }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entry": {
+      "message": "Níl aon stór Git Sync luchtaithe."
+    },
+    "no_ai_task": {
+      "message": "Níl aonán taisc AI socraithe i roghanna Git Sync."
+    },
+    "ai_task_failed": {
+      "message": "Níor thug an tasc AI teachtaireacht commit ar ais."
+    }
+  },
+  "services": {
+    "commit_push": {
+      "name": "Commit agus push",
+      "description": "Cuireann sé gach athrú sa stáitse, déanann sé commit le teachtaireacht ginte ag AI (nó tugtha) agus push chuig an remote.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Stór",
+          "description": "An iontráil Git Sync le húsáid. Na stórais go léir má tá sé folamh."
+        },
+        "message": {
+          "name": "Teachtaireacht",
+          "description": "Teachtaireacht commit. Ginte ag an tasc AI má tá sí folamh."
+        }
+      }
+    },
+    "export_dashboards": {
+      "name": "Easpórtáil painéil",
+      "description": "Cóipeálann sé na painéil Lovelace ó .storage chuig an bhfillteán easpórtála.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Stór",
+          "description": "An iontráil Git Sync le húsáid. Na stórais go léir má tá sé folamh."
+        }
+      }
+    },
+    "generate_ssh_key": {
+      "name": "Gin eochair SSH",
+      "description": "Cruthaíonn sé an péire eochracha SSH mura bhfuil sé ann agus tugann sé ar ais an eochair phoiblí le cur leis mar deploy key.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Stór",
+          "description": "An iontráil Git Sync le húsáid. An chéad stór má tá sé folamh."
+        }
+      }
+    },
+    "generate_message": {
+      "name": "Gin teachtaireacht commit",
+      "description": "Scríobhann sé teachtaireacht commit leis an tasc AI do na hathruithe reatha, gan commit a dhéanamh. Tugann sé null ar ais mura bhfuil aon rud athraithe.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Stór",
+          "description": "An iontráil Git Sync le húsáid. An chéad stór má tá sé folamh."
+        }
+      }
+    }
+  }
+}

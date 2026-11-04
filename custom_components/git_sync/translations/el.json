@@ -1,0 +1,254 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Αποθετήριο Git",
+        "description": "Φάκελος του Home Assistant με έλεγχο εκδόσεων Git, που γίνεται push σε remote (GitHub, Gitea…).",
+        "data": {
+          "repo_path": "Διαδρομή αποθετηρίου",
+          "remote": "Remote",
+          "branch": "Κλάδος",
+          "ssh_key": "Ιδιωτικό κλειδί SSH",
+          "author_name": "Όνομα συντάκτη",
+          "author_email": "Email συντάκτη"
+        },
+        "data_description": {
+          "repo_path": "Φάκελος που περιέχει τον κατάλογο .git, συνήθως /config.",
+          "remote": "Το Git remote για push, συνήθως origin.",
+          "branch": "Κλάδος προορισμού στο remote. Αφήστε κενό για push του τρέχοντος κλάδου.",
+          "ssh_key": "Ιδιωτικό κλειδί για το push. Δημιουργήστε το με την ενέργεια generate_ssh_key και μετά προσθέστε το δημόσιο κλειδί ως deploy key με δικαίωμα εγγραφής.",
+          "author_name": "Προαιρετικό, αντικαθιστά τα git user.name / user.email του αποθετηρίου.",
+          "author_email": "Προαιρετικό, αντικαθιστά τα git user.name / user.email του αποθετηρίου."
+        }
+      },
+      "reconfigure": {
+        "title": "Ρυθμίσεις αποθετηρίου",
+        "data": {
+          "repo_path": "Διαδρομή αποθετηρίου",
+          "remote": "Remote",
+          "branch": "Κλάδος",
+          "ssh_key": "Ιδιωτικό κλειδί SSH",
+          "author_name": "Όνομα συντάκτη",
+          "author_email": "Email συντάκτη"
+        },
+        "data_description": {
+          "repo_path": "Φάκελος που περιέχει τον κατάλογο .git, συνήθως /config.",
+          "remote": "Το Git remote για push, συνήθως origin.",
+          "branch": "Κλάδος προορισμού στο remote. Αφήστε κενό για push του τρέχοντος κλάδου.",
+          "ssh_key": "Ιδιωτικό κλειδί για το push. Δημιουργήστε το με την ενέργεια generate_ssh_key και μετά προσθέστε το δημόσιο κλειδί ως deploy key με δικαίωμα εγγραφής.",
+          "author_name": "Προαιρετικό, αντικαθιστά τα git user.name / user.email του αποθετηρίου.",
+          "author_email": "Προαιρετικό, αντικαθιστά τα git user.name / user.email του αποθετηρίου."
+        }
+      }
+    },
+    "error": {
+      "not_a_repository": "Αυτός ο φάκελος δεν είναι δέντρο εργασίας Git.",
+      "unknown_remote": "Αυτό το remote δεν υπάρχει στο αποθετήριο.",
+      "author_required": "Το Git δεν ξέρει ποιος υπογράφει εδώ τα commit: εισαγάγετε το email (και το όνομα) του συντάκτη."
+    },
+    "abort": {
+      "already_configured": "Αυτό το αποθετήριο έχει ήδη ρυθμιστεί.",
+      "reconfigure_successful": "Το αποθετήριο ενημερώθηκε.",
+      "unique_id_mismatch": "Η διαδρομή του αποθετηρίου δεν μπορεί να αλλάξει: προσθέστε μια νέα καταχώριση."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Επιλογές Git Sync",
+        "description": "Μήνυμα commit, χρονοδιαγράμματα, ειδοποιήσεις και εξαγωγή πινάκων ελέγχου.",
+        "data": {
+          "ai_task_entity": "Οντότητα εργασίας AI",
+          "commit_language": "Γλώσσα μηνύματος commit",
+          "commit_interval": "Διάστημα αυτόματου commit",
+          "status_interval": "Διάστημα ανανέωσης κατάστασης",
+          "notify_service": "Ενέργεια ειδοποίησης",
+          "notify_image": "URL εικόνας ειδοποίησης",
+          "export_enabled": "Ημερήσια εξαγωγή πινάκων ελέγχου",
+          "export_time": "Ώρα εξαγωγής",
+          "export_dir": "Φάκελος εξαγωγής",
+          "export_format": "Μορφή εξαγωγής",
+          "export_before_commit": "Εξαγωγή πινάκων ελέγχου πριν από κάθε commit"
+        },
+        "data_description": {
+          "ai_task_entity": "Δημιουργεί μήνυμα Conventional Commits από το diff. Χωρίς αυτήν χρησιμοποιείται ένα γενικό μήνυμα.",
+          "commit_interval": "Commit και push κάθε N λεπτά όταν υπάρχουν αλλαγές. Το 0 το απενεργοποιεί.",
+          "notify_service": "Για παράδειγμα notify.mobile_app_phone. Αφήστε κενό για απενεργοποίηση.",
+          "notify_image": "Απόλυτο URL HTTPS (απαιτείται από το iOS).",
+          "export_format": "Το JSON αντιγράφει τα αρχεία .storage ως έχουν· το YAML κρατά μόνο τη διαμόρφωση του πίνακα ελέγχου, πιο ευανάγνωστη στα diff."
+        }
+      }
+    },
+    "error": {
+      "unknown_notify_service": "Αυτή η ενέργεια ειδοποίησης δεν υπάρχει."
+    }
+  },
+  "selector": {
+    "export_format": {
+      "options": {
+        "json": "JSON (ακατέργαστο αντίγραφο)",
+        "yaml": "YAML (μόνο διαμόρφωση)",
+        "both": "JSON και YAML"
+      }
+    },
+    "commit_language": {
+      "options": {
+        "en": "Αγγλικά",
+        "fr": "Γαλλικά",
+        "de": "Γερμανικά",
+        "es": "Ισπανικά"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Κατάσταση",
+        "state": {
+          "clean": "Ενημερωμένο",
+          "dirty": "Εκκρεμείς αλλαγές",
+          "ahead": "Εκκρεμεί push",
+          "error": "Σφάλμα"
+        },
+        "state_attributes": {
+          "branch": {
+            "name": "Κλάδος"
+          },
+          "upstream": {
+            "name": "Upstream"
+          },
+          "remote_url": {
+            "name": "URL remote"
+          },
+          "ahead": {
+            "name": "Commit μπροστά"
+          },
+          "behind": {
+            "name": "Commit πίσω"
+          },
+          "changed_count": {
+            "name": "Αλλαγμένα αρχεία"
+          },
+          "changed_files": {
+            "name": "Λίστα αλλαγμένων αρχείων"
+          },
+          "last_error": {
+            "name": "Τελευταίο σφάλμα"
+          },
+          "ai_task": {
+            "name": "Εργασία AI"
+          }
+        }
+      },
+      "changed_files": {
+        "name": "Αλλαγμένα αρχεία"
+      },
+      "last_commit": {
+        "name": "Τελευταίο commit",
+        "state_attributes": {
+          "message": {
+            "name": "Μήνυμα"
+          },
+          "sha": {
+            "name": "Commit"
+          },
+          "short_sha": {
+            "name": "Σύντομο commit"
+          }
+        }
+      },
+      "last_push": {
+        "name": "Τελευταίο push",
+        "state_attributes": {
+          "message": {
+            "name": "Μήνυμα"
+          }
+        }
+      },
+      "last_export": {
+        "name": "Τελευταία εξαγωγή πινάκων ελέγχου",
+        "state_attributes": {
+          "files": {
+            "name": "Αρχεία που εξήχθησαν"
+          }
+        }
+      },
+      "branch": {
+        "name": "Κλάδος",
+        "state_attributes": {
+          "remote_url": {
+            "name": "URL remote"
+          },
+          "upstream": {
+            "name": "Upstream"
+          }
+        }
+      }
+    },
+    "button": {
+      "commit_push": {
+        "name": "Commit και push"
+      },
+      "export_dashboards": {
+        "name": "Εξαγωγή πινάκων ελέγχου"
+      }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entry": {
+      "message": "Δεν έχει φορτωθεί κανένα αποθετήριο Git Sync."
+    },
+    "no_ai_task": {
+      "message": "Δεν έχει οριστεί οντότητα εργασίας AI στις επιλογές του Git Sync."
+    },
+    "ai_task_failed": {
+      "message": "Η εργασία AI δεν επέστρεψε μήνυμα commit."
+    }
+  },
+  "services": {
+    "commit_push": {
+      "name": "Commit και push",
+      "description": "Προσθέτει όλες τις αλλαγές στο ευρετήριο, κάνει commit με μήνυμα που δημιουργεί η AI (ή που δίνεται) και push στο remote.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Αποθετήριο",
+          "description": "Καταχώριση Git Sync προς χρήση. Όλα τα αποθετήρια αν είναι κενό."
+        },
+        "message": {
+          "name": "Μήνυμα",
+          "description": "Μήνυμα commit. Δημιουργείται από την εργασία AI αν είναι κενό."
+        }
+      }
+    },
+    "export_dashboards": {
+      "name": "Εξαγωγή πινάκων ελέγχου",
+      "description": "Αντιγράφει τους πίνακες ελέγχου Lovelace από το .storage στον φάκελο εξαγωγής.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Αποθετήριο",
+          "description": "Καταχώριση Git Sync προς χρήση. Όλα τα αποθετήρια αν είναι κενό."
+        }
+      }
+    },
+    "generate_ssh_key": {
+      "name": "Δημιουργία κλειδιού SSH",
+      "description": "Δημιουργεί το ζεύγος κλειδιών SSH αν λείπει και επιστρέφει το δημόσιο κλειδί για προσθήκη ως deploy key.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Αποθετήριο",
+          "description": "Καταχώριση Git Sync προς χρήση. Το πρώτο αποθετήριο αν είναι κενό."
+        }
+      }
+    },
+    "generate_message": {
+      "name": "Δημιουργία μηνύματος commit",
+      "description": "Γράφει με την εργασία AI ένα μήνυμα commit για τις τρέχουσες αλλαγές, χωρίς commit. Επιστρέφει null όταν δεν άλλαξε τίποτα.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Αποθετήριο",
+          "description": "Καταχώριση Git Sync προς χρήση. Το πρώτο αποθετήριο αν είναι κενό."
+        }
+      }
+    }
+  }
+}

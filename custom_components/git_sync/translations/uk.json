@@ -1,0 +1,254 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Репозиторій Git",
+        "description": "Тека Home Assistant під керуванням Git, що надсилається до remote (GitHub, Gitea…).",
+        "data": {
+          "repo_path": "Шлях до репозиторію",
+          "remote": "Remote",
+          "branch": "Гілка",
+          "ssh_key": "Приватний ключ SSH",
+          "author_name": "Ім'я автора",
+          "author_email": "Email автора"
+        },
+        "data_description": {
+          "repo_path": "Тека, що містить каталог .git, зазвичай /config.",
+          "remote": "Git remote для push, зазвичай origin.",
+          "branch": "Цільова гілка в remote. Залиште порожнім, щоб надіслати поточну гілку.",
+          "ssh_key": "Приватний ключ для push. Створіть його дією generate_ssh_key, потім додайте публічний ключ як deploy key з правом запису.",
+          "author_name": "Необов'язково, замінює git user.name / user.email репозиторію.",
+          "author_email": "Необов'язково, замінює git user.name / user.email репозиторію."
+        }
+      },
+      "reconfigure": {
+        "title": "Налаштування репозиторію",
+        "data": {
+          "repo_path": "Шлях до репозиторію",
+          "remote": "Remote",
+          "branch": "Гілка",
+          "ssh_key": "Приватний ключ SSH",
+          "author_name": "Ім'я автора",
+          "author_email": "Email автора"
+        },
+        "data_description": {
+          "repo_path": "Тека, що містить каталог .git, зазвичай /config.",
+          "remote": "Git remote для push, зазвичай origin.",
+          "branch": "Цільова гілка в remote. Залиште порожнім, щоб надіслати поточну гілку.",
+          "ssh_key": "Приватний ключ для push. Створіть його дією generate_ssh_key, потім додайте публічний ключ як deploy key з правом запису.",
+          "author_name": "Необов'язково, замінює git user.name / user.email репозиторію.",
+          "author_email": "Необов'язково, замінює git user.name / user.email репозиторію."
+        }
+      }
+    },
+    "error": {
+      "not_a_repository": "Ця тека не є робочим деревом Git.",
+      "unknown_remote": "Такого remote немає в репозиторії.",
+      "author_required": "Git не знає, хто підписує тут commit-и: вкажіть email (та ім'я) автора."
+    },
+    "abort": {
+      "already_configured": "Цей репозиторій уже налаштовано.",
+      "reconfigure_successful": "Репозиторій оновлено.",
+      "unique_id_mismatch": "Шлях до репозиторію не можна змінити: натомість додайте новий запис."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Параметри Git Sync",
+        "description": "Повідомлення commit, розклади, сповіщення та експорт панелей.",
+        "data": {
+          "ai_task_entity": "Об'єкт AI-завдання",
+          "commit_language": "Мова повідомлень commit",
+          "commit_interval": "Інтервал автоматичного commit",
+          "status_interval": "Інтервал оновлення стану",
+          "notify_service": "Дія сповіщення",
+          "notify_image": "URL зображення сповіщення",
+          "export_enabled": "Щоденний експорт панелей",
+          "export_time": "Час експорту",
+          "export_dir": "Тека експорту",
+          "export_format": "Формат експорту",
+          "export_before_commit": "Експортувати панелі перед кожним commit"
+        },
+        "data_description": {
+          "ai_task_entity": "Генерує повідомлення у форматі Conventional Commits за diff. Без нього використовується загальне повідомлення.",
+          "commit_interval": "Commit і push кожні N хвилин, якщо є зміни. 0 вимикає.",
+          "notify_service": "Наприклад, notify.mobile_app_phone. Залиште порожнім, щоб вимкнути.",
+          "notify_image": "Абсолютний HTTPS URL (потрібен для iOS).",
+          "export_format": "JSON копіює файли .storage як є; YAML зберігає лише конфігурацію панелі, її простіше читати в diff."
+        }
+      }
+    },
+    "error": {
+      "unknown_notify_service": "Такої дії сповіщення не існує."
+    }
+  },
+  "selector": {
+    "export_format": {
+      "options": {
+        "json": "JSON (необроблена копія)",
+        "yaml": "YAML (лише конфігурація)",
+        "both": "JSON і YAML"
+      }
+    },
+    "commit_language": {
+      "options": {
+        "en": "Англійська",
+        "fr": "Французька",
+        "de": "Німецька",
+        "es": "Іспанська"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Стан",
+        "state": {
+          "clean": "Актуально",
+          "dirty": "Є зміни",
+          "ahead": "Очікує push",
+          "error": "Помилка"
+        },
+        "state_attributes": {
+          "branch": {
+            "name": "Гілка"
+          },
+          "upstream": {
+            "name": "Upstream"
+          },
+          "remote_url": {
+            "name": "URL remote"
+          },
+          "ahead": {
+            "name": "Commit-ів попереду"
+          },
+          "behind": {
+            "name": "Commit-ів позаду"
+          },
+          "changed_count": {
+            "name": "Змінені файли"
+          },
+          "changed_files": {
+            "name": "Список змінених файлів"
+          },
+          "last_error": {
+            "name": "Остання помилка"
+          },
+          "ai_task": {
+            "name": "AI-завдання"
+          }
+        }
+      },
+      "changed_files": {
+        "name": "Змінені файли"
+      },
+      "last_commit": {
+        "name": "Останній commit",
+        "state_attributes": {
+          "message": {
+            "name": "Повідомлення"
+          },
+          "sha": {
+            "name": "Commit"
+          },
+          "short_sha": {
+            "name": "Короткий commit"
+          }
+        }
+      },
+      "last_push": {
+        "name": "Останній push",
+        "state_attributes": {
+          "message": {
+            "name": "Повідомлення"
+          }
+        }
+      },
+      "last_export": {
+        "name": "Останній експорт панелей",
+        "state_attributes": {
+          "files": {
+            "name": "Експортовані файли"
+          }
+        }
+      },
+      "branch": {
+        "name": "Гілка",
+        "state_attributes": {
+          "remote_url": {
+            "name": "URL remote"
+          },
+          "upstream": {
+            "name": "Upstream"
+          }
+        }
+      }
+    },
+    "button": {
+      "commit_push": {
+        "name": "Commit і push"
+      },
+      "export_dashboards": {
+        "name": "Експортувати панелі"
+      }
+    }
+  },
+  "exceptions": {
+    "no_loaded_entry": {
+      "message": "Жоден репозиторій Git Sync не завантажено."
+    },
+    "no_ai_task": {
+      "message": "У параметрах Git Sync не задано об'єкт AI-завдання."
+    },
+    "ai_task_failed": {
+      "message": "AI-завдання не повернуло повідомлення commit."
+    }
+  },
+  "services": {
+    "commit_push": {
+      "name": "Commit і push",
+      "description": "Індексує всі зміни, виконує commit із повідомленням від AI (або заданим) і push до remote.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Репозиторій",
+          "description": "Запис Git Sync. Усі репозиторії, якщо порожньо."
+        },
+        "message": {
+          "name": "Повідомлення",
+          "description": "Повідомлення commit. Генерується AI-завданням, якщо порожньо."
+        }
+      }
+    },
+    "export_dashboards": {
+      "name": "Експортувати панелі",
+      "description": "Копіює панелі Lovelace із .storage до теки експорту.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Репозиторій",
+          "description": "Запис Git Sync. Усі репозиторії, якщо порожньо."
+        }
+      }
+    },
+    "generate_ssh_key": {
+      "name": "Згенерувати ключ SSH",
+      "description": "Створює пару ключів SSH, якщо її немає, і повертає публічний ключ для додавання як deploy key.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Репозиторій",
+          "description": "Запис Git Sync. Перший репозиторій, якщо порожньо."
+        }
+      }
+    },
+    "generate_message": {
+      "name": "Згенерувати повідомлення commit",
+      "description": "Пише за допомогою AI-завдання повідомлення commit для поточних змін, не виконуючи commit. Повертає null, якщо нічого не змінилося.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Репозиторій",
+          "description": "Запис Git Sync. Перший репозиторій, якщо порожньо."
+        }
+      }
+    }
+  }
+}

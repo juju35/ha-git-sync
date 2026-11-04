@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1 - 2026-11-04
+
+### What's new
+- Added Romanian, Danish, Swedish, Bulgarian, Russian, Ukrainian, Hungarian, Irish, Slovak, Czech, Slovenian, Maltese, Latvian and Greek translations: the setup and options, the entities, the actions and both cards with their visual editor (`ro`, `da`, `sv`, `bg`, `ru`, `uk`, `hu`, `ga`, `sk`, `cs`, `sl`, `mt`, `lv` and `el`). The cards follow Home Assistant's language or the `language` option. Commit messages are still written in English, French, German or Spanish.
+
 ## 1.1.0 - 2026-11-02
 
 ### What's new
