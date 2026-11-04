@@ -178,7 +178,7 @@ async def test_default_ai_task_and_language(hass: HomeAssistant, repo: Path) -> 
 
 @pytest.mark.parametrize(
     ("ha_language", "expected"),
-    [("ru", "ru"), ("el", "el"), ("sr-Latn", "sr-Latn"), ("sr", "sr"), ("pt-BR", "pt"), ("cs", "cs"), ("ja", "en")],
+    [("ru", "ru"), ("el", "el"), ("sr-Latn", "sr-latn"), ("sr", "sr"), ("pt-BR", "pt"), ("cs", "cs"), ("ja", "en")],
 )
 async def test_default_language_follows_home_assistant(
     hass: HomeAssistant, repo: Path, ha_language: str, expected: str
@@ -207,7 +207,7 @@ async def test_ai_prompt_names_the_commit_language(hass: HomeAssistant, repo: Pa
             CONF_COMMIT_INTERVAL: 0,
             CONF_EXPORT_ENABLED: False,
             CONF_AI_TASK_ENTITY: "ai_task.test",
-            CONF_COMMIT_LANGUAGE: "sr-Latn",
+            CONF_COMMIT_LANGUAGE: "sr-latn",
         },
     )
     entry.add_to_hass(hass)

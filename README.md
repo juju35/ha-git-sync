@@ -104,7 +104,7 @@ Copy `custom_components/git_sync/` to `/config/custom_components/git_sync/`, the
 | Option | Default | Description |
 |---|---|---|
 | AI task entity | the only `ai_task` entity, if there is one | Writes the commit message from the diff, and shows the ✨ button of the card. Without it: `chore: update configuration (n files)` |
-| Commit message language | Home Assistant's, else English | `en`, `fr`, `de`, `es`, `sr`, `sr-Latn`, `it`, `nl`, `pt`, `pl`, `ro`, `da`, `sv`, `bg`, `ru`, `uk`, `hu`, `sk`, `cs`, `sl`, `lv` or `el` |
+| Commit message language | Home Assistant's, else English | `en`, `fr`, `de`, `es`, `sr`, `sr-latn`, `it`, `nl`, `pt`, `pl`, `ro`, `da`, `sv`, `bg`, `ru`, `uk`, `hu`, `sk`, `cs`, `sl`, `lv` or `el` |
 | Automatic commit interval | 60 min | Commit and push every N minutes when something changed, 0 to disable, up to 1440 |
 | Status refresh interval | 60 s | How often `git status` is read, from 10 to 3600 |
 | Notification action | none | Sent after each commit, for example `notify.mobile_app_phone`. An action that does not exist is refused by the form |

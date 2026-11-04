@@ -4,7 +4,7 @@
 
 ### What's new
 - Added Romanian, Danish, Swedish, Bulgarian, Russian, Ukrainian, Hungarian, Slovak, Czech, Slovenian, Latvian and Greek translations: the setup and options, the entities, the actions and both cards with their visual editor (`ro`, `da`, `sv`, `bg`, `ru`, `uk`, `hu`, `sk`, `cs`, `sl`, `lv` and `el`). The cards follow Home Assistant's language or the `language` option.
-- AI commit messages can now be written in every language of the integration (22, Serbian in Cyrillic or Latin script), not only English, French, German and Spanish. The default still follows Home Assistant's language: its full tag first (`sr-Latn`), then its language (`pt-BR` gives European Portuguese), else English.
+- AI commit messages can now be written in every language of the integration (22, Serbian in Cyrillic or Latin script), not only English, French, German and Spanish. The default still follows Home Assistant's language: its full tag first (`sr-Latn`, stored as `sr-latn`), then its language (`pt-BR` gives European Portuguese), else English.
 
 ## 1.1.0 - 2026-11-02
 
