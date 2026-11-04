@@ -96,7 +96,25 @@
         "en": "Angličtina",
         "fr": "Francúzština",
         "de": "Nemčina",
-        "es": "Španielčina"
+        "es": "Španielčina",
+        "sr": "Srbčina (cyrilika)",
+        "sr-Latn": "Srbčina (latinka)",
+        "it": "Taliančina",
+        "nl": "Holandčina",
+        "pt": "Portugalčina (Portugalsko)",
+        "pl": "Poľština",
+        "ro": "Rumunčina",
+        "da": "Dánčina",
+        "sv": "Švédčina",
+        "bg": "Bulharčina",
+        "ru": "Ruština",
+        "uk": "Ukrajinčina",
+        "hu": "Maďarčina",
+        "sk": "Slovenčina",
+        "cs": "Čeština",
+        "sl": "Slovinčina",
+        "lv": "Lotyština",
+        "el": "Gréčtina"
       }
     }
   },

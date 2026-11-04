@@ -96,7 +96,25 @@
         "en": "Angol",
         "fr": "Francia",
         "de": "Német",
-        "es": "Spanyol"
+        "es": "Spanyol",
+        "sr": "Szerb (Cirill)",
+        "sr-Latn": "Szerb (Latin)",
+        "it": "Olasz",
+        "nl": "Holland",
+        "pt": "Portugál (Portugália)",
+        "pl": "Lengyel",
+        "ro": "Román",
+        "da": "Dán",
+        "sv": "Svéd",
+        "bg": "Bolgár",
+        "ru": "Orosz",
+        "uk": "Ukrán",
+        "hu": "Magyar",
+        "sk": "Szlovák",
+        "cs": "Cseh",
+        "sl": "Szlovén",
+        "lv": "Lett",
+        "el": "Görög"
       }
     }
   },

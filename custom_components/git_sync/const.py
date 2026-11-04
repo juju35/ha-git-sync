@@ -40,7 +40,30 @@ DEFAULT_EXPORT_DIR: Final = "/config/dashboards_export"
 DEFAULT_EXPORT_FORMAT: Final = "json"
 
 EXPORT_FORMATS: Final = ["json", "yaml", "both"]
-COMMIT_LANGUAGES: Final = ["en", "fr", "de", "es"]
+COMMIT_LANGUAGES: Final = [
+    "en",
+    "fr",
+    "de",
+    "es",
+    "sr",
+    "sr-Latn",
+    "it",
+    "nl",
+    "pt",
+    "pl",
+    "ro",
+    "da",
+    "sv",
+    "bg",
+    "ru",
+    "uk",
+    "hu",
+    "sk",
+    "cs",
+    "sl",
+    "lv",
+    "el",
+]
 
 # Git output limits
 DIFF_MAX_CHARS: Final = 8000
@@ -77,6 +100,24 @@ LANGUAGE_NAMES: Final = {
     "fr": "French",
     "de": "German",
     "es": "Spanish",
+    "sr": "Serbian (Cyrillic script)",
+    "sr-Latn": "Serbian (Latin script)",
+    "it": "Italian",
+    "nl": "Dutch",
+    "pt": "European Portuguese",
+    "pl": "Polish",
+    "ro": "Romanian",
+    "da": "Danish",
+    "sv": "Swedish",
+    "bg": "Bulgarian",
+    "ru": "Russian",
+    "uk": "Ukrainian",
+    "hu": "Hungarian",
+    "sk": "Slovak",
+    "cs": "Czech",
+    "sl": "Slovenian",
+    "lv": "Latvian",
+    "el": "Greek",
 }
 
 AI_INSTRUCTIONS: Final = (

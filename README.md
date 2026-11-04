@@ -24,7 +24,7 @@ It replaces the usual stack of `shell_command`, `command_line` sensor, script an
 
 - **Status** of the work tree: clean, changes pending, push pending or error, with the changed files, the branch and the remote
 - **Automatic commit and push** every N minutes (60 by default) when something changed, and on demand from a button, an action or the card
-- **AI commit messages**: the staged diff is sent to an `ai_task` entity (Google, OpenAI, Ollama…), which writes a one-line [Conventional Commits](https://www.conventionalcommits.org/) message in English, French, German or Spanish. Without AI task, or if it fails, a generic message is used
+- **AI commit messages**: the staged diff is sent to an `ai_task` entity (Google, OpenAI, Ollama…), which writes a one-line [Conventional Commits](https://www.conventionalcommits.org/) message in any of the integration's languages. Without AI task, or if it fails, a generic message is used
 - **Notification** after each real commit, with an optional image
 - **Dashboard export**: copies `.storage/lovelace*` to a folder, as raw JSON, readable YAML or both, every day at a set time and optionally right before each commit. A file is only rewritten when it changes
 - **SSH deploy key** created by an action; the push accepts the host key on first use, no `ssh-keyscan` needed
@@ -104,7 +104,7 @@ Copy `custom_components/git_sync/` to `/config/custom_components/git_sync/`, the
 | Option | Default | Description |
 |---|---|---|
 | AI task entity | the only `ai_task` entity, if there is one | Writes the commit message from the diff, and shows the ✨ button of the card. Without it: `chore: update configuration (n files)` |
-| Commit message language | Home Assistant's, else English | `en`, `fr`, `de` or `es` |
+| Commit message language | Home Assistant's, else English | `en`, `fr`, `de`, `es`, `sr`, `sr-Latn`, `it`, `nl`, `pt`, `pl`, `ro`, `da`, `sv`, `bg`, `ru`, `uk`, `hu`, `sk`, `cs`, `sl`, `lv` or `el` |
 | Automatic commit interval | 60 min | Commit and push every N minutes when something changed, 0 to disable, up to 1440 |
 | Status refresh interval | 60 s | How often `git status` is read, from 10 to 3600 |
 | Notification action | none | Sent after each commit, for example `notify.mobile_app_phone`. An action that does not exist is refused by the form |

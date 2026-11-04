@@ -107,3 +107,13 @@ def test_cyrillic_and_greek_keep_latin_for_names_only(language: str):
     for key, text in _load(language).items():
         for word in re.findall(r"[A-Za-z]+", text):
             assert word.lower() in english, f"{key}: {word}"
+
+
+def test_every_commit_language_has_a_name_and_a_label():
+    """Each commit language has an English name for the AI prompt and a label in every translation."""
+    from custom_components.git_sync.const import COMMIT_LANGUAGES, LANGUAGE_NAMES
+
+    assert sorted(LANGUAGE_NAMES) == sorted(COMMIT_LANGUAGES)
+    for language in ["en", *LANGUAGES]:
+        data = json.loads((TRANSLATIONS / f"{language}.json").read_text(encoding="utf-8"))
+        assert list(data["selector"]["commit_language"]["options"]) == COMMIT_LANGUAGES, language

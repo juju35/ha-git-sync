@@ -108,9 +108,15 @@ def _default_ai_task(hass: HomeAssistant) -> str | None:
 
 
 def _default_language(hass: HomeAssistant) -> str:
-    """Home Assistant's language when commit messages can be written in it, else English."""
-    language = (hass.config.language or "").split("-")[0]
-    return language if language in COMMIT_LANGUAGES else DEFAULT_COMMIT_LANGUAGE
+    """Home Assistant's language when commit messages can be written in it, else English.
+
+    The full tag first (sr-Latn), then its language (pt-BR gives pt).
+    """
+    language = hass.config.language or ""
+    for candidate in (language, language.split("-")[0]):
+        if candidate in COMMIT_LANGUAGES:
+            return candidate
+    return DEFAULT_COMMIT_LANGUAGE
 
 
 def _default_options(hass: HomeAssistant) -> dict[str, Any]:

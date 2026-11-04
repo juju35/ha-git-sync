@@ -96,7 +96,25 @@
         "en": "Engelska",
         "fr": "Franska",
         "de": "Tyska",
-        "es": "Spanska"
+        "es": "Spanska",
+        "sr": "Serbiska (kyrilliska)",
+        "sr-Latn": "Serbiska (latinska)",
+        "it": "Italienska",
+        "nl": "Nederländska",
+        "pt": "Portugisiska (Portugal)",
+        "pl": "Polska",
+        "ro": "Rumänska",
+        "da": "Danska",
+        "sv": "Svenska",
+        "bg": "Bulgariska",
+        "ru": "Ryska",
+        "uk": "Ukrainska",
+        "hu": "Ungerska",
+        "sk": "Slovakiska",
+        "cs": "Tjeckiska",
+        "sl": "Slovenska",
+        "lv": "Lettiska",
+        "el": "Grekiska"
       }
     }
   },

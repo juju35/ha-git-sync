@@ -96,7 +96,25 @@
         "en": "Angļu",
         "fr": "Franču",
         "de": "Vācu",
-        "es": "Spāņu"
+        "es": "Spāņu",
+        "sr": "Serbu (kirilica)",
+        "sr-Latn": "Serbu (latīņu)",
+        "it": "Itāļu",
+        "nl": "Holandiešu",
+        "pt": "Portugāļu (Portugāle)",
+        "pl": "Poļu",
+        "ro": "Rumāņu",
+        "da": "Dāņu",
+        "sv": "Zviedru",
+        "bg": "Bulgāru",
+        "ru": "Krievu",
+        "uk": "Ukraiņu",
+        "hu": "Ungāru",
+        "sk": "Slovāku",
+        "cs": "Čehu",
+        "sl": "Slovēņu",
+        "lv": "Latviešu",
+        "el": "Grieķu"
       }
     }
   },

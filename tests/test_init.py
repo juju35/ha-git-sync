@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -173,6 +174,49 @@ async def test_default_ai_task_and_language(hass: HomeAssistant, repo: Path) -> 
     )
     assert done["type"] is FlowResultType.CREATE_ENTRY
     assert done["options"] == {CONF_AI_TASK_ENTITY: "ai_task.google_ai_task", CONF_COMMIT_LANGUAGE: "fr"}
+
+
+@pytest.mark.parametrize(
+    ("ha_language", "expected"),
+    [("ru", "ru"), ("el", "el"), ("sr-Latn", "sr-Latn"), ("sr", "sr"), ("pt-BR", "pt"), ("cs", "cs"), ("ja", "en")],
+)
+async def test_default_language_follows_home_assistant(
+    hass: HomeAssistant, repo: Path, ha_language: str, expected: str
+) -> None:
+    """Commit messages default to Home Assistant's language: full tag first, then its language, else English."""
+    from custom_components.git_sync.const import CONF_COMMIT_LANGUAGE
+
+    hass.config.language = ha_language
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    done = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_REPO_PATH: str(repo), CONF_REMOTE: "origin", CONF_SSH_KEY: ""}
+    )
+    assert done["options"][CONF_COMMIT_LANGUAGE] == expected
+
+
+async def test_ai_prompt_names_the_commit_language(hass: HomeAssistant, repo: Path) -> None:
+    """The AI is asked for the message in the chosen language, by its English name."""
+    from custom_components.git_sync.const import CONF_AI_TASK_ENTITY, CONF_COMMIT_LANGUAGE
+
+    calls = _mock_ai_task(hass, "fix: ažuriraj skripte")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=str(repo),
+        data={CONF_REPO_PATH: str(repo), CONF_REMOTE: "origin", CONF_SSH_KEY: ""},
+        options={
+            CONF_COMMIT_INTERVAL: 0,
+            CONF_EXPORT_ENABLED: False,
+            CONF_AI_TASK_ENTITY: "ai_task.test",
+            CONF_COMMIT_LANGUAGE: "sr-Latn",
+        },
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    await hass.services.async_call(DOMAIN, "generate_message", {}, blocking=True, return_response=True)
+    assert "commit message in Serbian (Latin script)," in calls[0]["instructions"]
 
 
 def _suggested(schema, key: str):

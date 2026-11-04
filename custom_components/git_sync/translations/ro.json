@@ -96,7 +96,25 @@
         "en": "Engleză",
         "fr": "Franceză",
         "de": "Germană",
-        "es": "Spaniolă"
+        "es": "Spaniolă",
+        "sr": "Sârbă (chirilică)",
+        "sr-Latn": "Sârbă (latină)",
+        "it": "Italiană",
+        "nl": "Neerlandeză",
+        "pt": "Portugheză (Portugalia)",
+        "pl": "Poloneză",
+        "ro": "Română",
+        "da": "Daneză",
+        "sv": "Suedeză",
+        "bg": "Bulgară",
+        "ru": "Rusă",
+        "uk": "Ucraineană",
+        "hu": "Maghiară",
+        "sk": "Slovacă",
+        "cs": "Cehă",
+        "sl": "Slovenă",
+        "lv": "Letonă",
+        "el": "Greacă"
       }
     }
   },
