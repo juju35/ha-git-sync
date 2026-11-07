@@ -267,6 +267,16 @@
           "description": "Voce Git Sync da usare. Il primo repository se vuoto."
         }
       }
+    },
+    "get_diff": {
+      "name": "Ottieni modifiche",
+      "description": "Restituisce le modifiche che un commit includerebbe, file per file, come le mostra il visualizzatore diff della scheda.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Voce Git Sync da usare. Il primo repository se vuoto."
+        }
+      }
     }
   }
 }

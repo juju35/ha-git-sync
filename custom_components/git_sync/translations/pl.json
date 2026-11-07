@@ -267,6 +267,16 @@
           "description": "Wpis Git Sync do użycia. Pierwsze repozytorium, gdy puste."
         }
       }
+    },
+    "get_diff": {
+      "name": "Pobierz zmiany",
+      "description": "Zwraca zmiany, które zawierałby commit, plik po pliku, tak jak pokazuje je widok różnic karty.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozytorium",
+          "description": "Wpis Git Sync do użycia. Pierwsze repozytorium, gdy puste."
+        }
+      }
     }
   }
 }

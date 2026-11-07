@@ -61,6 +61,8 @@ ICONS = {
     "loading": "M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z",
     "arrow-expand": "M10,21V19H6.41L10.91,14.5L9.5,13.09L5,17.59V14H3V21H10M14.5,10.91L19,6.41V10H21V3H14V5H17.59L13.09,9.5L14.5,10.91Z",
     "arrow-collapse": "M19.5,3.09L15,7.59V4H13V11H20V9H16.41L20.91,4.5L19.5,3.09M4,13V15H7.59L3.09,19.5L4.5,20.91L9,16.41V20H11V13H4Z",
+    "file-compare": "M10,18H6V16H10V18M10,14H6V12H10V14M10,10H6V8H10V10M10,6H6V4H10V6M20,18H14V16H20V18M20,14H14V12H20V14M20,10H14V8H20V10M20,6H14V4H20V6M12,2V22H10V2H12Z",
+    "arrow-right": "M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z",
 }
 
 # Minimal stand-ins for Home Assistant's <ha-card> and <ha-icon>.
@@ -150,6 +152,100 @@ def mock_hass(status, files, error=None):
     }
 
 
+# The changes shown by the diff viewer (what the get_diff action returns), mock data.
+DIFF = {
+    "additions": 14,
+    "deletions": 3,
+    "more_files": 0,
+    "files": [
+        {
+            "path": "automations.yaml",
+            "status": "modified",
+            "old_path": None,
+            "binary": False,
+            "additions": 7,
+            "deletions": 2,
+            "truncated": 0,
+            "hunks": [
+                {
+                    "header": "@@ -12,9 +12,14 @@ - alias: Corridor night light",
+                    "lines": [
+                        {"kind": "context", "old": 12, "new": 12, "text": "  triggers:"},
+                        {"kind": "context", "old": 13, "new": 13, "text": "    - trigger: state"},
+                        {
+                            "kind": "context",
+                            "old": 14,
+                            "new": 14,
+                            "text": "      entity_id: binary_sensor.corridor_occupancy",
+                        },
+                        {"kind": "context", "old": 15, "new": 15, "text": '      to: "on"'},
+                        {"kind": "context", "old": 16, "new": 16, "text": "  conditions:"},
+                        {"kind": "del", "old": 17, "new": None, "text": "    - condition: numeric_state"},
+                        {"kind": "del", "old": 18, "new": None, "text": "      entity_id: sensor.corridor_illuminance"},
+                        {"kind": "add", "old": None, "new": 17, "text": "    - condition: numeric_state"},
+                        {"kind": "add", "old": None, "new": 18, "text": "      entity_id: sensor.corridor_illuminance"},
+                        {"kind": "add", "old": None, "new": 19, "text": "      below: 5"},
+                        {"kind": "add", "old": None, "new": 20, "text": "    - condition: time"},
+                        {"kind": "add", "old": None, "new": 21, "text": '      after: "22:00:00"'},
+                        {"kind": "add", "old": None, "new": 22, "text": '      before: "07:00:00"'},
+                        {"kind": "context", "old": 19, "new": 23, "text": "  actions:"},
+                        {"kind": "context", "old": 20, "new": 24, "text": "    - action: light.turn_on"},
+                        {"kind": "add", "old": None, "new": 25, "text": "      data:"},
+                        {"kind": "add", "old": None, "new": 26, "text": "        brightness_pct: 30"},
+                    ],
+                }
+            ],
+        },
+        {
+            "path": "scripts.yaml",
+            "status": "modified",
+            "old_path": None,
+            "binary": False,
+            "additions": 1,
+            "deletions": 1,
+            "truncated": 0,
+            "hunks": [
+                {
+                    "header": "@@ -3,3 +3,3 @@",
+                    "lines": [
+                        {"kind": "del", "old": 4, "new": None, "text": "  icon: mdi:lightbulb"},
+                        {"kind": "add", "old": None, "new": 4, "text": "  icon: mdi:lightbulb-night"},
+                    ],
+                }
+            ],
+        },
+        {
+            "path": "dashboards_export/lovelace.dashboard_home",
+            "status": "modified",
+            "old_path": None,
+            "binary": False,
+            "additions": 3,
+            "deletions": 0,
+            "truncated": 0,
+            "hunks": [],
+        },
+        {
+            "path": "packages/lighting.yaml",
+            "status": "added",
+            "old_path": None,
+            "binary": False,
+            "additions": 3,
+            "deletions": 0,
+            "truncated": 0,
+            "hunks": [
+                {
+                    "header": "@@ -0,0 +1,3 @@",
+                    "lines": [
+                        {"kind": "add", "old": None, "new": 1, "text": "scene:"},
+                        {"kind": "add", "old": None, "new": 2, "text": "  - name: Corridor night"},
+                        {"kind": "add", "old": None, "new": 3, "text": "    entities: {}"},
+                    ],
+                }
+            ],
+        },
+    ],
+}
+
 DIRTY = ("dirty", FILES)
 CLEAN = ("clean", [])
 ERROR = ("error", [], "git push failed: Permission denied (publickey).")
@@ -172,7 +268,14 @@ SHOTS = [
     ("mini-error-dark", "dark", ERROR, None, "git-sync-mini-card"),
     ("mini-zoomed", "light", DIRTY, "zoom", "git-sync-mini-card"),
     ("mini-zoomed-dark", "dark", DIRTY, "zoom", "git-sync-mini-card"),
+    # The full-screen diff viewer: a desktop window, and a phone (full screen, files as chips above the diff).
+    ("diff", "light", DIRTY, "diff", "git-sync-card"),
+    ("diff-dark", "dark", DIRTY, "diff", "git-sync-card"),
+    ("diff-phone", "light", DIRTY, "diff", "git-sync-card"),
+    ("diff-phone-dark", "dark", DIRTY, "diff", "git-sync-card"),
 ]
+# Viewport of the diff viewer captures (the viewer fills it); other captures are clipped to the card.
+VIEWPORTS = {"diff": (1000, 640), "diff-phone": (390, 760)}
 
 
 def page_html(theme, width):
@@ -187,10 +290,11 @@ body {{ margin: 0; padding: 16px; background: var(--primary-background-color);
 MOUNT = """([hass, dark, action, card]) => {
     const el = document.createElement(card);
     el.setConfig({ type: `custom:${card}` });
-    el.hass = { ...hass, themes: { darkMode: dark }, callService: async () => ({}) };
+    el.hass = { ...hass, themes: { darkMode: dark }, callService: async (d, s) => ({ response: s === "get_diff" ? hass.diff : {} }) };
     document.getElementById("root").appendChild(el);
     if (action === "files") el.shadowRoot.querySelector(".toggle").click();
     if (action === "zoom") el.shadowRoot.querySelector(".zoom").click();
+    if (action === "diff") el.shadowRoot.querySelector("#diff").click();
     if (action === "confirm") {
         el.shadowRoot.querySelector("#commit").click();
         // The message written by the sparkle button (AI task) in the field.
@@ -232,16 +336,23 @@ def main():
         browser = p.chromium.launch(executable_path=os.environ.get("CHROMIUM_PATH") or None)
         for name, theme, state, action, card in SHOTS:
             width = MINI_WIDTH if card == "git-sync-mini-card" else WIDTH
-            page = browser.new_page(device_scale_factor=2, viewport={"width": 1000, "height": 1600})
+            viewport = VIEWPORTS.get(name.removesuffix("-dark"))
+            page = browser.new_page(
+                device_scale_factor=2,
+                viewport={"width": viewport[0], "height": viewport[1]} if viewport else {"width": 1000, "height": 1600},
+            )
             page.on("pageerror", lambda err, name=name: print(f"{name}: page error: {err}"))
             page.clock.set_fixed_time(NOW.isoformat())
             page.set_content(page_html(theme, width))
             page.add_script_tag(content=HA_ELEMENTS)
             page.add_script_tag(content=CARD_JS)
-            page.evaluate(MOUNT, [mock_hass(*state), theme == "dark", action, card])
+            page.evaluate(MOUNT, [{**mock_hass(*state), "diff": DIFF}, theme == "dark", action, card])
             page.wait_for_timeout(400)
-            box = page.locator("#root").bounding_box()
-            clip = {"x": 0, "y": 0, "width": width + 32, "height": int(box["height"] + 0.999) + 32}
+            if viewport:
+                clip = {"x": 0, "y": 0, "width": viewport[0], "height": viewport[1]}
+            else:
+                box = page.locator("#root").bounding_box()
+                clip = {"x": 0, "y": 0, "width": width + 32, "height": int(box["height"] + 0.999) + 32}
             path = ROOT / "screenshots" / f"{name}.png"
             path.parent.mkdir(exist_ok=True)
             png = page.screenshot(clip=clip, animations="disabled")

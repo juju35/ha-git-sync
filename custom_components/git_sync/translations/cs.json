@@ -267,6 +267,16 @@
           "description": "Položka Git Sync, která se má použít. Pokud je prázdné, první repozitář."
         }
       }
+    },
+    "get_diff": {
+      "name": "Získat změny",
+      "description": "Vrátí změny, které by commit obsahoval, soubor po souboru, tak jak je zobrazuje zobrazení rozdílů karty.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozitář",
+          "description": "Položka Git Sync, která se má použít. Pokud je prázdné, první repozitář."
+        }
+      }
     }
   }
 }

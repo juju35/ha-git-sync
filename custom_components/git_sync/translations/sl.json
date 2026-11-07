@@ -267,6 +267,16 @@
           "description": "Vnos Git Sync, ki naj se uporabi. Prvi repozitorij, če je prazno."
         }
       }
+    },
+    "get_diff": {
+      "name": "Pridobi spremembe",
+      "description": "Vrne spremembe, ki bi jih commit vseboval, datoteko po datoteko, kot jih prikazuje pogled razlik kartice.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozitorij",
+          "description": "Vnos Git Sync, ki naj se uporabi. Prvi repozitorij, če je prazno."
+        }
+      }
     }
   }
 }

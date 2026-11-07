@@ -267,6 +267,16 @@
           "description": "A használandó Git Sync-bejegyzés. Üresen hagyva az első tároló."
         }
       }
+    },
+    "get_diff": {
+      "name": "Változások lekérése",
+      "description": "Visszaadja a commitba kerülő változásokat fájlonként, ahogy a kártya diff nézete mutatja őket.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Tároló",
+          "description": "A használandó Git Sync-bejegyzés. Üresen hagyva az első tároló."
+        }
+      }
     }
   }
 }

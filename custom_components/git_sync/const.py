@@ -7,7 +7,7 @@ from typing import Final
 DOMAIN: Final = "git_sync"
 NAME: Final = "Git Sync"
 # Same as manifest.json and the card: the card URL carries it, so that browsers load a new release.
-VERSION: Final = "1.1.2"
+VERSION: Final = "1.2.0"
 
 # Config entry data / options
 CONF_REPO_PATH: Final = "repo_path"
@@ -67,6 +67,9 @@ COMMIT_LANGUAGES: Final = [
 
 # Git output limits
 DIFF_MAX_CHARS: Final = 8000
+# The diff viewer of the card: lines kept per file, and files kept in one response (the rest is counted).
+DIFF_FILE_MAX_LINES: Final = 2000
+DIFF_MAX_FILES: Final = 200
 COMMIT_MESSAGE_MAX: Final = 100
 CHANGED_FILES_MAX: Final = 50
 GIT_TIMEOUT: Final = 120  # seconds
@@ -83,6 +86,7 @@ SERVICE_COMMIT_PUSH: Final = "commit_push"
 SERVICE_EXPORT_DASHBOARDS: Final = "export_dashboards"
 SERVICE_GENERATE_SSH_KEY: Final = "generate_ssh_key"
 SERVICE_GENERATE_MESSAGE: Final = "generate_message"
+SERVICE_GET_DIFF: Final = "get_diff"
 ATTR_MESSAGE: Final = "message"
 ATTR_CONFIG_ENTRY_ID: Final = "config_entry_id"
 

@@ -267,6 +267,16 @@
           "description": "Intrarea Git Sync de utilizat. Primul depozit dacă este gol."
         }
       }
+    },
+    "get_diff": {
+      "name": "Obține modificările",
+      "description": "Returnează modificările pe care le-ar include un commit, fișier cu fișier, așa cum le afișează vizualizatorul de diferențe al cardului.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Depozit",
+          "description": "Intrarea Git Sync de utilizat. Primul depozit dacă este gol."
+        }
+      }
     }
   }
 }

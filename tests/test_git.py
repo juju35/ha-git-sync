@@ -16,6 +16,7 @@ from custom_components.git_sync.git import (
     GitRepo,
     GitStatus,
     _parse_branch_line,
+    parse_patch,
     redact_credentials,
     redact_url,
 )
@@ -303,3 +304,99 @@ def test_export_adopts_the_files_of_an_older_version(tmp_path: Path) -> None:
     result = export_dashboards(str(storage), str(out), "yaml", adopt=True)
     assert result.skipped == []
     assert "title: lovelace" in (out / "lovelace.yaml").read_text(encoding="utf-8")
+
+
+def test_parse_patch_file_by_file() -> None:
+    patch = """diff --git a/configuration.yaml b/configuration.yaml
+index 1111111..2222222 100644
+--- a/configuration.yaml
++++ b/configuration.yaml
+@@ -1,3 +1,4 @@ homeassistant:
+ default_config:
+-logger: info
++logger: debug
++recorder:
+ frontend:
+\\ No newline at end of file
+diff --git a/my notes.txt b/my notes.txt
+new file mode 100644
+index 0000000..3333333
+--- /dev/null
++++ b/my notes.txt
+@@ -0,0 +1 @@
++hello
+diff --git a/old.yaml b/new.yaml
+similarity index 100%
+rename from old.yaml
+rename to new.yaml
+diff --git a/gone.yaml b/gone.yaml
+deleted file mode 100644
+index 4444444..0000000
+--- a/gone.yaml
++++ /dev/null
+@@ -1 +0,0 @@
+-bye
+diff --git a/icon.png b/icon.png
+new file mode 100644
+index 0000000..5555555
+Binary files /dev/null and b/icon.png differ
+diff --git a/run.sh b/run.sh
+old mode 100644
+new mode 100755
+"""
+    result = parse_patch(patch)
+    assert [(f.path, f.status) for f in result.files] == [
+        ("configuration.yaml", "modified"),
+        ("my notes.txt", "added"),
+        ("new.yaml", "renamed"),
+        ("gone.yaml", "deleted"),
+        ("icon.png", "added"),
+        ("run.sh", "mode"),
+    ]
+    first = result.files[0]
+    assert (first.additions, first.deletions, first.old_path) == (2, 1, None)
+    assert first.hunks[0].header == "@@ -1,3 +1,4 @@ homeassistant:"
+    assert [(line.kind, line.old, line.new, line.text) for line in first.hunks[0].lines] == [
+        ("context", 1, 1, "default_config:"),
+        ("del", 2, None, "logger: info"),
+        ("add", None, 2, "logger: debug"),
+        ("add", None, 3, "recorder:"),
+        ("context", 3, 4, "frontend:"),
+    ]
+    assert result.files[2].old_path == "old.yaml"
+    assert result.files[4].binary and not result.files[4].hunks
+    assert (result.additions, result.deletions, result.more_files) == (3, 2, 0)
+    added = result.as_dict()["files"][1]["hunks"][0]["lines"]
+    assert added == [{"kind": "add", "old": None, "new": 1, "text": "hello"}]
+
+
+def test_parse_patch_limits() -> None:
+    body = "\n".join(f"+line {i}" for i in range(10))
+    patch = "".join(
+        f"diff --git a/f{n}.txt b/f{n}.txt\nnew file mode 100644\n"
+        f"--- /dev/null\n+++ b/f{n}.txt\n@@ -0,0 +1,10 @@\n{body}\n"
+        for n in range(3)
+    )
+    result = parse_patch(patch, max_lines=4, max_files=2)
+    assert len(result.files) == 2
+    assert result.more_files == 1
+    assert len(result.files[0].hunks[0].lines) == 4
+    assert result.files[0].truncated == 6
+    # The counts cover the whole file, not only the lines kept.
+    assert result.files[0].additions == 10
+
+
+async def test_preview_files_keeps_the_index(repo: Path) -> None:
+    git_repo = _repo(repo)
+    assert (await git_repo.preview_files()).files == []
+
+    (repo / "configuration.yaml").write_text("default_config:\nlogger:\n", encoding="utf-8")
+    (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    git(repo, "add", "scripts.yaml")
+    result = await git_repo.preview_files()
+    assert [(f.path, f.status, f.additions) for f in result.files] == [
+        ("configuration.yaml", "modified", 1),
+        ("scripts.yaml", "added", 1),
+    ]
+    # The untracked file was diffed from a copy of the index: the real one still holds only scripts.yaml.
+    assert git(repo, "diff", "--cached", "--name-only").split() == ["scripts.yaml"]

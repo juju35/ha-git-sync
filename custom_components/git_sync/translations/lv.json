@@ -267,6 +267,16 @@
           "description": "Izmantojamais Git Sync ieraksts. Ja tukšs, pirmais repozitorijs."
         }
       }
+    },
+    "get_diff": {
+      "name": "Iegūt izmaiņas",
+      "description": "Atgriež izmaiņas, ko iekļautu commit, failu pa failam, kā tās rāda kartītes atšķirību skats.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozitorijs",
+          "description": "Izmantojamais Git Sync ieraksts. Ja tukšs, pirmais repozitorijs."
+        }
+      }
     }
   }
 }

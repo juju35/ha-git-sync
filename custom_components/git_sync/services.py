@@ -16,6 +16,7 @@ from .const import (
     SERVICE_EXPORT_DASHBOARDS,
     SERVICE_GENERATE_MESSAGE,
     SERVICE_GENERATE_SSH_KEY,
+    SERVICE_GET_DIFF,
 )
 from .coordinator import GitSyncCoordinator
 
@@ -65,10 +66,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
         coordinator = _coordinators(hass, call)[0]
         return {"message": await coordinator.async_generate_message()}
 
+    async def get_diff(call: ServiceCall) -> ServiceResponse:
+        coordinator = _coordinators(hass, call)[0]
+        return (await coordinator.async_get_diff()).as_dict()
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_GENERATE_MESSAGE,
         generate_message,
+        schema=_ENTRY_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_DIFF,
+        get_diff,
         schema=_ENTRY_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

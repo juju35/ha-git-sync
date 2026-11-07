@@ -5,7 +5,7 @@
  * Served and added to the dashboard resources by the Git Sync integration.
  * https://github.com/juju35/ha-git-sync
  */
-var GIT_SYNC_CARD_VERSION = '1.1.2';
+var GIT_SYNC_CARD_VERSION = '1.2.0';
 
 const GS_I18N = {
   en: {
@@ -58,6 +58,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Switches the mini card to the full card and back',
     ed_language: 'Language',
     ed_language_helper: 'Leave empty to follow Home Assistant',
+    diff: 'View changes',
+    diff_title: 'Changes on ‘{branch}’',
+    diff_loading: 'Loading changes…',
+    diff_empty: 'No changes to show',
+    diff_binary: 'Binary file',
+    diff_truncated: 'Diff cut here: {n} more lines',
+    diff_more_files: '{n} more files not shown',
+    diff_added: 'Added',
+    diff_modified: 'Modified',
+    diff_deleted: 'Deleted',
+    diff_renamed: 'Renamed',
+    diff_mode: 'Mode changed',
+    close: 'Close',
   },
   fr: {
     title: 'Git Sync',
@@ -109,6 +122,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Bascule la mini-carte en carte complète, et inversement',
     ed_language: 'Langue',
     ed_language_helper: 'Laisser vide pour suivre Home Assistant',
+    diff: 'Voir les modifications',
+    diff_title: 'Modifications sur ‘{branch}’',
+    diff_loading: 'Chargement des modifications…',
+    diff_empty: 'Aucune modification à afficher',
+    diff_binary: 'Fichier binaire',
+    diff_truncated: 'Diff coupé ici : {n} lignes de plus',
+    diff_more_files: '{n} autres fichiers non affichés',
+    diff_added: 'Ajouté',
+    diff_modified: 'Modifié',
+    diff_deleted: 'Supprimé',
+    diff_renamed: 'Renommé',
+    diff_mode: 'Mode modifié',
+    close: 'Fermer',
   },
   de: {
     title: 'Git Sync',
@@ -160,6 +186,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Wechselt von der Mini-Karte zur vollständigen Karte und zurück',
     ed_language: 'Sprache',
     ed_language_helper: 'Leer lassen, um Home Assistant zu folgen',
+    diff: 'Änderungen anzeigen',
+    diff_title: 'Änderungen auf ‘{branch}’',
+    diff_loading: 'Änderungen werden geladen…',
+    diff_empty: 'Keine Änderungen anzuzeigen',
+    diff_binary: 'Binärdatei',
+    diff_truncated: 'Diff hier gekürzt: {n} weitere Zeilen',
+    diff_more_files: '{n} weitere Dateien nicht angezeigt',
+    diff_added: 'Hinzugefügt',
+    diff_modified: 'Geändert',
+    diff_deleted: 'Gelöscht',
+    diff_renamed: 'Umbenannt',
+    diff_mode: 'Modus geändert',
+    close: 'Schließen',
   },
   es: {
     title: 'Git Sync',
@@ -211,6 +250,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Cambia la minitarjeta a la tarjeta completa y viceversa',
     ed_language: 'Idioma',
     ed_language_helper: 'Déjalo vacío para seguir a Home Assistant',
+    diff: 'Ver cambios',
+    diff_title: 'Cambios en ‘{branch}’',
+    diff_loading: 'Cargando cambios…',
+    diff_empty: 'No hay cambios que mostrar',
+    diff_binary: 'Archivo binario',
+    diff_truncated: 'Diff cortado aquí: {n} líneas más',
+    diff_more_files: '{n} archivos más no mostrados',
+    diff_added: 'Añadido',
+    diff_modified: 'Modificado',
+    diff_deleted: 'Eliminado',
+    diff_renamed: 'Renombrado',
+    diff_mode: 'Modo cambiado',
+    close: 'Cerrar',
   },
   it: {
     title: 'Git Sync',
@@ -262,6 +314,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Passa dalla mini scheda alla scheda completa e viceversa',
     ed_language: 'Lingua',
     ed_language_helper: 'Lascia vuoto per seguire Home Assistant',
+    diff: 'Vedi modifiche',
+    diff_title: 'Modifiche su ‘{branch}’',
+    diff_loading: 'Caricamento delle modifiche…',
+    diff_empty: 'Nessuna modifica da mostrare',
+    diff_binary: 'File binario',
+    diff_truncated: 'Diff interrotto qui: altre {n} righe',
+    diff_more_files: 'Altri {n} file non mostrati',
+    diff_added: 'Aggiunto',
+    diff_modified: 'Modificato',
+    diff_deleted: 'Eliminato',
+    diff_renamed: 'Rinominato',
+    diff_mode: 'Modalità cambiata',
+    close: 'Chiudi',
   },
   nl: {
     title: 'Git Sync',
@@ -313,6 +378,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Schakelt de minikaart over naar de volledige kaart en terug',
     ed_language: 'Taal',
     ed_language_helper: 'Leeg laten om Home Assistant te volgen',
+    diff: 'Wijzigingen bekijken',
+    diff_title: 'Wijzigingen op ‘{branch}’',
+    diff_loading: 'Wijzigingen laden…',
+    diff_empty: 'Geen wijzigingen om te tonen',
+    diff_binary: 'Binair bestand',
+    diff_truncated: 'Diff hier afgekapt: nog {n} regels',
+    diff_more_files: 'Nog {n} bestanden niet getoond',
+    diff_added: 'Toegevoegd',
+    diff_modified: 'Gewijzigd',
+    diff_deleted: 'Verwijderd',
+    diff_renamed: 'Hernoemd',
+    diff_mode: 'Modus gewijzigd',
+    close: 'Sluiten',
   },
   pt: {
     title: 'Git Sync',
@@ -364,6 +442,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Alterna o minicartão para o cartão completo e vice-versa',
     ed_language: 'Idioma',
     ed_language_helper: 'Deixe vazio para seguir o Home Assistant',
+    diff: 'Ver alterações',
+    diff_title: 'Alterações em ‘{branch}’',
+    diff_loading: 'A carregar as alterações…',
+    diff_empty: 'Sem alterações para mostrar',
+    diff_binary: 'Ficheiro binário',
+    diff_truncated: 'Diff cortado aqui: mais {n} linhas',
+    diff_more_files: 'Mais {n} ficheiros não mostrados',
+    diff_added: 'Adicionado',
+    diff_modified: 'Modificado',
+    diff_deleted: 'Eliminado',
+    diff_renamed: 'Renomeado',
+    diff_mode: 'Modo alterado',
+    close: 'Fechar',
   },
   pl: {
     title: 'Git Sync',
@@ -415,6 +506,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Przełącza minikartę na pełną kartę i z powrotem',
     ed_language: 'Język',
     ed_language_helper: 'Pozostaw puste, aby używać języka Home Assistanta',
+    diff: 'Zobacz zmiany',
+    diff_title: 'Zmiany na ‘{branch}’',
+    diff_loading: 'Wczytywanie zmian…',
+    diff_empty: 'Brak zmian do pokazania',
+    diff_binary: 'Plik binarny',
+    diff_truncated: 'Diff ucięty tutaj: pozostałe wiersze: {n}',
+    diff_more_files: 'Niepokazane pliki: {n}',
+    diff_added: 'Dodano',
+    diff_modified: 'Zmieniono',
+    diff_deleted: 'Usunięto',
+    diff_renamed: 'Zmieniono nazwę',
+    diff_mode: 'Zmieniono tryb',
+    close: 'Zamknij',
   },
   ro: {
     title: 'Git Sync',
@@ -466,6 +570,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Comută minicardul la cardul complet și înapoi',
     ed_language: 'Limbă',
     ed_language_helper: 'Lăsați gol pentru a urma limba Home Assistant',
+    diff: 'Vezi modificările',
+    diff_title: 'Modificări pe ‘{branch}’',
+    diff_loading: 'Se încarcă modificările…',
+    diff_empty: 'Nicio modificare de afișat',
+    diff_binary: 'Fișier binar',
+    diff_truncated: 'Diff tăiat aici: încă {n} linii',
+    diff_more_files: 'Încă {n} fișiere neafișate',
+    diff_added: 'Adăugat',
+    diff_modified: 'Modificat',
+    diff_deleted: 'Șters',
+    diff_renamed: 'Redenumit',
+    diff_mode: 'Mod schimbat',
+    close: 'Închide',
   },
   da: {
     title: 'Git Sync',
@@ -517,6 +634,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Skifter minikortet til hele kortet og tilbage',
     ed_language: 'Sprog',
     ed_language_helper: 'Lad feltet være tomt for at følge Home Assistant',
+    diff: 'Vis ændringer',
+    diff_title: 'Ændringer på ‘{branch}’',
+    diff_loading: 'Indlæser ændringer…',
+    diff_empty: 'Ingen ændringer at vise',
+    diff_binary: 'Binær fil',
+    diff_truncated: 'Diff afkortet her: {n} linjer mere',
+    diff_more_files: '{n} filer mere ikke vist',
+    diff_added: 'Tilføjet',
+    diff_modified: 'Ændret',
+    diff_deleted: 'Slettet',
+    diff_renamed: 'Omdøbt',
+    diff_mode: 'Tilstand ændret',
+    close: 'Luk',
   },
   sv: {
     title: 'Git Sync',
@@ -568,6 +698,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Växlar minikortet till hela kortet och tillbaka',
     ed_language: 'Språk',
     ed_language_helper: 'Lämna tomt för att följa Home Assistant',
+    diff: 'Visa ändringar',
+    diff_title: 'Ändringar på ‘{branch}’',
+    diff_loading: 'Läser in ändringar…',
+    diff_empty: 'Inga ändringar att visa',
+    diff_binary: 'Binär fil',
+    diff_truncated: 'Diff avkortad här: {n} rader till',
+    diff_more_files: '{n} filer till visas inte',
+    diff_added: 'Tillagd',
+    diff_modified: 'Ändrad',
+    diff_deleted: 'Borttagen',
+    diff_renamed: 'Omdöpt',
+    diff_mode: 'Läge ändrat',
+    close: 'Stäng',
   },
   bg: {
     title: 'Git Sync',
@@ -619,6 +762,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Превключва мини картата към цялата карта и обратно',
     ed_language: 'Език',
     ed_language_helper: 'Оставете празно, за да следва езика на Home Assistant',
+    diff: 'Преглед на промените',
+    diff_title: 'Промени в ‘{branch}’',
+    diff_loading: 'Зареждане на промените…',
+    diff_empty: 'Няма промени за показване',
+    diff_binary: 'Двоичен файл',
+    diff_truncated: 'Diff отрязан тук: още {n} реда',
+    diff_more_files: 'Още {n} файла не са показани',
+    diff_added: 'Добавен',
+    diff_modified: 'Променен',
+    diff_deleted: 'Изтрит',
+    diff_renamed: 'Преименуван',
+    diff_mode: 'Променен режим',
+    close: 'Затвори',
   },
   ru: {
     title: 'Git Sync',
@@ -670,6 +826,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Переключает мини-карточку на полную карточку и обратно',
     ed_language: 'Язык',
     ed_language_helper: 'Оставьте пустым, чтобы использовать язык Home Assistant',
+    diff: 'Показать изменения',
+    diff_title: 'Изменения в ‘{branch}’',
+    diff_loading: 'Загрузка изменений…',
+    diff_empty: 'Нет изменений для показа',
+    diff_binary: 'Двоичный файл',
+    diff_truncated: 'Diff обрезан здесь: ещё строк: {n}',
+    diff_more_files: 'Не показано файлов: {n}',
+    diff_added: 'Добавлен',
+    diff_modified: 'Изменён',
+    diff_deleted: 'Удалён',
+    diff_renamed: 'Переименован',
+    diff_mode: 'Режим изменён',
+    close: 'Закрыть',
   },
   uk: {
     title: 'Git Sync',
@@ -721,6 +890,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Перемикає міні-картку на повну картку й назад',
     ed_language: 'Мова',
     ed_language_helper: 'Залиште порожнім, щоб використовувати мову Home Assistant',
+    diff: 'Показати зміни',
+    diff_title: 'Зміни у ‘{branch}’',
+    diff_loading: 'Завантаження змін…',
+    diff_empty: 'Немає змін для показу',
+    diff_binary: 'Двійковий файл',
+    diff_truncated: 'Diff обрізано тут: ще рядків: {n}',
+    diff_more_files: 'Не показано файлів: {n}',
+    diff_added: 'Додано',
+    diff_modified: 'Змінено',
+    diff_deleted: 'Видалено',
+    diff_renamed: 'Перейменовано',
+    diff_mode: 'Режим змінено',
+    close: 'Закрити',
   },
   hu: {
     title: 'Git Sync',
@@ -772,6 +954,19 @@ const GS_I18N = {
     ed_zoom_helper: 'A minikártyát teljes kártyára váltja, majd vissza',
     ed_language: 'Nyelv',
     ed_language_helper: 'Hagyja üresen a Home Assistant nyelvének követéséhez',
+    diff: 'Változások megtekintése',
+    diff_title: 'Változások itt: ‘{branch}’',
+    diff_loading: 'Változások betöltése…',
+    diff_empty: 'Nincs megjeleníthető változás',
+    diff_binary: 'Bináris fájl',
+    diff_truncated: 'A diff itt le van vágva: még {n} sor',
+    diff_more_files: 'Még {n} fájl nincs megjelenítve',
+    diff_added: 'Hozzáadva',
+    diff_modified: 'Módosítva',
+    diff_deleted: 'Törölve',
+    diff_renamed: 'Átnevezve',
+    diff_mode: 'Mód megváltozott',
+    close: 'Bezárás',
   },
   sk: {
     title: 'Git Sync',
@@ -823,6 +1018,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Prepína minikartu na celú kartu a späť',
     ed_language: 'Jazyk',
     ed_language_helper: 'Nechajte prázdne, ak sa má použiť jazyk Home Assistanta',
+    diff: 'Zobraziť zmeny',
+    diff_title: 'Zmeny na ‘{branch}’',
+    diff_loading: 'Načítavajú sa zmeny…',
+    diff_empty: 'Žiadne zmeny na zobrazenie',
+    diff_binary: 'Binárny súbor',
+    diff_truncated: 'Diff tu skrátený: ďalších riadkov: {n}',
+    diff_more_files: 'Nezobrazených súborov: {n}',
+    diff_added: 'Pridané',
+    diff_modified: 'Zmenené',
+    diff_deleted: 'Odstránené',
+    diff_renamed: 'Premenované',
+    diff_mode: 'Zmenený režim',
+    close: 'Zavrieť',
   },
   cs: {
     title: 'Git Sync',
@@ -874,6 +1082,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Přepíná minikartu na celou kartu a zpět',
     ed_language: 'Jazyk',
     ed_language_helper: 'Ponechte prázdné pro použití jazyka Home Assistanta',
+    diff: 'Zobrazit změny',
+    diff_title: 'Změny na ‘{branch}’',
+    diff_loading: 'Načítání změn…',
+    diff_empty: 'Žádné změny k zobrazení',
+    diff_binary: 'Binární soubor',
+    diff_truncated: 'Diff zde zkrácen: dalších řádků: {n}',
+    diff_more_files: 'Nezobrazených souborů: {n}',
+    diff_added: 'Přidáno',
+    diff_modified: 'Změněno',
+    diff_deleted: 'Odstraněno',
+    diff_renamed: 'Přejmenováno',
+    diff_mode: 'Změněn režim',
+    close: 'Zavřít',
   },
   sl: {
     title: 'Git Sync',
@@ -925,6 +1146,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Preklopi mini kartico na celotno kartico in nazaj',
     ed_language: 'Jezik',
     ed_language_helper: 'Pustite prazno za jezik Home Assistanta',
+    diff: 'Prikaži spremembe',
+    diff_title: 'Spremembe na ‘{branch}’',
+    diff_loading: 'Nalaganje sprememb…',
+    diff_empty: 'Ni sprememb za prikaz',
+    diff_binary: 'Binarna datoteka',
+    diff_truncated: 'Diff tu odrezan: še vrstic: {n}',
+    diff_more_files: 'Neprikazanih datotek: {n}',
+    diff_added: 'Dodano',
+    diff_modified: 'Spremenjeno',
+    diff_deleted: 'Izbrisano',
+    diff_renamed: 'Preimenovano',
+    diff_mode: 'Spremenjen način',
+    close: 'Zapri',
   },
   lv: {
     title: 'Git Sync',
@@ -976,6 +1210,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Pārslēdz minikarti uz pilno karti un atpakaļ',
     ed_language: 'Valoda',
     ed_language_helper: 'Atstājiet tukšu, lai izmantotu Home Assistant valodu',
+    diff: 'Skatīt izmaiņas',
+    diff_title: 'Izmaiņas zarā ‘{branch}’',
+    diff_loading: 'Ielādē izmaiņas…',
+    diff_empty: 'Nav rādāmu izmaiņu',
+    diff_binary: 'Binārs fails',
+    diff_truncated: 'Diff šeit nogriezts: vēl rindu: {n}',
+    diff_more_files: 'Nav parādīti faili: {n}',
+    diff_added: 'Pievienots',
+    diff_modified: 'Mainīts',
+    diff_deleted: 'Dzēsts',
+    diff_renamed: 'Pārdēvēts',
+    diff_mode: 'Mainīts režīms',
+    close: 'Aizvērt',
   },
   el: {
     title: 'Git Sync',
@@ -1027,6 +1274,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Εναλλάσσει τη μίνι κάρτα στην πλήρη κάρτα και αντίστροφα',
     ed_language: 'Γλώσσα',
     ed_language_helper: 'Αφήστε κενό για να ακολουθεί το Home Assistant',
+    diff: 'Προβολή αλλαγών',
+    diff_title: 'Αλλαγές στο ‘{branch}’',
+    diff_loading: 'Φόρτωση αλλαγών…',
+    diff_empty: 'Δεν υπάρχουν αλλαγές για εμφάνιση',
+    diff_binary: 'Δυαδικό αρχείο',
+    diff_truncated: 'Το diff κόπηκε εδώ: {n} ακόμη γραμμές',
+    diff_more_files: '{n} ακόμη αρχεία δεν εμφανίζονται',
+    diff_added: 'Προστέθηκε',
+    diff_modified: 'Τροποποιήθηκε',
+    diff_deleted: 'Διαγράφηκε',
+    diff_renamed: 'Μετονομάστηκε',
+    diff_mode: 'Αλλαγή λειτουργίας',
+    close: 'Κλείσιμο',
   },
   sr: {
     title: 'Git Sync',
@@ -1078,6 +1338,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Пребацује мини картицу на пун приказ и назад',
     ed_language: 'Језик',
     ed_language_helper: 'Остави празно да прати језик Home Assistant-а',
+    diff: 'Прикажи измене',
+    diff_title: 'Измене на ‘{branch}’',
+    diff_loading: 'Учитавање измена…',
+    diff_empty: 'Нема измена за приказ',
+    diff_binary: 'Бинарна датотека',
+    diff_truncated: 'Diff је овде скраћен, преосталих редова: {n}',
+    diff_more_files: 'Неприказаних датотека: {n}',
+    diff_added: 'Додато',
+    diff_modified: 'Измењено',
+    diff_deleted: 'Обрисано',
+    diff_renamed: 'Преименовано',
+    diff_mode: 'Режим промењен',
+    close: 'Затвори',
   },
   'sr-Latn': {
     title: 'Git Sync',
@@ -1129,6 +1402,19 @@ const GS_I18N = {
     ed_zoom_helper: 'Prebacuje mini karticu na pun prikaz i nazad',
     ed_language: 'Jezik',
     ed_language_helper: 'Ostavi prazno da prati jezik Home Assistant-a',
+    diff: 'Prikaži izmene',
+    diff_title: 'Izmene na ‘{branch}’',
+    diff_loading: 'Učitavanje izmena…',
+    diff_empty: 'Nema izmena za prikaz',
+    diff_binary: 'Binarna datoteka',
+    diff_truncated: 'Diff je ovde skraćen, preostalih redova: {n}',
+    diff_more_files: 'Neprikazanih datoteka: {n}',
+    diff_added: 'Dodato',
+    diff_modified: 'Izmenjeno',
+    diff_deleted: 'Obrisano',
+    diff_renamed: 'Preimenovano',
+    diff_mode: 'Režim promenjen',
+    close: 'Zatvori',
   },
 };
 
@@ -1193,9 +1479,27 @@ function gsDevices(registry) {
   return devices;
 }
 
-// A click in a dialog opened from the card (more-info…) is not a click elsewhere.
+// A click in a dialog opened from the card (more-info, the diff viewer…) is not a click elsewhere.
 const gsInDialog = (ev) =>
-  (ev.composedPath?.() || []).some((n) => ['ha-more-info-dialog', 'ha-dialog', 'dialog'].includes(n?.localName));
+  (ev.composedPath?.() || []).some((n) =>
+    ['ha-more-info-dialog', 'ha-dialog', 'dialog', 'git-sync-diff-dialog'].includes(n?.localName),
+  );
+
+// Status letter and colour of a file in the diff viewer, as in an editor's source control view.
+const GS_DIFF_STATUS = {
+  added: { letter: 'A', key: 'diff_added', color: 'var(--gs-ok)' },
+  modified: { letter: 'M', key: 'diff_modified', color: 'var(--gs-warn)' },
+  deleted: { letter: 'D', key: 'diff_deleted', color: 'var(--gs-alert)' },
+  renamed: { letter: 'R', key: 'diff_renamed', color: 'var(--gs-info)' },
+  copied: { letter: 'C', key: 'diff_added', color: 'var(--gs-info)' },
+  mode: { letter: 'T', key: 'diff_mode', color: 'var(--gs-off)' },
+};
+
+// "config/packages/lights.yaml" → ["lights.yaml", "config/packages"].
+const gsSplitPath = (path) => {
+  const i = String(path || '').lastIndexOf('/');
+  return i < 0 ? [path, ''] : [path.slice(i + 1), path.slice(0, i)];
+};
 
 // "git@github.com:me/homeassistant-config.git" → "me/homeassistant-config".
 const gsRepo = (url) => {
@@ -1234,6 +1538,9 @@ class GitSyncCard extends HTMLElement {
 
   disconnectedCallback() {
     document.removeEventListener?.('click', this._outside, true);
+    this._diffDialog?.close?.();
+    this._diffDialog?.remove?.();
+    this._diffDialog = null;
   }
 
   // Folds what a click elsewhere folds; true when something changed.
@@ -1394,9 +1701,33 @@ class GitSyncCard extends HTMLElement {
     }
   }
 
+  // Opens the full-screen diff viewer on the changes a commit would include.
+  _openDiff() {
+    const data = {};
+    const entry = this._hass?.devices?.[this._ids?.device]?.config_entries?.[0];
+    if (entry) data.config_entry_id = entry;
+    if (!this._diffDialog) {
+      this._diffDialog = document.createElement('git-sync-diff-dialog');
+      document.body?.appendChild?.(this._diffDialog);
+    }
+    const branch = this._hass?.states?.[this._ids?.status]?.attributes?.branch;
+    this._diffDialog.open({
+      lang: gsLang(this._hass, this._config),
+      locale: gsLocale(this._hass, this._config),
+      branch,
+      request: async () => (await this._hass.callService('git_sync', 'get_diff', data, undefined, false, true))?.response,
+      onCommit: () => {
+        this._confirm = true;
+        this._render();
+        this.shadowRoot.querySelector('#message')?.focus?.({ preventScroll: true });
+      },
+    });
+  }
+
   _bind() {
     const root = this.shadowRoot;
     const on = (sel, fn) => root.querySelector(sel)?.addEventListener('click', fn);
+    on('#diff', () => this._openDiff());
     const toggleFiles = () => {
       this._filesOpen = !this._filesOpen;
       this._render();
@@ -1440,6 +1771,7 @@ class GitSyncCard extends HTMLElement {
     if (!el) return null;
     if (el.id) return `#${el.id}`;
     if (el.classList?.contains('zoom')) return '.zoom';
+    if (el.classList?.contains('link')) return '.link';
     return el.classList?.contains('toggle') ? '.toggle' : null;
   }
 
@@ -1543,6 +1875,7 @@ class GitSyncCard extends HTMLElement {
             }
           </div>
           ${a.ai_task ? `<div class="hint">${gsEsc(this._t('message_hint'))}</div>` : ''}
+          ${count > 0 ? `<button class="link" id="diff"><ha-icon icon="mdi:file-compare"></ha-icon>${gsEsc(this._t('diff'))}</button>` : ''}
           <div class="actions">
             <button class="action" id="cancel"><ha-icon icon="mdi:close"></ha-icon>${gsEsc(this._t('cancel'))}</button>
             <button class="action" id="confirm"${this._generating ? ' disabled' : ''}><ha-icon icon="mdi:source-commit-end"></ha-icon>${gsEsc(this._t('commit'))}</button>
@@ -1557,6 +1890,9 @@ class GitSyncCard extends HTMLElement {
 
     const pillText = busy ? this._t('working') : this._t(status);
     const error = a.last_error ? `<div class="err">${gsEsc(a.last_error)}</div>` : '';
+    // Opens the full-screen diff viewer; only when something changed (the popup has its own link).
+    const diffButton = `<button class="icon-btn" id="diff" title="${gsEsc(this._t('diff'))}" aria-label="${gsEsc(this._t('diff'))}">
+        <ha-icon icon="mdi:file-compare"></ha-icon></button>`;
     let body;
     if (compact && this._confirm) body = popup;
     else if (compact) {
@@ -1577,6 +1913,7 @@ class GitSyncCard extends HTMLElement {
             <ha-icon icon="mdi:file-document-multiple-outline"></ha-icon><span class="m-txt">${gsEsc(changesText)}</span></span>
           <span class="m-chip" title="${gsEsc(this._t('last_push'))}: ${gsEsc(pushText)}">
             <ha-icon icon="mdi:cloud-check-outline"></ha-icon><span class="m-txt">${gsEsc(pushText)}</span></span>
+          ${count > 0 ? diffButton : ''}
           <button class="icon-btn${busy === 'commit_push' ? ' busy' : ''}" id="commit" title="${gsEsc(commitLabel)}" aria-label="${gsEsc(commitLabel)}" ${canCommit ? '' : 'disabled'}>
             <ha-icon icon="${busy === 'commit_push' ? 'mdi:loading' : 'mdi:source-commit-end'}"></ha-icon></button>
         </div>`;
@@ -1591,6 +1928,7 @@ class GitSyncCard extends HTMLElement {
         <div class="actions">
           ${button('commit', 'commit_push', 'mdi:source-commit-end', this._t('commit'), canCommit)}
           ${c.show_export ? button('export', 'export_dashboards', 'mdi:export', this._t('export'), !busy) : ''}
+          ${count > 0 && !this._confirm ? diffButton : ''}
         </div>
         ${popup}`;
     }
@@ -1725,6 +2063,14 @@ class GitSyncCard extends HTMLElement {
       .generating .gen ha-icon { animation: gs-spin 1s linear infinite; color: var(--gs-accent); }
       .hint { margin-top: 4px; font-size: 11px; color: var(--secondary-text-color); }
       .popup .actions { margin-top: 14px; }
+      /* "View changes" in the commit popup: a text link with its icon, no border. */
+      button.link { margin-top: 10px; display: inline-flex; align-items: center; gap: 6px; padding: 2px 0; border: none; cursor: pointer;
+                    background: transparent; font: inherit; font-size: 13px; color: var(--gs-accent); }
+      button.link ha-icon { --mdc-icon-size: 16px; }
+      button.link:hover { text-decoration: underline; }
+      button.link:focus-visible { outline: 2px solid var(--gs-accent); outline-offset: 2px; border-radius: 4px; }
+      /* The diff button in the full card's action row keeps its square shape beside the wide buttons. */
+      .actions button.icon-btn { flex: none; margin-left: 0; min-height: 38px; height: 38px; width: 38px; }
 
       /* Mini card: zoom button at the far right of the header. */
       .zoom { flex: none; align-self: flex-start; width: 24px; height: 24px; margin: 0 -4px 0 -2px; padding: 0;
@@ -1822,6 +2168,292 @@ class GitSyncMiniCard extends GitSyncCard {
     const label = this._t(this._zoomed ? 'zoom_out' : 'zoom_in');
     return `<button class="zoom" title="${gsEsc(label)}" aria-label="${gsEsc(label)}" aria-expanded="${this._zoomed}">
       <ha-icon icon="${this._zoomed ? 'mdi:arrow-collapse' : 'mdi:arrow-expand'}"></ha-icon></button>`;
+  }
+}
+
+// ── Diff viewer ──────────────────────────────────────────────────────────────
+// A full-screen dialog showing the changes a commit would include, file by file, like an editor's diff view:
+// the files on the left (status letter, name, added and removed lines), the selected file's hunks on the right
+// with the line numbers of both sides. It lives in document.body, so that no card, section or transform clips it.
+class GitSyncDiffDialog extends HTMLElement {
+  constructor() {
+    super();
+    this._open = false;
+    this._loading = false;
+    this._diff = null;
+    this._error = null;
+    this._selected = 0;
+    this._onKey = (ev) => {
+      if (!this._open) return;
+      if (ev.key === 'Escape') {
+        ev.preventDefault();
+        this.close();
+      } else if ((ev.key === 'ArrowDown' || ev.key === 'ArrowUp') && !(ev.target?.closest?.('.d-main'))) {
+        const files = this._diff?.files || [];
+        if (!files.length) return;
+        ev.preventDefault();
+        this._select((this._selected + (ev.key === 'ArrowDown' ? 1 : files.length - 1)) % files.length);
+      }
+    };
+  }
+
+  // Opens the viewer for a card: `request` fetches the diff, `onCommit` (optional) adds a Commit & push button.
+  async open({ lang, locale, branch, request, onCommit }) {
+    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+    this._lang = lang;
+    this._locale = locale;
+    this._branch = branch;
+    this._onCommit = onCommit;
+    this._open = true;
+    this._loading = true;
+    this._diff = null;
+    this._error = null;
+    this._selected = 0;
+    this._restore = document.activeElement;
+    document.addEventListener?.('keydown', this._onKey);
+    this._render();
+    try {
+      this._diff = await request();
+    } catch (err) {
+      this._error = err?.message || String(err);
+    } finally {
+      this._loading = false;
+      if (this._open) {
+        this._render();
+        this.shadowRoot.querySelector('.d-main')?.focus?.({ preventScroll: true });
+      }
+    }
+  }
+
+  close() {
+    if (!this._open) return;
+    this._open = false;
+    document.removeEventListener?.('keydown', this._onKey);
+    this._render();
+    this._restore?.focus?.({ preventScroll: true });
+  }
+
+  _t(key, vars) {
+    return gsT(this._lang, key, vars);
+  }
+
+  _select(index) {
+    this._selected = index;
+    this._render();
+    this.shadowRoot.querySelector('.d-main')?.scrollTo?.(0, 0);
+    this.shadowRoot.querySelector(`.d-file[data-i="${index}"]`)?.focus?.({ preventScroll: true });
+  }
+
+  _fmt(n) {
+    try {
+      return Number(n).toLocaleString(this._locale);
+    } catch {
+      return String(n);
+    }
+  }
+
+  _fileItem(file, index) {
+    const st = GS_DIFF_STATUS[file.status] || GS_DIFF_STATUS.modified;
+    const [name, dir] = gsSplitPath(file.path);
+    const label = this._t(st.key);
+    return `<button class="d-file${index === this._selected ? ' selected' : ''}" data-i="${index}" role="option" aria-selected="${index === this._selected}"
+        title="${gsEsc(file.path)}">
+      <span class="d-st" style="--c:${st.color}" title="${gsEsc(label)}" aria-label="${gsEsc(label)}">${st.letter}</span>
+      <span class="d-name"><span class="d-base">${gsEsc(name)}</span>${dir ? `<span class="d-dir">${gsEsc(dir)}</span>` : ''}</span>
+      <span class="d-counts">${file.additions ? `<span class="d-add">+${this._fmt(file.additions)}</span>` : ''}${
+        file.deletions ? `<span class="d-del">−${this._fmt(file.deletions)}</span>` : ''
+      }</span>
+    </button>`;
+  }
+
+  _hunk(hunk) {
+    const rows = hunk.lines
+      .map((line) => {
+        const cls = line.kind === 'add' ? 'add' : line.kind === 'del' ? 'del' : 'ctx';
+        const sign = line.kind === 'add' ? '+' : line.kind === 'del' ? '−' : ' ';
+        return `<tr class="${cls}"><td class="ln">${line.old ?? ''}</td><td class="ln">${line.new ?? ''}</td><td class="sg">${sign}</td><td class="tx">${gsEsc(line.text)}</td></tr>`;
+      })
+      .join('');
+    return `<tr class="hunk"><td class="ln"></td><td class="ln"></td><td class="sg"></td><td class="tx">${gsEsc(hunk.header)}</td></tr>${rows}`;
+  }
+
+  _fileView(file) {
+    const st = GS_DIFF_STATUS[file.status] || GS_DIFF_STATUS.modified;
+    const rename = file.old_path ? `<span class="d-old">${gsEsc(file.old_path)}</span><ha-icon icon="mdi:arrow-right"></ha-icon>` : '';
+    let body;
+    if (file.binary) body = `<div class="d-note"><ha-icon icon="mdi:file-outline"></ha-icon>${gsEsc(this._t('diff_binary'))}</div>`;
+    else if (!file.hunks.length) body = `<div class="d-note">${gsEsc(this._t(st.key))}</div>`;
+    else {
+      body = `<table class="d-table" aria-label="${gsEsc(file.path)}"><tbody>${file.hunks.map((h) => this._hunk(h)).join('')}</tbody></table>`;
+      if (file.truncated) body += `<div class="d-note">${gsEsc(this._t('diff_truncated', { n: this._fmt(file.truncated) }))}</div>`;
+    }
+    return `<div class="d-head">
+        <span class="d-st big" style="--c:${st.color}" title="${gsEsc(this._t(st.key))}">${st.letter}</span>
+        <span class="d-path">${rename}<span>${gsEsc(file.path)}</span></span>
+        <span class="d-counts">${file.additions ? `<span class="d-add">+${this._fmt(file.additions)}</span>` : ''}${
+          file.deletions ? `<span class="d-del">−${this._fmt(file.deletions)}</span>` : ''
+        }</span>
+      </div>${body}`;
+  }
+
+  _render() {
+    if (!this.shadowRoot) return;
+    if (!this._open) {
+      this.shadowRoot.innerHTML = '';
+      return;
+    }
+    const diff = this._diff;
+    const files = diff?.files || [];
+    const selected = files[this._selected];
+    let main;
+    let summary = '';
+    if (this._loading) main = `<div class="d-note d-center"><ha-icon class="spin" icon="mdi:loading"></ha-icon>${gsEsc(this._t('diff_loading'))}</div>`;
+    else if (this._error) main = `<div class="d-note d-center d-error">${gsEsc(this._t('failed', { e: this._error }))}</div>`;
+    else if (!files.length) main = `<div class="d-note d-center">${gsEsc(this._t('diff_empty'))}</div>`;
+    else {
+      main = this._fileView(selected);
+      summary = `${gsEsc(gsN(this._lang, 'files', files.length + (diff.more_files || 0)))} · <span class="d-add">+${this._fmt(diff.additions)}</span> <span class="d-del">−${this._fmt(diff.deletions)}</span>`;
+    }
+    const list = files.length
+      ? `<div class="d-list" role="listbox" aria-label="${gsEsc(this._t('changed_files'))}">${files.map((f, i) => this._fileItem(f, i)).join('')}${
+          diff.more_files ? `<div class="d-more">${gsEsc(this._t('diff_more_files', { n: this._fmt(diff.more_files) }))}</div>` : ''
+        }</div>`
+      : '';
+    const commit = this._onCommit && files.length
+      ? `<button class="d-btn primary" id="commit"><ha-icon icon="mdi:source-commit-end"></ha-icon>${gsEsc(this._t('commit'))}</button>`
+      : '';
+    this.shadowRoot.innerHTML = `<style>${this._css()}</style>
+      <div class="d-backdrop"></div>
+      <div class="d-dialog" role="dialog" aria-modal="true" aria-label="${gsEsc(this._t('diff_title', { branch: this._branch || 'HEAD' }))}">
+        <div class="d-top">
+          <div class="badge"><ha-icon icon="mdi:file-compare"></ha-icon></div>
+          <div class="d-titles">
+            <div class="d-title">${gsEsc(this._t('diff_title', { branch: this._branch || 'HEAD' }))}</div>
+            <div class="d-sub">${summary}</div>
+          </div>
+          <button class="d-x" id="close" title="${gsEsc(this._t('close'))}" aria-label="${gsEsc(this._t('close'))}"><ha-icon icon="mdi:close"></ha-icon></button>
+        </div>
+        <div class="d-body${files.length ? '' : ' alone'}">
+          ${list}
+          <div class="d-main" tabindex="0">${main}</div>
+        </div>
+        <div class="d-foot">
+          <button class="d-btn" id="close2"><ha-icon icon="mdi:close"></ha-icon>${gsEsc(this._t('close'))}</button>
+          ${commit}
+        </div>
+      </div>`;
+    this._bind();
+  }
+
+  _bind() {
+    const root = this.shadowRoot;
+    const on = (sel, fn) => root.querySelector(sel)?.addEventListener('click', fn);
+    on('.d-backdrop', () => this.close());
+    on('#close', () => this.close());
+    on('#close2', () => this.close());
+    on('#commit', () => {
+      const cb = this._onCommit;
+      this.close();
+      cb?.();
+    });
+    root.querySelector('.d-list')?.addEventListener('click', (ev) => {
+      const item = ev.target?.closest?.('.d-file');
+      if (item) this._select(Number(item.dataset.i));
+    });
+  }
+
+  _css() {
+    return `
+      :host { --gs-ok: var(--success-color, #43a047); --gs-warn: var(--warning-color, #ffa600);
+              --gs-info: var(--info-color, #039be5); --gs-alert: var(--error-color, #db4437);
+              --gs-off: var(--disabled-text-color, #9e9e9e); --gs-accent: var(--primary-color, #03a9f4);
+              --gs-mono: var(--code-font-family, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+              --gs-bg: var(--card-background-color, var(--ha-card-background, #fff));
+              --gs-line: var(--divider-color, rgba(127,127,127,.2)); }
+      .d-backdrop { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.45); backdrop-filter: blur(2px); }
+      /* Full screen on a phone; a large centred window elsewhere. */
+      .d-dialog { position: fixed; inset: 0; z-index: 1001; display: flex; flex-direction: column; min-height: 0;
+                  background: var(--gs-bg); color: var(--primary-text-color); font-family: var(--paper-font-body1_-_font-family, inherit); }
+      @media (min-width: 900px) and (min-height: 600px) {
+        .d-dialog { inset: 24px; max-width: 1280px; margin: 0 auto; border-radius: 16px;
+                    box-shadow: 0 12px 40px rgba(0,0,0,.35); border: 1px solid var(--gs-line); }
+      }
+      .d-top { flex: none; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--gs-line); }
+      .badge { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+               color: var(--gs-accent); background: color-mix(in srgb, var(--gs-accent) 18%, transparent); }
+      .badge ha-icon { --mdc-icon-size: 24px; }
+      .d-titles { flex: 1 1 auto; min-width: 0; }
+      .d-title { font-size: 16px; font-weight: 500; line-height: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .d-sub { font-size: 12px; line-height: 16px; color: var(--secondary-text-color); }
+      .d-x { flex: none; width: 36px; height: 36px; border: none; border-radius: 50%; padding: 0; display: grid; place-items: center;
+             cursor: pointer; background: transparent; color: var(--secondary-text-color); }
+      .d-x:hover { background: color-mix(in srgb, var(--secondary-text-color) 16%, transparent); color: var(--primary-text-color); }
+      .d-x:focus-visible, .d-btn:focus-visible, .d-file:focus-visible { outline: 2px solid var(--gs-accent); outline-offset: 1px; }
+
+      .d-body { flex: 1 1 auto; min-height: 0; display: flex; }
+      .d-body.alone .d-main { width: 100%; }
+      /* Files: a column on the left; on a narrow screen, a row of chips above the diff. */
+      .d-list { flex: none; width: 280px; overflow-y: auto; border-right: 1px solid var(--gs-line); padding: 6px; display: flex; flex-direction: column; gap: 2px;
+                background: var(--secondary-background-color, color-mix(in srgb, var(--primary-text-color) 4%, transparent)); }
+      .d-file { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; padding: 6px 8px; border: none; border-radius: 8px;
+                cursor: pointer; text-align: left; font: inherit; font-size: 13px; color: var(--primary-text-color); background: transparent; }
+      .d-file:hover { background: color-mix(in srgb, var(--gs-accent) 8%, transparent); }
+      .d-file.selected { background: color-mix(in srgb, var(--gs-accent) 16%, transparent); }
+      .d-st { flex: none; width: 20px; height: 20px; border-radius: 5px; display: grid; place-items: center; font-family: var(--gs-mono);
+              font-size: 11px; font-weight: 700; color: var(--c); background: color-mix(in srgb, var(--c) 18%, transparent); }
+      .d-st.big { width: 24px; height: 24px; font-size: 12px; }
+      .d-name { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; line-height: 16px; }
+      .d-base { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .d-dir { font-size: 11px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; direction: rtl; text-align: left; }
+      .d-counts { flex: none; display: inline-flex; gap: 6px; font-family: var(--gs-mono); font-size: 11px; }
+      .d-add { color: var(--gs-ok); }
+      .d-del { color: var(--gs-alert); }
+      .d-more { padding: 8px; font-size: 12px; color: var(--secondary-text-color); }
+      @media (max-width: 719px) {
+        .d-body { flex-direction: column; }
+        .d-list { width: auto; max-height: 34%; flex-direction: row; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+                  border-right: none; border-bottom: 1px solid var(--gs-line); }
+        .d-file { width: auto; flex: none; max-width: 220px; }
+        .d-dir { display: none; }
+        .d-more { white-space: nowrap; align-self: center; }
+      }
+
+      .d-main { flex: 1 1 auto; min-width: 0; overflow: auto; outline: none; }
+      .d-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-size: 13px;
+                background: var(--gs-bg); border-bottom: 1px solid var(--gs-line); }
+      .d-path { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 6px; font-family: var(--gs-mono); font-size: 12px;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .d-path ha-icon { --mdc-icon-size: 14px; color: var(--secondary-text-color); }
+      .d-old { color: var(--secondary-text-color); }
+      .d-note { display: flex; align-items: center; gap: 8px; padding: 16px; font-size: 13px; color: var(--secondary-text-color); }
+      .d-note.d-center { justify-content: center; padding: 48px 16px; }
+      .d-note.d-error { color: var(--gs-alert); }
+      .d-note ha-icon { --mdc-icon-size: 20px; }
+      .spin { animation: gs-spin 1s linear infinite; }
+
+      /* The diff itself: old and new line numbers, sign, text; additions tinted green, deletions red. */
+      .d-table { width: 100%; border-collapse: collapse; font-family: var(--gs-mono); font-size: 12px; line-height: 20px; tab-size: 4; }
+      .d-table td { padding: 0 6px; vertical-align: top; white-space: pre; }
+      .d-table .ln { width: 1%; min-width: 3.5ch; text-align: right; color: var(--secondary-text-color); opacity: .7; user-select: none;
+                     background: color-mix(in srgb, var(--primary-text-color) 3%, transparent); }
+      .d-table .sg { width: 1%; padding: 0 4px; user-select: none; }
+      .d-table .tx { white-space: pre-wrap; word-break: break-all; }
+      .d-table tr.add td { background: color-mix(in srgb, var(--gs-ok) 14%, transparent); }
+      .d-table tr.add .ln, .d-table tr.add .sg { color: var(--gs-ok); opacity: 1; }
+      .d-table tr.del td { background: color-mix(in srgb, var(--gs-alert) 14%, transparent); }
+      .d-table tr.del .ln, .d-table tr.del .sg { color: var(--gs-alert); opacity: 1; }
+      .d-table tr.hunk td { color: var(--gs-info); background: color-mix(in srgb, var(--gs-info) 8%, transparent); }
+
+      .d-foot { flex: none; display: flex; justify-content: flex-end; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--gs-line); }
+      .d-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 4px 14px; border-radius: 10px; cursor: pointer;
+               font: inherit; font-size: 14px; font-weight: 500; color: var(--secondary-text-color); background: transparent;
+               border: 1px solid color-mix(in srgb, var(--secondary-text-color) 35%, transparent); }
+      .d-btn.primary { color: var(--gs-accent); border-color: color-mix(in srgb, var(--gs-accent) 45%, transparent); }
+      .d-btn:hover { background: color-mix(in srgb, var(--gs-accent) 10%, transparent); }
+      .d-btn ha-icon { --mdc-icon-size: 18px; }
+      @keyframes gs-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+    `;
   }
 }
 
@@ -1929,6 +2561,7 @@ if (!customElements.get('git-sync-card')) {
   customElements.define('git-sync-card-editor', GitSyncCardEditor);
   customElements.define('git-sync-mini-card', GitSyncMiniCard);
   customElements.define('git-sync-mini-card-editor', GitSyncMiniCardEditor);
+  customElements.define('git-sync-diff-dialog', GitSyncDiffDialog);
   window.customCards = window.customCards || [];
   window.customCards.push(
     {

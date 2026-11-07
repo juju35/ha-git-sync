@@ -87,10 +87,10 @@ const context = {
 };
 vm.createContext(context);
 vm.runInContext(
-  `${source}\nthis.gs = { GitSyncCard, GitSyncCardEditor, GitSyncMiniCard, GitSyncMiniCardEditor, GS_I18N, gsEsc, gsLang, gsLocale, gsDevices, gsRepo, GS_DEFAULTS };`,
+  `${source}\nthis.gs = { GitSyncCard, GitSyncCardEditor, GitSyncMiniCard, GitSyncMiniCardEditor, GitSyncDiffDialog, GS_I18N, gsEsc, gsLang, gsLocale, gsDevices, gsRepo, GS_DEFAULTS };`,
   context,
 );
-const { GitSyncCard, GitSyncCardEditor, GitSyncMiniCard, GitSyncMiniCardEditor, GS_I18N, gsEsc, gsLang, gsLocale, gsDevices, gsRepo } = context.gs;
+const { GitSyncCard, GitSyncCardEditor, GitSyncMiniCard, GitSyncMiniCardEditor, GitSyncDiffDialog, GS_I18N, gsEsc, gsLang, gsLocale, gsDevices, gsRepo } = context.gs;
 
 const STATUS = 'sensor.git_sync_config_status';
 const LAST_COMMIT = 'sensor.git_sync_config_last_commit';
@@ -738,4 +738,138 @@ test('mini card editor: zoom toggle, left out of the YAML at its default', () =>
   full.setConfig({});
   full.hass = makeHass();
   assert.ok(!full._form.schema.some((s) => s.name === 'zoom'));
+});
+
+// ── Diff viewer ──────────────────────────────────────────────────────────────
+const DIFF = {
+  additions: 3,
+  deletions: 1,
+  more_files: 0,
+  files: [
+    {
+      path: 'packages/lights.yaml',
+      status: 'modified',
+      old_path: null,
+      binary: false,
+      additions: 2,
+      deletions: 1,
+      truncated: 0,
+      hunks: [
+        {
+          header: '@@ -1,3 +1,4 @@',
+          lines: [
+            { kind: 'context', old: 1, new: 1, text: 'light:' },
+            { kind: 'del', old: 2, new: null, text: '  - platform: <old>' },
+            { kind: 'add', old: null, new: 2, text: '  - platform: new' },
+            { kind: 'add', old: null, new: 3, text: '    name: Couloir' },
+          ],
+        },
+      ],
+    },
+    { path: 'icon.png', status: 'added', old_path: null, binary: true, additions: 0, deletions: 0, truncated: 0, hunks: [] },
+    { path: 'new.yaml', status: 'renamed', old_path: 'old.yaml', binary: false, additions: 1, deletions: 0, truncated: 5, hunks: [{ header: '@@ -1 +1 @@', lines: [{ kind: 'add', old: null, new: 1, text: 'x' }] }] },
+  ],
+};
+
+function dialog() {
+  const d = new GitSyncDiffDialog();
+  d.attachShadow = fakeNode().attachShadow;
+  return d;
+}
+
+test('diff viewer: files on the left with status letter and counts, the selected file hunk by hunk', async () => {
+  const d = dialog();
+  const opening = d.open({ lang: 'en', locale: 'en', branch: 'main', request: async () => DIFF, onCommit: () => {} });
+  assert.match(html(d), /Loading changes…/);
+  await opening;
+  const out = html(d);
+  assert.match(out, /Changes on ‘main’/);
+  assert.match(out, /3 files · <span class="d-add">\+3<\/span> <span class="d-del">−1<\/span>/);
+  // File list: letter, base name and folder, counts; the first file is selected.
+  assert.match(out, /class="d-file selected" data-i="0"[^>]*title="packages\/lights.yaml"/);
+  assert.match(out, /<span class="d-st" style="--c:var\(--gs-warn\)" title="Modified"[^>]*>M</);
+  assert.match(out, /<span class="d-base">lights.yaml<\/span><span class="d-dir">packages<\/span>/);
+  assert.match(out, /<span class="d-st" style="--c:var\(--gs-ok\)" title="Added"[^>]*>A</);
+  assert.match(out, /<span class="d-st" style="--c:var\(--gs-info\)" title="Renamed"[^>]*>R</);
+  // The diff: hunk header, then one row per line with both line numbers, the sign and the escaped text.
+  assert.match(out, /<tr class="hunk">.*@@ -1,3 \+1,4 @@/);
+  assert.match(out, /<tr class="ctx"><td class="ln">1<\/td><td class="ln">1<\/td><td class="sg"> <\/td><td class="tx">light:<\/td>/);
+  assert.match(out, /<tr class="del"><td class="ln">2<\/td><td class="ln"><\/td><td class="sg">−<\/td><td class="tx"> {2}- platform: &lt;old&gt;<\/td>/);
+  assert.match(out, /<tr class="add"><td class="ln"><\/td><td class="ln">3<\/td><td class="sg">\+<\/td><td class="tx"> {4}name: Couloir<\/td>/);
+  assert.match(out, /id="commit"/);
+});
+
+test('diff viewer: binary file, rename with its old path, truncated patch; Escape and the buttons close it', async () => {
+  const d = dialog();
+  const commits = [];
+  await d.open({ lang: 'fr', locale: 'fr', branch: 'main', request: async () => DIFF, onCommit: () => commits.push(1) });
+  d._select(1);
+  let out = html(d);
+  assert.match(out, /Fichier binaire/);
+  assert.match(out, /class="d-file selected" data-i="1"/);
+  d._select(2);
+  out = html(d);
+  assert.match(out, /<span class="d-old">old.yaml<\/span><ha-icon icon="mdi:arrow-right"><\/ha-icon><span>new.yaml<\/span>/);
+  assert.match(out, /Diff coupé ici : 5 lignes de plus/);
+  // Arrow keys walk the file list, wrapping around.
+  d._onKey({ key: 'ArrowDown', preventDefault() {} });
+  assert.equal(d._selected, 0);
+  d._onKey({ key: 'ArrowUp', preventDefault() {} });
+  assert.equal(d._selected, 2);
+  // Commit & push closes the viewer and hands over to the card.
+  d.shadowRoot.querySelector('#commit').click();
+  assert.deepEqual(commits, [1]);
+  assert.equal(html(d), '');
+  await d.open({ lang: 'fr', locale: 'fr', branch: 'main', request: async () => DIFF });
+  assert.doesNotMatch(html(d), /id="commit"/);
+  d._onKey({ key: 'Escape', preventDefault() {} });
+  assert.equal(html(d), '');
+});
+
+test('diff viewer: nothing to show, a failed request, files past the limit', async () => {
+  const d = dialog();
+  await d.open({ lang: 'en', locale: 'en', branch: 'main', request: async () => ({ files: [], additions: 0, deletions: 0, more_files: 0 }) });
+  assert.match(html(d), /No changes to show/);
+  assert.doesNotMatch(html(d), /class="d-list"/);
+  await d.open({ lang: 'en', locale: 'en', branch: 'main', request: async () => { throw new Error('boom <x>'); } });
+  assert.match(html(d), /Failed: boom &lt;x&gt;/);
+  await d.open({ lang: 'en', locale: 'en', branch: 'main', request: async () => ({ ...DIFF, more_files: 7 }) });
+  assert.match(html(d), /10 files/);
+  assert.match(html(d), /7 more files not shown/);
+});
+
+test('card: the View changes button opens the viewer on the entry, from the actions and from the commit popup', async () => {
+  const created = [];
+  context.document.createElement = (tag) => {
+    const node = fakeNode();
+    node.tag = tag;
+    node.open = (opts) => created.push({ tag, opts });
+    node.remove = () => {};
+    return node;
+  };
+  try {
+    const hass = makeHass({ status: 'dirty', files: ['a.yaml'], response: DIFF });
+    const card = render({}, hass);
+    assert.match(html(card), /id="diff"[^>]*title="View changes"/);
+    card.shadowRoot.querySelector('#diff').click();
+    assert.equal(created[0].tag, 'git-sync-diff-dialog');
+    assert.equal(created[0].opts.branch, 'main');
+    assert.equal(created[0].opts.lang, 'en');
+    assert.deepEqual(await created[0].opts.request(), DIFF);
+    assert.deepEqual(JSON.parse(JSON.stringify(hass.calls.at(-1).slice(0, 3))), ['git_sync', 'get_diff', { config_entry_id: 'entry1' }]);
+    // Commit & push from the viewer opens the card's commit popup, with the View changes link in it.
+    created[0].opts.onCommit();
+    assert.match(html(card), /role="dialog"/);
+    assert.match(html(card), /class="link" id="diff"/);
+    assert.doesNotMatch(html(card), /class="icon-btn" id="diff"/);
+    // A clean repository has no button.
+    assert.doesNotMatch(html(render({}, makeHass())), /id="diff"/);
+    // The compact mini card has it too.
+    const mini = render({}, makeHass({ status: 'dirty', files: ['a.yaml'] }), GitSyncMiniCard);
+    assert.match(html(mini), /class="icon-btn" id="diff"/);
+    card.disconnectedCallback();
+    assert.equal(card._diffDialog, null);
+  } finally {
+    context.document.createElement = () => fakeNode();
+  }
 });
