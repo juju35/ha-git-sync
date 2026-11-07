@@ -303,6 +303,10 @@ Git Sync raises these issues in **Settings → System → Repairs**:
 | Cannot push (behind) | The remote has new commits and *Pull before push* is off | Turn the option on, or run `git pull --rebase`. Removed by the next successful push |
 | `.gitignore` does not exclude secrets | The repository holds a `configuration.yaml` and its `.gitignore` lets `secrets.yaml` or `.storage/` be committed | **Fix** shows the lines to add and appends them to `.gitignore` once confirmed (repairs are for administrators only). A file already tracked stays tracked: `git rm -r --cached secrets.yaml .storage` removes it from the repository, not from the disk |
 
+### Diagnostics
+
+**Settings → Devices & services → Git Sync → ⋮ → Download diagnostics** gives the entry settings and the last status (branch, ahead/behind, changed files, last commit, push and export, last error), to attach to an issue. The SSH key path and the commit author name and email are replaced with `**REDACTED**`, and the user and password or token of an HTTPS remote URL are removed (the host and path are kept), in the remote URL and in the last error.
+
 To debug:
 
 ```yaml

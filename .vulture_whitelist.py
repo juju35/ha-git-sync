@@ -12,6 +12,7 @@ _.async_step_reconfigure  # unused method (custom_components/git_sync/config_flo
 _.async_get_options_flow  # unused method (custom_components/git_sync/config_flow.py:184)
 _.async_step_init  # unused method (custom_components/git_sync/config_flow.py:194)
 _._async_update_data  # unused method (custom_components/git_sync/coordinator.py:143)
+async_get_config_entry_diagnostics  # unused function (custom_components/git_sync/diagnostics.py:37)
 _._attr_unique_id  # unused attribute (custom_components/git_sync/entity.py:21)
 _._attr_translation_key  # unused attribute (custom_components/git_sync/entity.py:22)
 _._attr_device_info  # unused attribute (custom_components/git_sync/entity.py:23)
