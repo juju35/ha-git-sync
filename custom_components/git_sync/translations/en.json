@@ -321,6 +321,16 @@
           "description": "Git Sync entry to use. The first repository when empty."
         }
       }
+    },
+    "pull": {
+      "name": "Pull",
+      "description": "Fetches the remote and brings in its new commits: a fast-forward, or the local commits rebased on top of them (only on a clean work tree). A conflict aborts the rebase.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Git Sync entry to use. All repositories when empty."
+        }
+      }
     }
   }
 }

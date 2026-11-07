@@ -141,11 +141,8 @@ def _schedule(hass: HomeAssistant, entry: GitSyncConfigEntry, coordinator: GitSy
     if interval > 0:
 
         async def _auto_commit(_now: datetime) -> None:
-            await coordinator.async_request_refresh()
-            if not coordinator.dirty:
-                return
             try:
-                await coordinator.async_commit_push()
+                await coordinator.async_auto_commit()
             except Exception:
                 _LOGGER.exception("Automatic commit failed")
 

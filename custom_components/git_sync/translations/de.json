@@ -321,6 +321,16 @@
           "description": "Zu verwendender Git-Sync-Eintrag. Das erste Repository, wenn leer."
         }
       }
+    },
+    "pull": {
+      "name": "Pull",
+      "description": "Holt das Remote und übernimmt seine neuen Commits: Fast-Forward, oder die lokalen Commits werden darauf rebased (nur bei sauberem Arbeitsverzeichnis). Ein Konflikt bricht den Rebase ab.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Zu verwendender Git-Sync-Eintrag. Alle Repositories, wenn leer."
+        }
+      }
     }
   }
 }

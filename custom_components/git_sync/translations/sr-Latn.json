@@ -321,6 +321,16 @@
           "description": "Git Sync unos koji se koristi. Prvi repozitorijum kada je prazno."
         }
       }
+    },
+    "pull": {
+      "name": "Pull",
+      "description": "Preuzima udaljeni repozitorijum i unosi njegove nove commit-ove: premotavanje unapred ili lokalni commit-ovi premešteni preko njih (samo uz čisto radno stablo). Sukob prekida premeštanje.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozitorijum",
+          "description": "Git Sync unos koji se koristi. Svi repozitorijumi kada je prazno."
+        }
+      }
     }
   }
 }

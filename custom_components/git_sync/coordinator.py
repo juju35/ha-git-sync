@@ -10,7 +10,9 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
+from pathlib import PurePosixPath
 from typing import Any
+from urllib.parse import urlsplit
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -83,6 +85,8 @@ from .git import (
 _LOGGER = logging.getLogger(__name__)
 
 _UNSAFE_CHARS = re.compile(r"[`$\"]")
+# The errors of a push that stays blocked until something is done by hand.
+_BLOCKED_PUSH = ("diverged", "behind_remote", "rebase_conflict")
 
 
 @dataclass(slots=True)
@@ -112,6 +116,11 @@ class CommitResult:
     def committed(self) -> bool:
         """Return True when a commit was made."""
         return self.message is not None
+
+
+def _signature(status: GitStatus) -> tuple[tuple[str, ...], int, int]:
+    """The changed files and the commits ahead and behind: what an automatic commit was blocked on."""
+    return tuple(sorted(status.files)), status.ahead, status.behind
 
 
 def sanitize_message(raw: str) -> str:
@@ -155,6 +164,8 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         self._last_fetch: float | None = None
         # The .gitignore lines missing to exclude secrets.yaml and .storage (None: not checked yet).
         self.gitignore_missing: list[str] | None = None
+        # The changes (files, commits ahead and behind) whose automatic commit was refused or blocked.
+        self._auto_blocked: tuple[tuple[str, ...], int, int] | None = None
 
     @staticmethod
     def _make_store(hass: HomeAssistant, entry: ConfigEntry) -> Store[dict[str, Any]]:
@@ -307,7 +318,9 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
 
     async def _async_check_sensitive(self) -> None:
         """Refuse changes to sensitive files (secrets, auth storage, keys, database, logs)."""
-        changes = await self.repo.preview_changes()
+        self._check_sensitive(await self.repo.preview_changes())
+
+    def _check_sensitive(self, changes: list[tuple[str, str]]) -> None:
         allow = self.settings.get(CONF_ALLOW_SENSITIVE, DEFAULT_ALLOW_SENSITIVE)
         blocked = blocked_sensitive(changes, allow_tracked=allow)
         if blocked:
@@ -348,6 +361,13 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
                     raise self._push_blocked("behind_remote", before)
                 await self._async_check_sensitive()
                 diff = await self.repo.stage_all()
+                # A sensitive file written between the check above and `git add -A` would be staged unchecked:
+                # check what the real index now holds, and unstage everything if it is refused.
+                try:
+                    self._check_sensitive(await self.repo.staged_changes())
+                except ServiceValidationError:
+                    await self.repo.unstage_all()
+                    raise
                 if diff is None:
                     # Nothing new: push what an earlier failure (or a never pushed branch) left pending.
                     if not (await self.repo.status()).push_pending:
@@ -392,6 +412,59 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         )
         await self._notify(commit_message)
         return CommitResult(message=commit_message, pushed=True)
+
+    async def async_auto_commit(self) -> None:
+        """Commit and push on the commit interval, without retrying a blocked change set every time.
+
+        A refused commit (sensitive files) or a blocked push (diverged, behind with Pull before push off, rebase
+        conflict) is logged once, then skipped until the changed files or the commits ahead/behind differ.
+        """
+        await self.async_request_refresh()
+        if not self.dirty:
+            return
+        if _signature(self.data.git) == self._auto_blocked:
+            return
+        try:
+            await self.async_commit_push()
+        except HomeAssistantError as err:
+            if not isinstance(err, ServiceValidationError) and err.translation_key not in _BLOCKED_PUSH:
+                raise
+            # Taken after the attempt: the commit fetched, so the commits behind are counted as the polling will.
+            try:
+                self._auto_blocked = _signature(await self.repo.status())
+            except (GitError, OSError):
+                self._auto_blocked = _signature(self.data.git)
+            _LOGGER.warning("Automatic commit skipped until the changes differ: %s", err)
+            return
+        self._auto_blocked = None
+
+    async def async_pull(self) -> int:
+        """Bring in the remote commits and return how many there were.
+
+        Fast-forward when nothing local waits to be pushed; local commits are rebased on the remote ones
+        (`git pull --rebase --autostash`, aborted on a conflict), but only on a clean work tree.
+        """
+        async with self._lock:
+            try:
+                self._last_fetch = time.monotonic()
+                await self.repo.fetch()
+                before = await self.repo.status()
+                if not before.behind:
+                    return 0
+                if not before.ahead:
+                    await self.repo.pull_ff_only()
+                elif before.dirty:
+                    raise self._push_blocked("diverged", before)
+                else:
+                    try:
+                        await self.repo.pull_rebase()
+                    except RebaseConflictError as err:
+                        raise self._push_blocked("rebase_conflict", await self.repo.status()) from err
+            except (GitError, OSError) as err:
+                raise HomeAssistantError(str(err)) from err
+            finally:
+                await self.async_refresh()
+        return before.behind
 
     def _fallback_message(self, diff: StagedDiff) -> str:
         return f"chore: update configuration ({diff.files} file{'s' if diff.files > 1 else ''})"
@@ -463,7 +536,8 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         payload: dict[str, Any] = {"title": "Git commit", "message": message}
         if image := self.settings.get(CONF_NOTIFY_IMAGE):
             payload["data"] = {
-                "attachment": {"url": image, "content-type": image.rsplit(".", 1)[-1]},
+                # The extension of the URL's path: a query string ("…/a.png?v=2") is not part of it.
+                "attachment": {"url": image, "content-type": PurePosixPath(urlsplit(image).path).suffix[1:]},
                 "image": image,
                 "notification_icon": "mdi:git",
             }

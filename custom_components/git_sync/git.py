@@ -422,9 +422,17 @@ class GitRepo:
         No rename detection: a renamed file is a deletion (D) and an addition (A).
         """
         async with self._preview_index() as env:
-            _, out = await self.run("diff", "--cached", "--name-status", "--no-renames", "-z", env=env)
+            return await self.staged_changes(env)
+
+    async def staged_changes(self, env: dict[str, str] | None = None) -> list[tuple[str, str]]:
+        """Return (status, path) of every change staged in the index (the real one unless `env` points elsewhere)."""
+        _, out = await self.run("diff", "--cached", "--name-status", "--no-renames", "-z", env=env)
         fields = [f for f in out.split("\0") if f]
         return [(fields[i][0], fields[i + 1]) for i in range(0, len(fields) - 1, 2)]
+
+    async def unstage_all(self) -> None:
+        """Empty the index back to HEAD, leaving the work tree untouched."""
+        await self.run("reset", "--quiet")
 
     async def preview_files(self) -> WorkTreeDiff:
         """Return the diff a commit would have, file by file, without touching the real index."""
@@ -467,6 +475,10 @@ class GitRepo:
     async def fetch(self) -> None:
         """Update the remote-tracking branches, so that the status counts the commits behind."""
         await self.run("fetch", "--quiet", "--no-tags", self.remote, timeout=FETCH_TIMEOUT)
+
+    async def pull_ff_only(self) -> None:
+        """Fast-forward to the upstream; git refuses when it would overwrite a local change."""
+        await self.run("pull", "--ff-only", "--quiet", "--no-tags")
 
     async def pull_rebase(self) -> None:
         """Rebase the local commits on the upstream; on a conflict, abort and raise RebaseConflictError."""

@@ -321,6 +321,16 @@
           "description": "Položka Git Sync, ktorá sa má použiť. Ak je prázdne, prvý repozitár."
         }
       }
+    },
+    "pull": {
+      "name": "Pull",
+      "description": "Načíta vzdialený repozitár a prevezme jeho nové commity: posun dopredu alebo lokálne commity presunuté navrch (len pri čistom pracovnom strome). Konflikt presun zruší.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozitár",
+          "description": "Položka Git Sync, ktorá sa má použiť. Ak je prázdne, všetky repozitáre."
+        }
+      }
     }
   }
 }

@@ -321,6 +321,16 @@
           "description": "A használandó Git Sync-bejegyzés. Üresen hagyva az első tároló."
         }
       }
+    },
+    "pull": {
+      "name": "Pull",
+      "description": "Lekéri a távoli tárolót, és átveszi az új commitjait: előrepörgetés, vagy a helyi commitok áthelyezése föléjük (csak tiszta munkakönyvtárnál). Ütközés esetén az áthelyezés megszakad.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Tároló",
+          "description": "A használandó Git Sync-bejegyzés. Üresen hagyva az összes tároló."
+        }
+      }
     }
   }
 }

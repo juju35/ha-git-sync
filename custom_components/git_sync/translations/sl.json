@@ -321,6 +321,16 @@
           "description": "Vnos Git Sync, ki naj se uporabi. Prvi repozitorij, če je prazno."
         }
       }
+    },
+    "pull": {
+      "name": "Pull",
+      "description": "Pridobi oddaljeni repozitorij in prevzame njegove nove commite: previjanje naprej ali lokalni commiti, prestavljeni na vrh (le pri čistem delovnem drevesu). Spor prestavljanje prekine.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozitorij",
+          "description": "Vnos Git Sync, ki naj se uporabi. Vsi repozitoriji, če je prazno."
+        }
+      }
     }
   }
 }

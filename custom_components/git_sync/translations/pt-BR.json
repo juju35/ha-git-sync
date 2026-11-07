@@ -321,6 +321,16 @@
           "description": "Entrada Git Sync a usar. O primeiro repositório se vazio."
         }
       }
+    },
+    "pull": {
+      "name": "Pull",
+      "description": "Busca o remoto e integra os novos commits: avanço rápido, ou os commits locais reaplicados por cima (só com a árvore de trabalho limpa). Um conflito cancela o rebase.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repositório",
+          "description": "Entrada Git Sync a usar. Todos os repositórios se vazio."
+        }
+      }
     }
   }
 }

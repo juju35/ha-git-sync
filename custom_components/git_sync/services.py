@@ -20,6 +20,7 @@ from .const import (
     SERVICE_GENERATE_MESSAGE,
     SERVICE_GENERATE_SSH_KEY,
     SERVICE_GET_DIFF,
+    SERVICE_PULL,
 )
 from .coordinator import GitSyncCoordinator
 
@@ -83,6 +84,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
             results.append({"config_entry_id": coordinator.config_entry.entry_id, "files": files})
         return {"results": results}
 
+    async def pull(call: ServiceCall) -> ServiceResponse:
+        results = []
+        for coordinator in _coordinators(hass, call):
+            pulled = await coordinator.async_pull()
+            results.append({"config_entry_id": coordinator.config_entry.entry_id, "pulled": pulled})
+        return {"results": results}
+
     async def ssh_key(call: ServiceCall) -> ServiceResponse:
         coordinator = _coordinators(hass, call)[0]
         return {"public_key": await coordinator.async_generate_ssh_key()}
@@ -120,6 +128,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_EXPORT_DASHBOARDS,
         _admin_only(hass, export),
+        schema=_ENTRY_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_PULL,
+        _admin_only(hass, pull),
         schema=_ENTRY_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )

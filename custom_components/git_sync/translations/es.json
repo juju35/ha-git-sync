@@ -321,6 +321,16 @@
           "description": "Entrada de Git Sync a usar. El primer repositorio si está vacío."
         }
       }
+    },
+    "pull": {
+      "name": "Pull",
+      "description": "Obtiene el remoto e incorpora sus nuevos commits: avance rápido, o los commits locales rebasados encima (solo con el árbol de trabajo limpio). Un conflicto cancela el rebase.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repositorio",
+          "description": "Entrada de Git Sync a usar. Todos los repositorios si está vacío."
+        }
+      }
     }
   }
 }

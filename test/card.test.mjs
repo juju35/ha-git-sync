@@ -883,3 +883,21 @@ test('card: the View changes button opens the viewer on the entry, from the acti
     context.document.createElement = () => fakeNode();
   }
 });
+
+test('behind: a Pull button (full and mini card) calls the pull action and says how many commits came in', async () => {
+  assert.doesNotMatch(html(render({}, makeHass({ status: 'clean' }))), /id="pull"/);
+  assert.doesNotMatch(html(render({}, makeHass({ status: 'diverged' }))), /id="pull"/);
+  const hass = makeHass({ status: 'behind', response: { results: [{ pulled: 2 }] } });
+  const card = render({}, hass);
+  assert.match(html(card), /id="pull"[^>]*>\s*<ha-icon icon="mdi:source-pull"><\/ha-icon>Pull/);
+  card.shadowRoot.querySelector('#pull').click();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(JSON.parse(JSON.stringify(hass.calls[0])), ['git_sync', 'pull', { config_entry_id: 'entry1' }, null, false, true]);
+  assert.deepEqual(card.toasts, ['2 commits pulled']);
+
+  const small = mini({}, makeHass({ status: 'behind', language: 'fr', response: { results: [{ pulled: 0 }] } }));
+  assert.match(html(small), /class="icon-btn" id="pull" title="Pull"/);
+  small.shadowRoot.querySelector('#pull').click();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(small.toasts, ['À jour']);
+});

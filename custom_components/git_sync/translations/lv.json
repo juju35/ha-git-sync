@@ -321,6 +321,16 @@
           "description": "Izmantojamais Git Sync ieraksts. Ja tukšs, pirmais repozitorijs."
         }
       }
+    },
+    "pull": {
+      "name": "Pull",
+      "description": "Ielādē attālo repozitoriju un pārņem tā jaunos commit: pārtīšana uz priekšu vai lokālie commit, pārbāzēti virs tiem (tikai ar tīru darba koku). Konflikts pārbāzēšanu atceļ.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozitorijs",
+          "description": "Izmantojamais Git Sync ieraksts. Ja tukšs, visi repozitoriji."
+        }
+      }
     }
   }
 }
