@@ -62,6 +62,9 @@
           "commit_language": "Jezik sporočil commitov",
           "commit_interval": "Interval samodejnega commita",
           "status_interval": "Interval osvežitve stanja",
+          "fetch_interval": "Interval preverjanja remote",
+          "pull_before_push": "Pull pred push",
+          "allow_sensitive": "Dovoli sledene občutljive datoteke",
           "notify_service": "Dejanje obvestila",
           "notify_image": "URL slike obvestila",
           "export_enabled": "Dnevni izvoz nadzornih plošč",
@@ -73,6 +76,9 @@
         "data_description": {
           "ai_task_entity": "Iz diffa ustvari sporočilo Conventional Commits. Brez nje se uporabi splošno sporočilo.",
           "commit_interval": "Commit in push vsakih N minut, ko so spremembe. 0 onemogoči.",
+          "fetch_interval": "Fetch iz remote vsakih N minut, da so vidni commiti, poslani od drugod (zaostaja, razhaja se). 0 ga izklopi; pred vsakim push se fetch vseeno izvede.",
+          "pull_before_push": "Ko ima remote nove commite, se pred push nanje izvede rebase (git pull --rebase --autostash). Ob konfliktu se rebase prekine, nič se ne pošlje, popravilo pa pojasni, kaj storiti.",
+          "allow_sensitive": "Commit sprememb občutljivih datotek, ki jih Git že sledi (secrets.yaml, .storage, ključi, zbirka podatkov, dnevniki). Nove občutljive datoteke so vedno zavrnjene.",
           "notify_service": "Na primer notify.mobile_app_telefon. Pustite prazno za onemogočanje.",
           "notify_image": "Absolutni URL HTTPS (zahteva ga iOS).",
           "export_format": "JSON kopira datoteke .storage nespremenjene; YAML ohrani le konfiguracijo nadzorne plošče, ki je v diffih lažje berljiva."
@@ -126,7 +132,9 @@
           "clean": "Posodobljeno",
           "dirty": "Spremembe na čakanju",
           "ahead": "Push na čakanju",
-          "error": "Napaka"
+          "error": "Napaka",
+          "behind": "Zaostaja za remote",
+          "diverged": "Razhaja se"
         },
         "state_attributes": {
           "branch": {
@@ -221,6 +229,42 @@
     },
     "ai_task_failed": {
       "message": "Opravilo AI ni vrnilo sporočila commita."
+    },
+    "diverged": {
+      "message": "Lokalna veja in {remote} sta se razšli ({ahead} lokalnih commitov, {behind} oddaljenih commitov): nič ni bilo commitano ali poslano. Glej Nastavitve → Popravila."
+    },
+    "behind_remote": {
+      "message": "{remote} ima {behind} novih commitov, Pull pred push pa je izklopljen: nič ni bilo commitano ali poslano. Glej Nastavitve → Popravila."
+    },
+    "rebase_conflict": {
+      "message": "Commit je v konfliktu z novimi commiti {upstream}: rebase je bil prekinjen in nič ni bilo poslano. Glej Nastavitve → Popravila."
+    },
+    "sensitive_files": {
+      "message": "Zavrnjeno: spremembe vsebujejo občutljive datoteke ({files}), ki niso ne commitane ne poslane AI task. Dodaj jih v .gitignore ali dovoli sledene v možnostih Git Sync."
+    }
+  },
+  "issues": {
+    "diverged": {
+      "title": "Git Sync ne more izvesti push za {repo}",
+      "description": "Veja ima {ahead} lokalnih commitov, ki jih ni na {upstream}, {upstream} pa ima {behind} commitov, ki jih tu ni. Git Sync sam ne združuje razhajajočih se zgodovin, zato se nič ne pošlje.\n\nZa rešitev odpri terminal v {repo} in zaženi:\n\n```\ngit pull --rebase\n```\n\nOdpravi morebitne konflikte (uredi datoteke, `git add`, nato `git rebase --continue`) in nato znova pritisni **Commit in push**. To popravilo izgine ob naslednjem uspešnem push."
+    },
+    "behind_remote": {
+      "title": "Git Sync ne more izvesti push za {repo}",
+      "description": "{upstream} ima {behind} commitov, ki jih tu ni, **Pull pred push** pa je izklopljen v možnostih Git Sync, zato se nič ne pošlje. Vklopi ga ali zaženi `git pull --rebase` v terminalu v {repo}. To popravilo izgine ob naslednjem uspešnem push."
+    },
+    "gitignore_missing": {
+      "title": ".gitignore v {repo} ne izključuje skrivnosti",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Dodaj manjkajoče vrstice v .gitignore",
+            "description": "Brez teh vrstic bi Git Sync commital in poslal gesla, žetone in shrambo za preverjanje pristnosti Home Assistant:\n\n{lines}\n\nPošlji, da se dodajo v {repo}/.gitignore. Datoteka, ki je že sledena, ostane sledena: odstrani jo iz repozitorija z ukazom `git rm -r --cached secrets.yaml .storage` (datoteke ostanejo na disku)."
+          }
+        },
+        "abort": {
+          "not_loaded": "Repozitorij Git Sync ni naložen."
+        }
+      }
     }
   },
   "services": {

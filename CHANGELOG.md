@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0 - 2026-11-07
+
+### What's new
+- **Behind and diverged**: the remote is now fetched during the status refresh (every 15 minutes by default, new *Remote check interval* option, 0 to disable) and before each commit, so the `behind` count is current. The status sensor and the card's status pill gain the `behind` and `diverged` states.
+- **Pull before push** (new option, on by default): when the remote has new commits, the commit is rebased on them (`git pull --rebase --autostash`) before the push. A diverged branch is neither committed nor pushed, and a rebase conflict is aborted (`git rebase --abort`) without pushing; both raise a clear error and a repair explaining how to resolve it, removed by the next successful push.
+- **Secret guard**: a commit, and the AI message generation, are refused when the changes include `secrets.yaml`, `.storage/`, `.ssh/`, `*.pem`, `*.key`, `id_rsa*`, `known_devices.yaml`, `home-assistant_v2.db*` or `*.log` (new *Allow tracked sensitive files* option for the ones already tracked). The values of `password`, `token`, `api_key`, `secret` and `client_secret` keys are hidden from the diff sent to the AI task.
+- New repair when `.gitignore` does not exclude `secrets.yaml` and `.storage/`: its fix shows the lines to add and appends them once an administrator confirms.
+
 ## 1.2.1 - 2026-11-07
 
 ### Security

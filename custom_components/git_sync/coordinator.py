@@ -6,6 +6,7 @@ import asyncio
 import logging
 import os
 import re
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
@@ -14,6 +15,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -22,6 +24,7 @@ from .const import (
     AI_INSTRUCTIONS,
     COMMIT_MESSAGE_MAX,
     CONF_AI_TASK_ENTITY,
+    CONF_ALLOW_SENSITIVE,
     CONF_AUTHOR_EMAIL,
     CONF_AUTHOR_NAME,
     CONF_BRANCH,
@@ -30,31 +33,52 @@ from .const import (
     CONF_EXPORT_DIR,
     CONF_EXPORT_ENABLED,
     CONF_EXPORT_FORMAT,
+    CONF_FETCH_INTERVAL,
     CONF_NOTIFY_IMAGE,
     CONF_NOTIFY_SERVICE,
+    CONF_PULL_BEFORE_PUSH,
     CONF_REMOTE,
     CONF_REPO_PATH,
     CONF_SSH_KEY,
     CONF_STATUS_INTERVAL,
+    DEFAULT_ALLOW_SENSITIVE,
     DEFAULT_BRANCH,
     DEFAULT_COMMIT_LANGUAGE,
     DEFAULT_EXPORT_DIR,
     DEFAULT_EXPORT_FORMAT,
+    DEFAULT_FETCH_INTERVAL,
+    DEFAULT_PULL_BEFORE_PUSH,
     DEFAULT_REMOTE,
     DEFAULT_SSH_KEY,
     DEFAULT_STATUS_INTERVAL,
     DOMAIN,
     EVENT_COMMITTED,
     EVENT_EXPORTED,
+    ISSUE_GITIGNORE,
+    ISSUE_PUSH_BLOCKED,
     LANGUAGE_NAMES,
     STATUS_AHEAD,
+    STATUS_BEHIND,
     STATUS_CLEAN,
     STATUS_DIRTY,
+    STATUS_DIVERGED,
     STATUS_ERROR,
     STORAGE_VERSION,
 )
 from .export import export_dashboards
-from .git import GitCommit, GitError, GitRepo, GitStatus, StagedDiff, WorkTreeDiff, generate_ssh_key, redact_url
+from .git import (
+    GitCommit,
+    GitError,
+    GitRepo,
+    GitStatus,
+    RebaseConflictError,
+    StagedDiff,
+    WorkTreeDiff,
+    append_gitignore,
+    blocked_sensitive,
+    generate_ssh_key,
+    redact_url,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,6 +150,11 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         # Per export folder, the files the integration itself wrote there and the hash of what it wrote: the only
         # files a later export may overwrite, or delete while unchanged.
         self._export_manifest: dict[str, dict[str, str]] = {}
+        # Seconds between two fetches of the status polling (0: only before a push), and when the last one ran.
+        self._fetch_every = int(self.settings.get(CONF_FETCH_INTERVAL, DEFAULT_FETCH_INTERVAL)) * 60
+        self._last_fetch: float | None = None
+        # The .gitignore lines missing to exclude secrets.yaml and .storage (None: not checked yet).
+        self.gitignore_missing: list[str] | None = None
 
     @staticmethod
     def _make_store(hass: HomeAssistant, entry: ConfigEntry) -> Store[dict[str, Any]]:
@@ -167,9 +196,26 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
             }
         )
 
+    async def _async_fetch(self) -> None:
+        """Fetch the remote, best effort: an unreachable remote is reported by the push, not by the status."""
+        self._last_fetch = time.monotonic()
+        try:
+            await self.repo.fetch()
+        except (GitError, OSError) as err:
+            _LOGGER.debug("git fetch failed: %s", err)
+
+    def _fetch_due(self) -> bool:
+        # Not on the first refresh (the setup does not wait for the network) nor during a commit, which fetches.
+        if not self._fetch_every or self.data is None or self._lock.locked():
+            return False
+        return self._last_fetch is None or time.monotonic() - self._last_fetch >= self._fetch_every
+
     async def _async_update_data(self) -> GitSyncData:
         state = self._state
+        if self._fetch_due():
+            await self._async_fetch()
         try:
+            await self._async_check_gitignore()
             state.git = await self.repo.status()
             state.head = await self.repo.last_commit()
             # An HTTPS remote may carry a token ("https://user:token@host/…"): never expose it in the state.
@@ -185,15 +231,91 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         git_state = state.git
         if state.last_error and not (git_state.dirty or git_state.push_pending or git_state.detached):
             state.last_error = None
-        if state.git.dirty:
+        if not git_state.behind:
+            # Rebased and pushed in a terminal: nothing blocks the push any more.
+            self._delete_issue(ISSUE_PUSH_BLOCKED)
+        if git_state.diverged:
+            # Nothing can be pushed until it is resolved by hand, whatever the work tree holds.
+            state.status = STATUS_DIVERGED
+        elif git_state.dirty:
             state.status = STATUS_DIRTY
         elif state.last_error:
             state.status = STATUS_ERROR
-        elif state.git.push_pending:
+        elif git_state.behind:
+            state.status = STATUS_BEHIND
+        elif git_state.push_pending:
             state.status = STATUS_AHEAD
         else:
             state.status = STATUS_CLEAN
         return state
+
+    # ------------------------------------------------------------------ repairs
+
+    def _issue_id(self, key: str) -> str:
+        return f"{key}_{self.config_entry.entry_id}"
+
+    def _delete_issue(self, key: str) -> None:
+        ir.async_delete_issue(self.hass, DOMAIN, self._issue_id(key))
+
+    async def _async_check_gitignore(self) -> None:
+        """Raise a fixable repair when .gitignore lets secrets.yaml or .storage be committed."""
+        is_config = await asyncio.to_thread(os.path.isfile, os.path.join(self.repo.path, "configuration.yaml"))
+        missing = await self.repo.gitignore_missing() if is_config else []
+        if missing == self.gitignore_missing:
+            return
+        self.gitignore_missing = missing
+        if not missing:
+            self._delete_issue(ISSUE_GITIGNORE)
+            return
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            self._issue_id(ISSUE_GITIGNORE),
+            is_fixable=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_GITIGNORE,
+            translation_placeholders={"repo": self.repo.path, "lines": "\n".join(f"- `{line}`" for line in missing)},
+            data={"entry_id": self.config_entry.entry_id},
+        )
+
+    async def async_fix_gitignore(self) -> None:
+        """Append the missing lines to .gitignore (the repair's fix flow, confirmed by an admin)."""
+        lines = await self.repo.gitignore_missing()
+        if lines:
+            await self.hass.async_add_executor_job(append_gitignore, self.repo.path, lines)
+        await self.async_refresh()
+
+    def _push_blocked(self, key: str, status: GitStatus) -> HomeAssistantError:
+        """Raise the repair explaining why nothing was pushed, and return the error to raise."""
+        placeholders = {
+            "repo": self.repo.path,
+            "remote": self.repo.remote,
+            "upstream": status.upstream or self.repo.remote,
+            "ahead": str(status.ahead),
+            "behind": str(status.behind),
+        }
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            self._issue_id(ISSUE_PUSH_BLOCKED),
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="behind_remote" if key == "behind_remote" else "diverged",
+            translation_placeholders=placeholders,
+        )
+        return HomeAssistantError(translation_domain=DOMAIN, translation_key=key, translation_placeholders=placeholders)
+
+    async def _async_check_sensitive(self) -> None:
+        """Refuse changes to sensitive files (secrets, auth storage, keys, database, logs)."""
+        changes = await self.repo.preview_changes()
+        allow = self.settings.get(CONF_ALLOW_SENSITIVE, DEFAULT_ALLOW_SENSITIVE)
+        blocked = blocked_sensitive(changes, allow_tracked=allow)
+        if blocked:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="sensitive_files",
+                translation_placeholders={"files": ", ".join(blocked[:10]) + (" …" if len(blocked) > 10 else "")},
+            )
 
     @property
     def dirty(self) -> bool:
@@ -216,23 +338,39 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
                 await self._export()
 
             try:
+                # A remote moved since the last fetch would make the push fail with a bare "rejected".
+                await self._async_fetch()
+                before = await self.repo.status()
+                if before.diverged:
+                    raise self._push_blocked("diverged", before)
+                pull = self.settings.get(CONF_PULL_BEFORE_PUSH, DEFAULT_PULL_BEFORE_PUSH)
+                if before.behind and not pull:
+                    raise self._push_blocked("behind_remote", before)
+                await self._async_check_sensitive()
                 diff = await self.repo.stage_all()
                 if diff is None:
                     # Nothing new: push what an earlier failure (or a never pushed branch) left pending.
                     if not (await self.repo.status()).push_pending:
                         return CommitResult()
-                    await self.repo.push()
                     commit_message = None
                 else:
                     commit_message = sanitize_message(message or "") or await self._ai_message(diff)
                     await self.repo.commit(commit_message)
-                    await self.repo.push()
-            except GitError as err:
+                if before.behind:
+                    try:
+                        await self.repo.pull_rebase()
+                    except RebaseConflictError as err:
+                        raise self._push_blocked("rebase_conflict", await self.repo.status()) from err
+                await self.repo.push()
+            except (GitError, HomeAssistantError) as err:
                 self._state.status = STATUS_ERROR
                 self._state.last_error = str(err)
                 self.async_update_listeners()
+                if isinstance(err, HomeAssistantError):
+                    raise
                 raise HomeAssistantError(str(err)) from err
 
+            self._delete_issue(ISSUE_PUSH_BLOCKED)
             self._state.last_error = None
             self._state.last_push = dt_util.utcnow()
             await self.async_refresh()
@@ -297,6 +435,7 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         if not self.ai_task:
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="no_ai_task")
         try:
+            await self._async_check_sensitive()
             diff = await self.repo.preview_diff()
         except GitError as err:
             raise HomeAssistantError(str(err)) from err

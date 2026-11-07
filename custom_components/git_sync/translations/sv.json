@@ -62,6 +62,9 @@
           "commit_language": "Språk för commitmeddelanden",
           "commit_interval": "Intervall för automatisk commit",
           "status_interval": "Intervall för statusuppdatering",
+          "fetch_interval": "Kontrollintervall för remote",
+          "pull_before_push": "Pull före push",
+          "allow_sensitive": "Tillåt spårade känsliga filer",
           "notify_service": "Aviseringsåtgärd",
           "notify_image": "Bild-URL för avisering",
           "export_enabled": "Daglig export av instrumentpaneler",
@@ -73,6 +76,9 @@
         "data_description": {
           "ai_task_entity": "Genererar ett Conventional Commits-meddelande utifrån diffen. Utan den används ett generiskt meddelande.",
           "commit_interval": "Commit och push var N:e minut när det finns ändringar. 0 inaktiverar.",
+          "fetch_interval": "Gör fetch från remote var N:e minut för att se commits som pushats från annat håll (efter, divergerat). 0 stänger av det; en fetch körs ändå före varje push.",
+          "pull_before_push": "När remote har nya commits görs rebase på dem (git pull --rebase --autostash) före push. Vid en konflikt avbryts rebasen, inget pushas och en reparation förklarar vad som ska göras.",
+          "allow_sensitive": "Committa ändringar i känsliga filer som Git redan spårar (secrets.yaml, .storage, nycklar, databas, loggar). Nya känsliga filer avvisas alltid.",
           "notify_service": "Till exempel notify.mobile_app_telefon. Lämna tomt för att inaktivera.",
           "notify_image": "Absolut HTTPS-URL (krävs av iOS).",
           "export_format": "JSON kopierar .storage-filerna som de är; YAML behåller bara instrumentpanelens konfiguration, som är lättare att läsa i diffar."
@@ -126,7 +132,9 @@
           "clean": "Uppdaterad",
           "dirty": "Ändringar väntar",
           "ahead": "Push väntar",
-          "error": "Fel"
+          "error": "Fel",
+          "behind": "Efter remote",
+          "diverged": "Divergerat"
         },
         "state_attributes": {
           "branch": {
@@ -221,6 +229,42 @@
     },
     "ai_task_failed": {
       "message": "AI-uppgiften returnerade inget commitmeddelande."
+    },
+    "diverged": {
+      "message": "Den lokala grenen och {remote} har divergerat ({ahead} lokala commits, {behind} fjärr-commits): inget har committats eller pushats. Se Inställningar → Reparationer."
+    },
+    "behind_remote": {
+      "message": "{remote} har {behind} nya commits och Pull före push är avstängt: inget har committats eller pushats. Se Inställningar → Reparationer."
+    },
+    "rebase_conflict": {
+      "message": "Committen är i konflikt med de nya commits i {upstream}: rebasen avbröts och inget pushades. Se Inställningar → Reparationer."
+    },
+    "sensitive_files": {
+      "message": "Avvisat: ändringarna innehåller känsliga filer ({files}) som varken committas eller skickas till AI-uppgiften. Lägg till dem i .gitignore, eller tillåt de spårade i Git Sync-alternativen."
+    }
+  },
+  "issues": {
+    "diverged": {
+      "title": "Git Sync kan inte pusha {repo}",
+      "description": "Grenen har {ahead} lokala commits som inte finns på {upstream}, och {upstream} har {behind} commits som inte finns här. Git Sync slår inte själv ihop divergerade historiker, så inget pushas.\n\nLös det genom att öppna en terminal i {repo} och köra:\n\n```\ngit pull --rebase\n```\n\nLös eventuella konflikter (redigera filerna, `git add`, sedan `git rebase --continue`) och tryck sedan på **Commit och push** igen. Den här reparationen försvinner vid nästa lyckade push."
+    },
+    "behind_remote": {
+      "title": "Git Sync kan inte pusha {repo}",
+      "description": "{upstream} har {behind} commits som inte finns här och **Pull före push** är avstängt i Git Sync-alternativen, så inget pushas. Slå på det, eller kör `git pull --rebase` i en terminal i {repo}. Den här reparationen försvinner vid nästa lyckade push."
+    },
+    "gitignore_missing": {
+      "title": ".gitignore i {repo} utesluter inte hemligheterna",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Lägg till de saknade raderna i .gitignore",
+            "description": "Utan dessa rader skulle Git Sync committa och pusha lösenorden, token och autentiseringslagret i Home Assistant:\n\n{lines}\n\nSkicka för att lägga till dem i {repo}/.gitignore. En fil som redan spåras fortsätter att spåras: ta bort den från repositoryt med `git rm -r --cached secrets.yaml .storage` (filerna ligger kvar på disken)."
+          }
+        },
+        "abort": {
+          "not_loaded": "Git Sync-repositoryt är inte inläst."
+        }
+      }
     }
   },
   "services": {

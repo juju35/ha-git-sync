@@ -17,6 +17,7 @@ from homeassistant.helpers import selector
 from .const import (
     COMMIT_LANGUAGES,
     CONF_AI_TASK_ENTITY,
+    CONF_ALLOW_SENSITIVE,
     CONF_AUTHOR_EMAIL,
     CONF_AUTHOR_NAME,
     CONF_BRANCH,
@@ -27,18 +28,23 @@ from .const import (
     CONF_EXPORT_ENABLED,
     CONF_EXPORT_FORMAT,
     CONF_EXPORT_TIME,
+    CONF_FETCH_INTERVAL,
     CONF_NOTIFY_IMAGE,
     CONF_NOTIFY_SERVICE,
+    CONF_PULL_BEFORE_PUSH,
     CONF_REMOTE,
     CONF_REPO_PATH,
     CONF_SSH_KEY,
     CONF_STATUS_INTERVAL,
+    DEFAULT_ALLOW_SENSITIVE,
     DEFAULT_BRANCH,
     DEFAULT_COMMIT_INTERVAL,
     DEFAULT_COMMIT_LANGUAGE,
     DEFAULT_EXPORT_DIR,
     DEFAULT_EXPORT_FORMAT,
     DEFAULT_EXPORT_TIME,
+    DEFAULT_FETCH_INTERVAL,
+    DEFAULT_PULL_BEFORE_PUSH,
     DEFAULT_REMOTE,
     DEFAULT_REPO_PATH,
     DEFAULT_SSH_KEY,
@@ -148,6 +154,16 @@ def _options_schema(hass: HomeAssistant, options: dict[str, Any]) -> vol.Schema:
                 CONF_STATUS_INTERVAL,
                 default=options.get(CONF_STATUS_INTERVAL, DEFAULT_STATUS_INTERVAL),
             ): _number(10, 3600, "s"),
+            vol.Required(
+                CONF_FETCH_INTERVAL,
+                default=options.get(CONF_FETCH_INTERVAL, DEFAULT_FETCH_INTERVAL),
+            ): _number(0, 1440, "min"),
+            vol.Required(
+                CONF_PULL_BEFORE_PUSH, default=options.get(CONF_PULL_BEFORE_PUSH, DEFAULT_PULL_BEFORE_PUSH)
+            ): selector.BooleanSelector(),
+            vol.Required(
+                CONF_ALLOW_SENSITIVE, default=options.get(CONF_ALLOW_SENSITIVE, DEFAULT_ALLOW_SENSITIVE)
+            ): selector.BooleanSelector(),
             vol.Optional(CONF_NOTIFY_SERVICE, description=_suggested(options.get(CONF_NOTIFY_SERVICE))): _TEXT,
             vol.Optional(CONF_NOTIFY_IMAGE, description=_suggested(options.get(CONF_NOTIFY_IMAGE))): _URL,
             vol.Required(
@@ -255,7 +271,7 @@ class GitSyncOptionsFlow(OptionsFlow):
         """Edit the options."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            for key in (CONF_COMMIT_INTERVAL, CONF_STATUS_INTERVAL):
+            for key in (CONF_COMMIT_INTERVAL, CONF_STATUS_INTERVAL, CONF_FETCH_INTERVAL):
                 user_input[key] = int(user_input[key])
             # An emptied field is left out of user_input: store it empty so it isn't suggested again.
             user_input.setdefault(CONF_AI_TASK_ENTITY, None)

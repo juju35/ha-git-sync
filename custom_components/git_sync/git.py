@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import fnmatch
 import logging
 import os
 import re
@@ -16,7 +17,17 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
-from .const import CHANGED_FILES_MAX, DIFF_FILE_MAX_LINES, DIFF_MAX_CHARS, DIFF_MAX_FILES, GIT_TIMEOUT
+from .const import (
+    CHANGED_FILES_MAX,
+    DIFF_FILE_MAX_LINES,
+    DIFF_MAX_CHARS,
+    DIFF_MAX_FILES,
+    FETCH_TIMEOUT,
+    GIT_TIMEOUT,
+    GITIGNORE_REQUIRED,
+    SENSITIVE_FOLDERS,
+    SENSITIVE_NAMES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,8 +53,66 @@ def redact_url(url: str | None) -> str | None:
     return urlunsplit(parts._replace(netloc=parts.netloc.rpartition("@")[2]))
 
 
+# A "key: value" (YAML) or "key": "value" / key = value line whose key names a secret, in a patch line (+, - or space).
+_SECRET_LINE = re.compile(
+    r"""^(?P<head>[-+ ]\s*["']?[\w.-]*(?:password|token|api_key|client_secret|secret)[\w.-]*["']?\s*[:=]\s*)"""
+    r"(?P<value>.+)$",
+    re.IGNORECASE,
+)
+
+
+def redact_secrets(patch: str) -> str:
+    """Hide the value of the secret-looking keys of a patch ("password: x" → "password: <redacted>").
+
+    A reference to secrets.yaml ("password: !secret wifi") carries no secret and is kept.
+    """
+    lines = []
+    for line in patch.split("\n"):
+        match = _SECRET_LINE.match(line)
+        value = match.group("value").strip() if match else ""
+        if match and value and not value.startswith("!secret") and value not in ("{", "[", "|", ">"):
+            lines.append(f"{match.group('head')}<redacted>")
+        else:
+            lines.append(line)
+    return "\n".join(lines)
+
+
+def is_sensitive(path: str) -> bool:
+    """Return True for a file that must not be committed: secrets, auth storage, keys, database, logs."""
+    parts = path.split("/")
+    if any(part in SENSITIVE_FOLDERS for part in parts[:-1]):
+        return True
+    return any(fnmatch.fnmatch(parts[-1], pattern) for pattern in SENSITIVE_NAMES)
+
+
+def blocked_sensitive(changes: list[tuple[str, str]], *, allow_tracked: bool) -> list[str]:
+    """Return the sensitive files among (status, path) changes that a commit must refuse.
+
+    A new file (A) is always refused; a change to a tracked one only unless `allow_tracked`. A deletion removes the
+    file from the repository and is allowed.
+    """
+    return [
+        path
+        for status, path in changes
+        if is_sensitive(path) and status != "D" and (status == "A" or not allow_tracked)
+    ]
+
+
+def append_gitignore(repo_path: str, lines: list[str]) -> None:
+    """Append lines to the .gitignore of a repository (created when missing). Runs in the executor."""
+    gitignore = Path(repo_path, ".gitignore")
+    current = gitignore.read_text(encoding="utf-8") if gitignore.exists() else ""
+    prefix = "" if not current or current.endswith("\n") else "\n"
+    with gitignore.open("a", encoding="utf-8") as file:
+        file.write(prefix + "# Added by Git Sync: never commit secrets\n" + "".join(f"{line}\n" for line in lines))
+
+
 class GitError(Exception):
     """Raised when a git command fails."""
+
+
+class RebaseConflictError(GitError):
+    """Raised when `git pull --rebase` stops on a conflict (the rebase is aborted)."""
 
 
 @dataclass(slots=True)
@@ -66,6 +135,11 @@ class GitStatus:
     def detached(self) -> bool:
         """Return True when HEAD is not on a branch."""
         return self.branch is None or self.branch.startswith("HEAD ")
+
+    @property
+    def diverged(self) -> bool:
+        """Return True when both the local branch and its upstream have commits the other lacks."""
+        return bool(self.ahead and self.behind)
 
     @property
     def push_pending(self) -> bool:
@@ -97,8 +171,8 @@ class StagedDiff:
     files: int
 
     def as_prompt(self) -> str:
-        """Return the diff in the format sent to the AI task."""
-        return f"{self.stat}\n===DIFF===\n{self.patch}"
+        """Return the diff in the format sent to the AI task, without the values of secret-looking keys."""
+        return f"{self.stat}\n===DIFF===\n{redact_secrets(self.patch)}"
 
 
 @dataclass(slots=True)
@@ -218,7 +292,7 @@ class GitRepo:
             known_hosts = key.parent / "known_hosts"
             env["GIT_SSH_COMMAND"] = (
                 f"ssh -i {shlex.quote(str(key))} -o IdentitiesOnly=yes "
-                f"-o StrictHostKeyChecking=accept-new "
+                f"-o StrictHostKeyChecking=accept-new -o BatchMode=yes "
                 f"-o UserKnownHostsFile={shlex.quote(str(known_hosts))}"
             )
         return env
@@ -231,7 +305,9 @@ class GitRepo:
             args += ["-c", f"user.email={self.author_email}"]
         return args
 
-    async def run(self, *args: str, check: bool = True, env: dict[str, str] | None = None) -> tuple[int, str]:
+    async def run(
+        self, *args: str, check: bool = True, env: dict[str, str] | None = None, timeout: float = GIT_TIMEOUT
+    ) -> tuple[int, str]:
         """Run a git sub-command and return (returncode, stdout)."""
         cmd = [*self._base_args(), *args]
         proc = await asyncio.create_subprocess_exec(
@@ -241,11 +317,11 @@ class GitRepo:
             env={**self._env(), **(env or {})},
         )
         try:
-            out, err = await asyncio.wait_for(proc.communicate(), GIT_TIMEOUT)
+            out, err = await asyncio.wait_for(proc.communicate(), timeout)
         except TimeoutError as exc:
             proc.kill()
             await proc.wait()
-            raise GitError(f"git {args[0]} timed out after {GIT_TIMEOUT}s") from exc
+            raise GitError(f"git {args[0]} timed out after {timeout:g}s") from exc
 
         stdout = out.decode(errors="replace")
         if check and proc.returncode != 0:
@@ -292,6 +368,16 @@ class GitRepo:
                     next(entries, None)
         return status
 
+    async def gitignore_missing(self) -> list[str]:
+        """Return the .gitignore lines needed so that secrets.yaml and .storage are never committed."""
+        missing = []
+        for probe, line in GITIGNORE_REQUIRED:
+            # --no-index: the rules count, even for a file already tracked.
+            code, _ = await self.run("check-ignore", "--no-index", "-q", probe, check=False)
+            if code == 1:
+                missing.append(line)
+        return missing
+
     async def last_commit(self) -> GitCommit | None:
         """Return the HEAD commit, or None on an empty repository."""
         code, out = await self.run("log", "-1", "--format=%H%x1f%s%x1f%ct", check=False)
@@ -330,6 +416,16 @@ class GitRepo:
         async with self._preview_index() as env:
             return await self._staged_diff(env)
 
+    async def preview_changes(self) -> list[tuple[str, str]]:
+        """Return (status, path) of every change a commit would include, without touching the real index.
+
+        No rename detection: a renamed file is a deletion (D) and an addition (A).
+        """
+        async with self._preview_index() as env:
+            _, out = await self.run("diff", "--cached", "--name-status", "--no-renames", "-z", env=env)
+        fields = [f for f in out.split("\0") if f]
+        return [(fields[i][0], fields[i + 1]) for i in range(0, len(fields) - 1, 2)]
+
     async def preview_files(self) -> WorkTreeDiff:
         """Return the diff a commit would have, file by file, without touching the real index."""
         async with self._preview_index() as env:
@@ -367,6 +463,24 @@ class GitRepo:
     async def commit(self, message: str) -> None:
         """Commit the staged changes."""
         await self.run("commit", "--quiet", "-m", message)
+
+    async def fetch(self) -> None:
+        """Update the remote-tracking branches, so that the status counts the commits behind."""
+        await self.run("fetch", "--quiet", "--no-tags", self.remote, timeout=FETCH_TIMEOUT)
+
+    async def pull_rebase(self) -> None:
+        """Rebase the local commits on the upstream; on a conflict, abort and raise RebaseConflictError."""
+        try:
+            await self.run("pull", "--rebase", "--autostash", "--quiet", "--no-tags")
+        except GitError:
+            for name in ("rebase-merge", "rebase-apply"):
+                _, path = await self.run("rev-parse", "--git-path", name)
+                if await asyncio.to_thread(Path(self.path, path.strip()).exists):
+                    await self.run("rebase", "--abort")
+                    raise RebaseConflictError(
+                        "git pull --rebase stopped on a conflict: the rebase was aborted, nothing was pushed"
+                    ) from None
+            raise
 
     async def push(self) -> None:
         """Push the current branch to the configured remote.

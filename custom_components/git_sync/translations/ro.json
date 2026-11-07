@@ -62,6 +62,9 @@
           "commit_language": "Limba mesajului de commit",
           "commit_interval": "Interval de commit automat",
           "status_interval": "Interval de reîmprospătare a stării",
+          "fetch_interval": "Interval de verificare a remote-ului",
+          "pull_before_push": "Pull înainte de push",
+          "allow_sensitive": "Permite fișierele sensibile urmărite",
           "notify_service": "Acțiune de notificare",
           "notify_image": "URL-ul imaginii din notificare",
           "export_enabled": "Export zilnic al tablourilor de bord",
@@ -73,6 +76,9 @@
         "data_description": {
           "ai_task_entity": "Generează un mesaj Conventional Commits din diff. Fără ea, se folosește un mesaj generic.",
           "commit_interval": "Commit și push la fiecare N minute când există modificări. 0 dezactivează.",
+          "fetch_interval": "Face fetch din remote la fiecare N minute pentru a vedea commit-urile trimise din altă parte (în urmă, divergent). 0 dezactivează; înainte de fiecare push se face oricum un fetch.",
+          "pull_before_push": "Când remote-ul are commit-uri noi, face rebase pe ele (git pull --rebase --autostash) înainte de push. La un conflict, rebase-ul este anulat, nu se trimite nimic și o reparație explică ce e de făcut.",
+          "allow_sensitive": "Face commit modificărilor fișierelor sensibile deja urmărite de Git (secrets.yaml, .storage, chei, bază de date, loguri). Fișierele sensibile noi sunt refuzate întotdeauna.",
           "notify_service": "De exemplu notify.mobile_app_telefon. Lăsați gol pentru a dezactiva.",
           "notify_image": "URL HTTPS absolut (cerut de iOS).",
           "export_format": "JSON copiază fișierele .storage ca atare; YAML păstrează doar configurația tabloului de bord, mai ușor de citit în diff-uri."
@@ -126,7 +132,9 @@
           "clean": "Actualizat",
           "dirty": "Modificări în așteptare",
           "ahead": "Push în așteptare",
-          "error": "Eroare"
+          "error": "Eroare",
+          "behind": "În urma remote-ului",
+          "diverged": "Divergent"
         },
         "state_attributes": {
           "branch": {
@@ -221,6 +229,42 @@
     },
     "ai_task_failed": {
       "message": "Sarcina AI nu a returnat niciun mesaj de commit."
+    },
+    "diverged": {
+      "message": "Ramura locală și {remote} au divergat ({ahead} commit-uri locale, {behind} commit-uri la distanță): nu s-a făcut commit sau push. Vezi Setări → Reparații."
+    },
+    "behind_remote": {
+      "message": "{remote} are {behind} commit-uri noi și Pull înainte de push este dezactivat: nu s-a făcut commit sau push. Vezi Setări → Reparații."
+    },
+    "rebase_conflict": {
+      "message": "Commit-ul intră în conflict cu commit-urile noi din {upstream}: rebase-ul a fost anulat și nu s-a trimis nimic. Vezi Setări → Reparații."
+    },
+    "sensitive_files": {
+      "message": "Refuzat: modificările includ fișiere sensibile ({files}), care nu sunt nici incluse în commit, nici trimise la AI task. Adaugă-le în .gitignore sau permite-le pe cele urmărite în opțiunile Git Sync."
+    }
+  },
+  "issues": {
+    "diverged": {
+      "title": "Git Sync nu poate face push pentru {repo}",
+      "description": "Ramura are {ahead} commit-uri locale care nu sunt în {upstream}, iar {upstream} are {behind} commit-uri care nu sunt aici. Git Sync nu unește singur istorii divergente, așa că nu se trimite nimic.\n\nPentru a rezolva, deschide un terminal în {repo} și rulează:\n\n```\ngit pull --rebase\n```\n\nRezolvă eventualele conflicte (editează fișierele, `git add`, apoi `git rebase --continue`), apoi apasă din nou **Commit și push**. Această reparație dispare la următorul push reușit."
+    },
+    "behind_remote": {
+      "title": "Git Sync nu poate face push pentru {repo}",
+      "description": "{upstream} are {behind} commit-uri care nu sunt aici și **Pull înainte de push** este dezactivat în opțiunile Git Sync, așa că nu se trimite nimic. Activează-l sau rulează `git pull --rebase` într-un terminal în {repo}. Această reparație dispare la următorul push reușit."
+    },
+    "gitignore_missing": {
+      "title": ".gitignore din {repo} nu exclude secretele",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Adaugă liniile lipsă în .gitignore",
+            "description": "Fără aceste linii, Git Sync ar face commit și push parolelor, token-urilor și stocării de autentificare din Home Assistant:\n\n{lines}\n\nTrimite pentru a le adăuga la {repo}/.gitignore. Un fișier deja urmărit rămâne urmărit: scoate-l din depozit cu `git rm -r --cached secrets.yaml .storage` (fișierele rămân pe disc)."
+          }
+        },
+        "abort": {
+          "not_loaded": "Depozitul Git Sync nu este încărcat."
+        }
+      }
     }
   },
   "services": {

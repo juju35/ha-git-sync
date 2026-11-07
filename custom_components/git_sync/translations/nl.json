@@ -62,6 +62,9 @@
           "commit_language": "Taal van het commitbericht",
           "commit_interval": "Interval van de automatische commit",
           "status_interval": "Vernieuwingsinterval van de status",
+          "fetch_interval": "Controle-interval van de remote",
+          "pull_before_push": "Pull vóór de push",
+          "allow_sensitive": "Gevolgde gevoelige bestanden toestaan",
           "notify_service": "Meldingsactie",
           "notify_image": "URL van de meldingsafbeelding",
           "export_enabled": "Dagelijkse export van de dashboards",
@@ -73,6 +76,9 @@
         "data_description": {
           "ai_task_entity": "Genereert een Conventional Commits-bericht uit de diff. Zonder deze entiteit wordt een algemeen bericht gebruikt.",
           "commit_interval": "Commit en push elke N minuten als er wijzigingen zijn. 0 schakelt dit uit.",
+          "fetch_interval": "Elke N minuten een fetch van de remote om commits te zien die elders zijn gepusht (achter, uiteengelopen). 0 schakelt het uit; vóór elke push wordt toch een fetch gedaan.",
+          "pull_before_push": "Als de remote nieuwe commits heeft, wordt vóór de push daarop gerebased (git pull --rebase --autostash). Bij een conflict wordt de rebase afgebroken, wordt niets gepusht en legt een reparatie uit wat te doen.",
+          "allow_sensitive": "Wijzigingen committen van gevoelige bestanden die Git al volgt (secrets.yaml, .storage, sleutels, database, logs). Nieuwe gevoelige bestanden worden altijd geweigerd.",
           "notify_service": "Bijvoorbeeld notify.mobile_app_telefoon. Leeg laten om uit te schakelen.",
           "notify_image": "Absolute HTTPS-URL (vereist door iOS).",
           "export_format": "JSON kopieert de .storage-bestanden ongewijzigd; YAML bewaart alleen de dashboardconfiguratie, beter leesbaar in diffs."
@@ -126,7 +132,9 @@
           "clean": "Bijgewerkt",
           "dirty": "Wijzigingen in afwachting",
           "ahead": "Push in afwachting",
-          "error": "Fout"
+          "error": "Fout",
+          "behind": "Achter op de remote",
+          "diverged": "Uiteengelopen"
         },
         "state_attributes": {
           "branch": {
@@ -221,6 +229,42 @@
     },
     "ai_task_failed": {
       "message": "De AI-taak gaf geen commitbericht terug."
+    },
+    "diverged": {
+      "message": "De lokale branch en {remote} zijn uiteengelopen ({ahead} lokale commits, {behind} externe commits): er is niets gecommit of gepusht. Zie Instellingen → Reparaties."
+    },
+    "behind_remote": {
+      "message": "{remote} heeft {behind} nieuwe commits en Pull vóór de push staat uit: er is niets gecommit of gepusht. Zie Instellingen → Reparaties."
+    },
+    "rebase_conflict": {
+      "message": "De commit conflicteert met de nieuwe commits van {upstream}: de rebase is afgebroken en er is niets gepusht. Zie Instellingen → Reparaties."
+    },
+    "sensitive_files": {
+      "message": "Geweigerd: de wijzigingen bevatten gevoelige bestanden ({files}), die niet gecommit en niet naar de AI-taak gestuurd worden. Voeg ze toe aan .gitignore, of sta de gevolgde toe in de Git Sync-opties."
+    }
+  },
+  "issues": {
+    "diverged": {
+      "title": "Git Sync kan {repo} niet pushen",
+      "description": "De branch heeft {ahead} lokale commits die niet op {upstream} staan, en {upstream} heeft {behind} commits die hier ontbreken. Git Sync voegt uiteengelopen geschiedenissen niet zelf samen, dus er wordt niets gepusht.\n\nOpen om het op te lossen een terminal in {repo} en voer uit:\n\n```\ngit pull --rebase\n```\n\nLos eventuele conflicten op (bewerk de bestanden, `git add`, daarna `git rebase --continue`) en druk opnieuw op **Commit en push**. Deze reparatie verdwijnt bij de volgende geslaagde push."
+    },
+    "behind_remote": {
+      "title": "Git Sync kan {repo} niet pushen",
+      "description": "{upstream} heeft {behind} commits die hier ontbreken en **Pull vóór de push** staat uit in de Git Sync-opties, dus er wordt niets gepusht. Zet het aan, of voer `git pull --rebase` uit in een terminal in {repo}. Deze reparatie verdwijnt bij de volgende geslaagde push."
+    },
+    "gitignore_missing": {
+      "title": "De .gitignore van {repo} sluit de geheimen niet uit",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Ontbrekende regels aan .gitignore toevoegen",
+            "description": "Zonder deze regels zou Git Sync de wachtwoorden, de tokens en de authenticatieopslag van Home Assistant committen en pushen:\n\n{lines}\n\nVerstuur om ze aan {repo}/.gitignore toe te voegen. Een bestand dat al gevolgd wordt, blijft gevolgd: haal het uit de repository met `git rm -r --cached secrets.yaml .storage` (de bestanden blijven op de schijf)."
+          }
+        },
+        "abort": {
+          "not_loaded": "De Git Sync-repository is niet geladen."
+        }
+      }
     }
   },
   "services": {

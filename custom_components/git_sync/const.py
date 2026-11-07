@@ -7,7 +7,7 @@ from typing import Final
 DOMAIN: Final = "git_sync"
 NAME: Final = "Git Sync"
 # Same as manifest.json and the card: the card URL carries it, so that browsers load a new release.
-VERSION: Final = "1.2.1"
+VERSION: Final = "1.3.0"
 
 # Config entry data / options
 CONF_REPO_PATH: Final = "repo_path"
@@ -27,6 +27,9 @@ CONF_EXPORT_TIME: Final = "export_time"
 CONF_EXPORT_DIR: Final = "export_dir"
 CONF_EXPORT_FORMAT: Final = "export_format"
 CONF_EXPORT_BEFORE_COMMIT: Final = "export_before_commit"
+CONF_FETCH_INTERVAL: Final = "fetch_interval"
+CONF_PULL_BEFORE_PUSH: Final = "pull_before_push"
+CONF_ALLOW_SENSITIVE: Final = "allow_sensitive"
 
 DEFAULT_REPO_PATH: Final = "/config"
 DEFAULT_BRANCH: Final = ""
@@ -38,6 +41,9 @@ DEFAULT_COMMIT_INTERVAL: Final = 60  # minutes, 0 = disabled
 DEFAULT_EXPORT_TIME: Final = "08:00:00"
 DEFAULT_EXPORT_DIR: Final = "/config/dashboards_export"
 DEFAULT_EXPORT_FORMAT: Final = "json"
+DEFAULT_FETCH_INTERVAL: Final = 15  # minutes, 0 = only before a push
+DEFAULT_PULL_BEFORE_PUSH: Final = True
+DEFAULT_ALLOW_SENSITIVE: Final = False
 
 EXPORT_FORMATS: Final = ["json", "yaml", "both"]
 COMMIT_LANGUAGES: Final = [
@@ -73,13 +79,35 @@ DIFF_MAX_FILES: Final = 200
 COMMIT_MESSAGE_MAX: Final = 100
 CHANGED_FILES_MAX: Final = 50
 GIT_TIMEOUT: Final = 120  # seconds
+# The fetch of the status polling: short, so that an unreachable remote does not hold the refresh.
+FETCH_TIMEOUT: Final = 30  # seconds
 
 # Status values exposed by the status sensor
 STATUS_CLEAN: Final = "clean"
 STATUS_DIRTY: Final = "dirty"
 STATUS_AHEAD: Final = "ahead"
 STATUS_ERROR: Final = "error"
-STATUSES: Final = [STATUS_CLEAN, STATUS_DIRTY, STATUS_AHEAD, STATUS_ERROR]
+STATUS_BEHIND: Final = "behind"
+STATUS_DIVERGED: Final = "diverged"
+STATUSES: Final = [STATUS_CLEAN, STATUS_DIRTY, STATUS_AHEAD, STATUS_ERROR, STATUS_BEHIND, STATUS_DIVERGED]
+
+# Files never committed nor sent to the AI task: fnmatch patterns on the file name, or folders anywhere in the path.
+SENSITIVE_NAMES: Final = (
+    "secrets.yaml",
+    "known_devices.yaml",
+    "home-assistant_v2.db*",
+    "*.pem",
+    "*.key",
+    "id_rsa*",
+    "*.log",
+)
+SENSITIVE_FOLDERS: Final = (".storage", ".ssh")
+# What .gitignore must exclude: (a path to test with `git check-ignore`, the line suggested when it is not).
+GITIGNORE_REQUIRED: Final = (("secrets.yaml", "secrets.yaml"), (".storage/core.config", ".storage/"))
+
+# Repairs issues, suffixed with the entry ID
+ISSUE_PUSH_BLOCKED: Final = "push_blocked"
+ISSUE_GITIGNORE: Final = "gitignore_missing"
 
 # Services
 SERVICE_COMMIT_PUSH: Final = "commit_push"

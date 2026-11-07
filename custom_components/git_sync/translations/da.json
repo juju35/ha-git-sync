@@ -62,6 +62,9 @@
           "commit_language": "Sprog for commitbeskeder",
           "commit_interval": "Interval for automatisk commit",
           "status_interval": "Interval for statusopdatering",
+          "fetch_interval": "Kontrolinterval for remote",
+          "pull_before_push": "Pull før push",
+          "allow_sensitive": "Tillad sporede følsomme filer",
           "notify_service": "Notifikationshandling",
           "notify_image": "Billed-URL til notifikation",
           "export_enabled": "Daglig dashboardeksport",
@@ -73,6 +76,9 @@
         "data_description": {
           "ai_task_entity": "Genererer en Conventional Commits-besked ud fra diffen. Uden den bruges en generisk besked.",
           "commit_interval": "Commit og push hvert N. minut, når der er ændringer. 0 deaktiverer det.",
+          "fetch_interval": "Fetch fra remote hvert N. minut for at se commits pushet andre steder fra (bagud, divergeret). 0 slår det fra; der køres stadig en fetch før hver push.",
+          "pull_before_push": "Når remote har nye commits, rebases der på dem (git pull --rebase --autostash) før push. Ved en konflikt afbrydes rebasen, intet pushes, og en reparation forklarer, hvad der skal gøres.",
+          "allow_sensitive": "Commit ændringer i følsomme filer, som Git allerede sporer (secrets.yaml, .storage, nøgler, database, logs). Nye følsomme filer afvises altid.",
           "notify_service": "For eksempel notify.mobile_app_telefon. Lad feltet være tomt for at deaktivere.",
           "notify_image": "Absolut HTTPS-URL (krævet af iOS).",
           "export_format": "JSON kopierer .storage-filerne som de er; YAML beholder kun dashboardets konfiguration, som er lettere at læse i diffs."
@@ -126,7 +132,9 @@
           "clean": "Opdateret",
           "dirty": "Ændringer afventer",
           "ahead": "Push afventer",
-          "error": "Fejl"
+          "error": "Fejl",
+          "behind": "Bagud i forhold til remote",
+          "diverged": "Divergeret"
         },
         "state_attributes": {
           "branch": {
@@ -221,6 +229,42 @@
     },
     "ai_task_failed": {
       "message": "AI-opgaven returnerede ingen commitbesked."
+    },
+    "diverged": {
+      "message": "Den lokale branch og {remote} er divergeret ({ahead} lokale commits, {behind} fjerne commits): intet blev committet eller pushet. Se Indstillinger → Reparationer."
+    },
+    "behind_remote": {
+      "message": "{remote} har {behind} nye commits, og Pull før push er slået fra: intet blev committet eller pushet. Se Indstillinger → Reparationer."
+    },
+    "rebase_conflict": {
+      "message": "Committet er i konflikt med de nye commits i {upstream}: rebasen blev afbrudt, og intet blev pushet. Se Indstillinger → Reparationer."
+    },
+    "sensitive_files": {
+      "message": "Afvist: ændringerne omfatter følsomme filer ({files}), som hverken committes eller sendes til AI-opgaven. Føj dem til .gitignore, eller tillad de sporede i Git Sync-indstillingerne."
+    }
+  },
+  "issues": {
+    "diverged": {
+      "title": "Git Sync kan ikke pushe {repo}",
+      "description": "Branchen har {ahead} lokale commits, som ikke er på {upstream}, og {upstream} har {behind} commits, som ikke er her. Git Sync fletter ikke selv divergerede historikker, så intet pushes.\n\nFor at løse det skal du åbne en terminal i {repo} og køre:\n\n```\ngit pull --rebase\n```\n\nRet eventuelle konflikter (rediger filerne, `git add` dem, og kør så `git rebase --continue`), og tryk så på **Commit og push** igen. Denne reparation forsvinder ved næste vellykkede push."
+    },
+    "behind_remote": {
+      "title": "Git Sync kan ikke pushe {repo}",
+      "description": "{upstream} har {behind} commits, som ikke er her, og **Pull før push** er slået fra i Git Sync-indstillingerne, så intet pushes. Slå det til, eller kør `git pull --rebase` i en terminal i {repo}. Denne reparation forsvinder ved næste vellykkede push."
+    },
+    "gitignore_missing": {
+      "title": ".gitignore i {repo} udelukker ikke hemmelighederne",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Føj de manglende linjer til .gitignore",
+            "description": "Uden disse linjer ville Git Sync committe og pushe adgangskoderne, tokens og godkendelseslageret i Home Assistant:\n\n{lines}\n\nIndsend for at tilføje dem til {repo}/.gitignore. En fil, der allerede spores, bliver ved med at blive sporet: fjern den fra repositoriet med `git rm -r --cached secrets.yaml .storage` (filerne bliver på disken)."
+          }
+        },
+        "abort": {
+          "not_loaded": "Git Sync-repositoriet er ikke indlæst."
+        }
+      }
     }
   },
   "services": {

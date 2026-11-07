@@ -62,6 +62,9 @@
           "commit_language": "Језик commit поруке",
           "commit_interval": "Интервал аутоматског commit-а",
           "status_interval": "Интервал освежавања статуса",
+          "fetch_interval": "Интервал провере remote",
+          "pull_before_push": "Pull пре push",
+          "allow_sensitive": "Дозволи праћене осетљиве датотеке",
           "notify_service": "Радња обавештења",
           "notify_image": "URL слике обавештења",
           "export_enabled": "Дневни извоз контролних табли",
@@ -73,6 +76,9 @@
         "data_description": {
           "ai_task_entity": "Пише поруку у формату Conventional Commits на основу diff-а. Без њега се користи општа порука.",
           "commit_interval": "Commit и push на сваких N минута када има измена. 0 га искључује.",
+          "fetch_interval": "Fetch са remote на сваких N минута да би се видели commit-ови послати са другог места (заостаје, разилази се). 0 га искључује; пре сваког push fetch се ипак покреће.",
+          "pull_before_push": "Када remote има нове commit-ове, пре push се ради rebase на њих (git pull --rebase --autostash). Код конфликта rebase се прекида, ништа се не шаље, а поправка објашњава шта треба урадити.",
+          "allow_sensitive": "Commit измена осетљивих датотека које Git већ прати (secrets.yaml, .storage, кључеви, база података, дневници). Нове осетљиве датотеке се увек одбијају.",
           "notify_service": "На пример notify.mobile_app_phone. Остави празно да искључиш.",
           "notify_image": "Апсолутни HTTPS URL (захтева га iOS).",
           "export_format": "JSON копира датотеке из .storage какве јесу; YAML задржава само конфигурацију контролне табле, лакшу за читање у diff-овима."
@@ -126,7 +132,9 @@
           "clean": "Ажурирано",
           "dirty": "Измене на чекању",
           "ahead": "Push на чекању",
-          "error": "Грешка"
+          "error": "Грешка",
+          "behind": "Заостаје за remote",
+          "diverged": "Разилази се"
         },
         "state_attributes": {
           "branch": {
@@ -221,6 +229,42 @@
     },
     "ai_task_failed": {
       "message": "AI task није вратио commit поруку."
+    },
+    "diverged": {
+      "message": "Локална грана и {remote} су се разишли ({ahead} локалних commit-ова, {behind} удаљених commit-ова): ништа није урађено commit нити push. Погледај Подешавања → Поправке."
+    },
+    "behind_remote": {
+      "message": "{remote} има {behind} нових commit-ова, а Pull пре push је искључен: ништа није урађено commit нити push. Погледај Подешавања → Поправке."
+    },
+    "rebase_conflict": {
+      "message": "Commit је у конфликту са новим commit-овима из {upstream}: rebase је прекинут и ништа није послато. Погледај Подешавања → Поправке."
+    },
+    "sensitive_files": {
+      "message": "Одбијено: измене садрже осетљиве датотеке ({files}), које се не укључују у commit нити шаљу AI task-у. Додај их у .gitignore или дозволи праћене у Git Sync опцијама."
+    }
+  },
+  "issues": {
+    "diverged": {
+      "title": "Git Sync не може да уради push за {repo}",
+      "description": "Грана има {ahead} локалних commit-ова којих нема на {upstream}, а {upstream} има {behind} commit-ова којих овде нема. Git Sync сам не спаја историје које се разилазе, па се ништа не шаље.\n\nДа би то решио, отвори терминал у {repo} и покрени:\n\n```\ngit pull --rebase\n```\n\nРеши евентуалне конфликте (измени датотеке, `git add`, затим `git rebase --continue`), па поново притисни **Commit и push**. Ова поправка нестаје са следећим успешним push."
+    },
+    "behind_remote": {
+      "title": "Git Sync не може да уради push за {repo}",
+      "description": "{upstream} има {behind} commit-ова којих овде нема, а **Pull пре push** је искључен у Git Sync опцијама, па се ништа не шаље. Укључи га или покрени `git pull --rebase` у терминалу у {repo}. Ова поправка нестаје са следећим успешним push."
+    },
+    "gitignore_missing": {
+      "title": ".gitignore у {repo} не искључује тајне",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Додај недостајуће редове у .gitignore",
+            "description": "Без ових редова Git Sync би урадио commit и push лозинки, токена и складишта за аутентификацију Home Assistant-а:\n\n{lines}\n\nПошаљи да се додају у {repo}/.gitignore. Датотека која се већ прати остаје праћена: уклони је из репозиторијума командом `git rm -r --cached secrets.yaml .storage` (датотеке остају на диску)."
+          }
+        },
+        "abort": {
+          "not_loaded": "Git Sync репозиторијум није учитан."
+        }
+      }
     }
   },
   "services": {
