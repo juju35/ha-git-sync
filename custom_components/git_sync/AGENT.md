@@ -14,6 +14,7 @@ custom_components/git_sync/
 ├── services.py      # commit_push / export_dashboards (optional response), generate_message / get_diff / generate_ssh_key (response only); config_entry_id optional; admin only (_admin_only: HA 2024.12 admin helper has no supports_response)
 ├── config_flow.py   # One entry per repo path (unique_id); reconfigure (same path); options: AI task, language, intervals (commit, status, fetch), pull before push, allow tracked sensitive files, notify, export
 ├── repairs.py       # Fix flow of the gitignore_missing issue: confirm, then append the missing lines
+├── diagnostics.py   # Entry data/options + coordinator snapshot; ssh_key, author name/email redacted, remote URL userinfo stripped
 ├── sensor.py        # status (enum + attributes), changed_files, last_commit, last_push, last_export, branch (diagnostic)
 ├── button.py        # commit_push, export_dashboards
 ├── entity.py        # Service device per entry

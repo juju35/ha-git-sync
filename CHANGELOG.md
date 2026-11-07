@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0 - 2026-11-07
+
+### What's new
+- Diagnostics: **Download diagnostics** now gives the entry settings and the last status, with the SSH key path, the commit author name and email and the credentials of an HTTPS remote URL redacted.
+
 ## 1.3.0 - 2026-11-07
 
 ### What's new
