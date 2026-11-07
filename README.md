@@ -1,6 +1,6 @@
 # ha-git-sync
 
-[![HACS](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![Marketplace](https://img.shields.io/badge/Marketplace-Custom-41BDF5.svg)](https://www.home-assistant.io/integrations/marketplace/)
 [![HACS Validation](https://github.com/juju35/ha-git-sync/actions/workflows/hacs.yml/badge.svg)](https://github.com/juju35/ha-git-sync/actions/workflows/hacs.yml)
 [![Validate](https://github.com/juju35/ha-git-sync/actions/workflows/validate.yml/badge.svg)](https://github.com/juju35/ha-git-sync/actions/workflows/validate.yml)
 [![Lint](https://github.com/juju35/ha-git-sync/actions/workflows/lint.yml/badge.svg)](https://github.com/juju35/ha-git-sync/actions/workflows/lint.yml)
@@ -19,7 +19,7 @@ Home Assistant integration that versions your configuration with Git: it commits
 
 It replaces the usual stack of `shell_command`, `command_line` sensor, script and automations around `git`, with nothing to write in YAML.
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=juju35&repository=ha-git-sync&category=integration)
+[![Open your Home Assistant instance and open a repository inside the Marketplace.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=juju35&repository=ha-git-sync&category=integration)
 
 ## Features
 
@@ -69,19 +69,19 @@ It replaces the usual stack of `shell_command`, `command_line` sensor, script an
 
 ## Installation
 
-### Via HACS (recommended)
+### Via the Marketplace (recommended)
 
 Click the button below to add the repository directly:
 
-[![Add to HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=juju35&repository=ha-git-sync&category=integration)
+[![Add to the Marketplace](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=juju35&repository=ha-git-sync&category=integration)
 
-Then click **Download** and restart Home Assistant.
+Then click **Install** and restart Home Assistant.
 
 Or manually:
 
-1. Open HACS → **⋮** (top right) → **Custom repositories**
+1. Open **Settings → Marketplace → Add from link** (top right; this needs a GitHub account connected)
 2. Add `https://github.com/juju35/ha-git-sync` — Type: **Integration**
-3. Search for **Git Sync** and click **Download**
+3. Open **Git Sync** and click **Install**
 4. Restart Home Assistant
 
 ### Manual
