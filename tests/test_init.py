@@ -6,8 +6,9 @@ from pathlib import Path
 
 import pytest
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import Unauthorized, UnknownUser
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.git_sync.const import (
@@ -660,3 +661,56 @@ async def test_get_diff_service(hass: HomeAssistant, repo: Path) -> None:
     assert file["hunks"][0]["lines"][-1] == {"kind": "add", "old": None, "new": 2, "text": "logger:"}
     # Nothing was committed or staged by looking at the diff.
     assert git(repo, "status", "--porcelain").rstrip() == " M configuration.yaml"
+
+
+@pytest.mark.parametrize(
+    "service", ["commit_push", "export_dashboards", "generate_message", "get_diff", "generate_ssh_key"]
+)
+async def test_services_require_admin(
+    hass: HomeAssistant, repo: Path, hass_admin_user, hass_read_only_user, service: str
+) -> None:
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=str(repo),
+        data={CONF_REPO_PATH: str(repo), CONF_REMOTE: "origin", CONF_SSH_KEY: ""},
+        options={CONF_COMMIT_INTERVAL: 0, CONF_EXPORT_ENABLED: False},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    (repo / "secrets.yaml").write_text("api_key: hunter2\n", encoding="utf-8")
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN, service, {}, blocking=True, return_response=True, context=Context(user_id=hass_read_only_user.id)
+        )
+    with pytest.raises(UnknownUser):
+        await hass.services.async_call(
+            DOMAIN, service, {}, blocking=True, return_response=True, context=Context(user_id="unknown")
+        )
+    # Nothing was committed by the refused calls.
+    assert git(repo, "status", "--porcelain").rstrip() == "?? secrets.yaml"
+
+
+async def test_admin_can_call_the_services(hass: HomeAssistant, repo: Path, hass_admin_user) -> None:
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=str(repo),
+        data={CONF_REPO_PATH: str(repo), CONF_REMOTE: "origin", CONF_SSH_KEY: ""},
+        options={CONF_COMMIT_INTERVAL: 0, CONF_EXPORT_ENABLED: False},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    context = Context(user_id=hass_admin_user.id)
+
+    (repo / "configuration.yaml").write_text("default_config:\nlogger:\n", encoding="utf-8")
+    response = await hass.services.async_call(
+        DOMAIN, "get_diff", {}, blocking=True, return_response=True, context=context
+    )
+    assert response["additions"] == 1
+    response = await hass.services.async_call(
+        DOMAIN, "commit_push", {"message": "feat: logger"}, blocking=True, return_response=True, context=context
+    )
+    assert response["results"][0]["pushed"] is True
+    assert git(repo, "log", "-1", "--format=%s", "origin/main").strip() == "feat: logger"

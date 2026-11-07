@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
+from functools import wraps
+
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError, Unauthorized, UnknownUser
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -34,8 +37,30 @@ def _coordinators(hass: HomeAssistant, call: ServiceCall) -> list[GitSyncCoordin
     return [entry.runtime_data for entry in entries]
 
 
+def _admin_only(
+    hass: HomeAssistant, handler: Callable[[ServiceCall], Awaitable[ServiceResponse]]
+) -> Callable[[ServiceCall], Awaitable[ServiceResponse]]:
+    """Refuse calls from non-admin users, like async_register_admin_service.
+
+    That helper has no supports_response in Home Assistant 2024.12, which is still supported, so the
+    same check is done here. Calls without a user (automations, scripts) are allowed.
+    """
+
+    @wraps(handler)
+    async def wrapper(call: ServiceCall) -> ServiceResponse:
+        if call.context.user_id:
+            user = await hass.auth.async_get_user(call.context.user_id)
+            if user is None:
+                raise UnknownUser(context=call.context)
+            if not user.is_admin:
+                raise Unauthorized(context=call.context)
+        return await handler(call)
+
+    return wrapper
+
+
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Register the integration services."""
+    """Register the integration services, for admins only (the diff can show secrets.yaml)."""
 
     async def commit_push(call: ServiceCall) -> ServiceResponse:
         results = []
@@ -73,35 +98,35 @@ def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN,
         SERVICE_GENERATE_MESSAGE,
-        generate_message,
+        _admin_only(hass, generate_message),
         schema=_ENTRY_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_DIFF,
-        get_diff,
+        _admin_only(hass, get_diff),
         schema=_ENTRY_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         SERVICE_COMMIT_PUSH,
-        commit_push,
+        _admin_only(hass, commit_push),
         schema=_COMMIT_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN,
         SERVICE_EXPORT_DASHBOARDS,
-        export,
+        _admin_only(hass, export),
         schema=_ENTRY_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN,
         SERVICE_GENERATE_SSH_KEY,
-        ssh_key,
+        _admin_only(hass, ssh_key),
         schema=_ENTRY_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
