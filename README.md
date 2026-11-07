@@ -182,7 +182,7 @@ action: git_sync.generate_ssh_key
 response_variable: key  # {"public_key": "ssh-ed25519 AAAA... homeassistant"}
 ```
 
-Every action takes an optional `config_entry_id` to target one repository; without it, `commit_push` and `export_dashboards` run on all of them, `generate_message`, `get_diff` and `generate_ssh_key` on the first one.
+Every action takes an optional `config_entry_id` to target one repository; without it, `commit_push` and `export_dashboards` run on all of them, `generate_message`, `get_diff` and `generate_ssh_key` on the first one. The actions are reserved to administrators (the diff can show `secrets.yaml`): a call from another user is refused, automations and scripts are not affected.
 
 ### Event `git_sync_committed`
 

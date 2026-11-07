@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1 - 2026-11-07
+
+### Security
+- The `git_sync` actions (`commit_push`, `export_dashboards`, `generate_message`, `get_diff`, `generate_ssh_key`) now require an administrator: a non-admin user could read the diff, `secrets.yaml` included, or commit, push and create the SSH key. Automations, scripts and the card used by an administrator work as before.
+
 ## 1.2.0 - 2026-11-07
 
 ### What's new

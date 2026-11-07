@@ -11,7 +11,7 @@ custom_components/git_sync/
 ├── git.py           # GitRepo: async `git` subprocess wrapper (status, last commit, stage_all / preview_diff / preview_files, commit, push), parse_patch, ssh-keygen
 ├── export.py        # export_dashboards(): .storage/lovelace* → export dir as json / yaml / both, written only when changed (executor)
 ├── coordinator.py   # GitSyncCoordinator: polling, commit/push under a lock, AI message, notify, export, Store for last push/export
-├── services.py      # commit_push / export_dashboards (optional response), generate_message / get_diff / generate_ssh_key (response only); config_entry_id optional
+├── services.py      # commit_push / export_dashboards (optional response), generate_message / get_diff / generate_ssh_key (response only); config_entry_id optional; admin only (_admin_only: HA 2024.12 admin helper has no supports_response)
 ├── config_flow.py   # One entry per repo path (unique_id); reconfigure (same path); options: AI task, language, intervals, notify, export
 ├── sensor.py        # status (enum + attributes), changed_files, last_commit, last_push, last_export, branch (diagnostic)
 ├── button.py        # commit_push, export_dashboards
