@@ -32,6 +32,7 @@ It replaces the usual stack of `shell_command`, `command_line` sensor, script an
 - A failed push stays visible on the status until a later push succeeds, and is retried at the next commit
 - `git_sync_committed` and `git_sync_exported` **events**
 - **Lovelace card** bundled with the integration: status, last commit, changed files, last push and export, Commit & push and Export dashboards
+- **Diff viewer**: a full-screen view of the changes a commit would include, file by file like an editor's source control view, from the card or the `git_sync.get_diff` action
 - English, French, German, Spanish, Italian, Dutch, European Portuguese, Polish, Romanian, Danish, Swedish, Bulgarian, Russian, Ukrainian, Hungarian, Slovak, Czech, Slovenian, Latvian, Greek and Serbian (Cyrillic and Latin)
 
 ## Prerequisites
@@ -154,6 +155,19 @@ action: git_sync.generate_message
 response_variable: result  # {"message": "feat(lights): add the corridor night scene"}
 ```
 
+### Action `git_sync.get_diff`
+
+Returns the changes a commit would include, **file by file**, without committing or staging anything (same copy of the index as `generate_message`). Each file carries its status (`added`, `modified`, `deleted`, `renamed`, `copied` or `mode`), the old path of a rename, whether it is binary, its added and removed lines and its hunks, each line with its line number on both sides. A file keeps at most 2000 lines (`truncated` counts the rest) and a response at most 200 files (`more_files` counts the rest). This is what the diff viewer of the card calls.
+
+```yaml
+action: git_sync.get_diff
+response_variable: diff
+# {"files": [{"path": "automations.yaml", "status": "modified", "old_path": null, "binary": false,
+#             "additions": 7, "deletions": 2, "truncated": 0,
+#             "hunks": [{"header": "@@ -12,9 +12,14 @@", "lines": [{"kind": "context", "old": 12, "new": 12, "text": "  triggers:"}, ...]}]}],
+#  "more_files": 0, "additions": 14, "deletions": 3}
+```
+
 ### Action `git_sync.export_dashboards`
 
 ```yaml
@@ -168,7 +182,7 @@ action: git_sync.generate_ssh_key
 response_variable: key  # {"public_key": "ssh-ed25519 AAAA... homeassistant"}
 ```
 
-Every action takes an optional `config_entry_id` to target one repository; without it, `commit_push` and `export_dashboards` run on all of them, `generate_message` and `generate_ssh_key` on the first one.
+Every action takes an optional `config_entry_id` to target one repository; without it, `commit_push` and `export_dashboards` run on all of them, `generate_message`, `get_diff` and `generate_ssh_key` on the first one.
 
 ### Event `git_sync_committed`
 
@@ -204,6 +218,16 @@ type: custom:git-sync-card
 - **Changed files**: collapsible list, folded again when you click elsewhere
 - **Last push** and **Dashboard export**, with the number of exported files
 - **Commit & push** opens a confirmation at the top of the card with a message box, as in VS Code: the placeholder names the branch, and the ✨ button inside it (shown when an AI task is set) writes the message for the current changes without committing, so you can read and edit it before **Commit & push**. Left empty, the AI task writes it when committing. **Enter** commits, **Escape** closes. **Export dashboards** runs the export right away. The result is shown in a toast
+- **View changes** (the compare button beside the actions, also linked from the commit confirmation, shown when something changed) opens the **diff viewer** below
+
+### Diff viewer
+
+A full-screen view of what the next commit would include, laid out like an editor's source control view: the changed files on the left with their status letter (**A**dded, **M**odified, **D**eleted, **R**enamed, **T**ype or mode changed) and their added and removed lines, the selected file on the right hunk by hunk, with the line numbers of both sides, additions in green and deletions in red. On a phone it fills the screen and the files become a row of chips above the diff. Nothing is staged or committed by looking: the diff comes from a copy of the Git index (`git_sync.get_diff`). **↑ ↓** walk the files, **Escape** or a click outside closes, **Commit & push** goes straight to the commit confirmation of the card.
+
+| Desktop | Phone |
+|---|---|
+| <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/diff.png" alt="Diff viewer" width="640"> | <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/diff-phone.png" alt="Diff viewer on a phone" width="250"> |
+| <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/diff-dark.png" alt="Diff viewer, dark theme" width="640"> | <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/diff-phone-dark.png" alt="Diff viewer on a phone, dark theme" width="250"> |
 
 Every option is in the visual editor:
 

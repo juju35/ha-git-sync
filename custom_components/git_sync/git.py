@@ -9,11 +9,14 @@ import re
 import shlex
 import shutil
 import tempfile
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
-from .const import CHANGED_FILES_MAX, DIFF_MAX_CHARS, GIT_TIMEOUT
+from .const import CHANGED_FILES_MAX, DIFF_FILE_MAX_LINES, DIFF_MAX_CHARS, DIFF_MAX_FILES, GIT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,6 +99,88 @@ class StagedDiff:
     def as_prompt(self) -> str:
         """Return the diff in the format sent to the AI task."""
         return f"{self.stat}\n===DIFF===\n{self.patch}"
+
+
+@dataclass(slots=True)
+class DiffLine:
+    """One line of a hunk: context, addition or deletion, with its line numbers on both sides."""
+
+    kind: str  # "context", "add" or "del"
+    old: int | None
+    new: int | None
+    text: str
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return the line as sent to the card."""
+        return {"kind": self.kind, "old": self.old, "new": self.new, "text": self.text}
+
+
+@dataclass(slots=True)
+class DiffHunk:
+    """A hunk of a file diff: its `@@` header and lines."""
+
+    header: str
+    lines: list[DiffLine] = field(default_factory=list)
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return the hunk as sent to the card."""
+        return {"header": self.header, "lines": [line.as_dict() for line in self.lines]}
+
+
+@dataclass(slots=True)
+class FileDiff:
+    """The diff of one file, as the card's viewer shows it (file by file, like an editor)."""
+
+    path: str
+    status: str = "modified"  # added, modified, deleted, renamed, copied, mode
+    old_path: str | None = None
+    binary: bool = False
+    additions: int = 0
+    deletions: int = 0
+    hunks: list[DiffHunk] = field(default_factory=list)
+    # Lines of the patch left out once DIFF_FILE_MAX_LINES was reached (0: the whole patch is there).
+    truncated: int = 0
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return the file as sent to the card."""
+        return {
+            "path": self.path,
+            "status": self.status,
+            "old_path": self.old_path,
+            "binary": self.binary,
+            "additions": self.additions,
+            "deletions": self.deletions,
+            "hunks": [hunk.as_dict() for hunk in self.hunks],
+            "truncated": self.truncated,
+        }
+
+
+@dataclass(slots=True)
+class WorkTreeDiff:
+    """Every change a commit would include, file by file."""
+
+    files: list[FileDiff] = field(default_factory=list)
+    # Files past DIFF_MAX_FILES, counted but not sent.
+    more_files: int = 0
+
+    @property
+    def additions(self) -> int:
+        """Lines added over every file sent."""
+        return sum(f.additions for f in self.files)
+
+    @property
+    def deletions(self) -> int:
+        """Lines removed over every file sent."""
+        return sum(f.deletions for f in self.files)
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return the diff as sent to the card."""
+        return {
+            "files": [f.as_dict() for f in self.files],
+            "more_files": self.more_files,
+            "additions": self.additions,
+            "deletions": self.deletions,
+        }
 
 
 class GitRepo:
@@ -222,10 +307,11 @@ class GitRepo:
         await self.run("add", "-A")
         return await self._staged_diff()
 
-    async def preview_diff(self) -> StagedDiff | None:
-        """Return the diff a commit would have, without touching the real index.
+    @asynccontextmanager
+    async def _preview_index(self) -> AsyncIterator[dict[str, str]]:
+        """Stage every change in a copy of the index and yield the env pointing git at it.
 
-        `git add -A` runs against a copy of the index (GIT_INDEX_FILE), so nothing the user staged changes.
+        `git add -A` runs against the copy (GIT_INDEX_FILE), so nothing the user staged changes.
         """
         _, index = await self.run("rev-parse", "--git-path", "index")
         index_path = Path(self.path, index.strip())
@@ -235,9 +321,35 @@ class GitRepo:
             if await asyncio.to_thread(index_path.is_file):
                 await asyncio.to_thread(shutil.copyfile, index_path, env["GIT_INDEX_FILE"])
             await self.run("add", "-A", env=env)
-            return await self._staged_diff(env)
+            yield env
         finally:
             await asyncio.to_thread(shutil.rmtree, tmp, True)
+
+    async def preview_diff(self) -> StagedDiff | None:
+        """Return the diff a commit would have, without touching the real index."""
+        async with self._preview_index() as env:
+            return await self._staged_diff(env)
+
+    async def preview_files(self) -> WorkTreeDiff:
+        """Return the diff a commit would have, file by file, without touching the real index."""
+        async with self._preview_index() as env:
+            code, _ = await self.run("diff", "--cached", "--quiet", check=False, env=env)
+            if code == 0:
+                return WorkTreeDiff()
+            # No colour, no external diff, no renames hidden behind a similarity index: one patch per file.
+            _, patch = await self.run(
+                "-c",
+                "core.quotePath=false",
+                "diff",
+                "--cached",
+                "--no-color",
+                "--no-ext-diff",
+                "--find-renames",
+                "--src-prefix=a/",
+                "--dst-prefix=b/",
+                env=env,
+            )
+        return parse_patch(patch)
 
     async def _staged_diff(self, env: dict[str, str] | None = None) -> StagedDiff | None:
         code, _ = await self.run("diff", "--cached", "--quiet", check=False, env=env)
@@ -290,6 +402,114 @@ def _parse_branch_line(line: str, status: GitStatus) -> None:
             status.ahead = int(value)
         elif key == "behind" and value.isdigit():
             status.behind = int(value)
+
+
+_HUNK_HEADER = re.compile(r"^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@")
+
+
+def _split_git_header(rest: str) -> str | None:
+    """Return the path of a `diff --git a/X b/X` line, None when the two halves differ (a rename)."""
+    # A path with spaces is not quoted: try every split where both halves name the same file.
+    for i, char in enumerate(rest):
+        if char != " " or not rest.startswith("a/") or not rest[i + 1 :].startswith("b/"):
+            continue
+        if rest[2:i] == rest[i + 3 :]:
+            return rest[2:i]
+    return None
+
+
+def parse_patch(patch: str, *, max_lines: int = DIFF_FILE_MAX_LINES, max_files: int = DIFF_MAX_FILES) -> WorkTreeDiff:
+    """Parse a unified git patch into one FileDiff per file.
+
+    Each file keeps at most `max_lines` hunk lines (the rest is counted in `truncated`), and the result keeps
+    at most `max_files` files (the rest is counted in `more_files`).
+    """
+    result = WorkTreeDiff()
+    current: FileDiff | None = None
+    hunk: DiffHunk | None = None
+    old = new = 0
+    kept = 0
+
+    def close() -> None:
+        nonlocal current, hunk, kept
+        if current is None:
+            return
+        if len(result.files) < max_files:
+            result.files.append(current)
+        else:
+            result.more_files += 1
+        current = hunk = None
+        kept = 0
+
+    for line in patch.splitlines():
+        if line.startswith("diff --git "):
+            close()
+            path = _split_git_header(line[len("diff --git ") :])
+            current = FileDiff(path=path or "")
+            continue
+        if current is None:
+            continue
+        if hunk is None:
+            # File header lines, before the first hunk.
+            if line.startswith("new file mode"):
+                current.status = "added"
+            elif line.startswith("deleted file mode"):
+                current.status = "deleted"
+            elif line.startswith(("old mode", "new mode")) and current.status == "modified":
+                current.status = "mode"
+            elif line.startswith("rename from "):
+                current.status = "renamed"
+                current.old_path = line[len("rename from ") :]
+            elif line.startswith("rename to "):
+                current.path = line[len("rename to ") :]
+            elif line.startswith("copy from "):
+                current.status = "copied"
+                current.old_path = line[len("copy from ") :]
+            elif line.startswith("copy to "):
+                current.path = line[len("copy to ") :]
+            elif line.startswith("Binary files "):
+                current.binary = True
+            elif line.startswith("--- ") and line != "--- /dev/null" and not current.old_path:
+                current.old_path = line[len("--- a/") :] if line.startswith("--- a/") else line[4:]
+            elif line.startswith("+++ ") and line != "+++ /dev/null":
+                current.path = line[len("+++ b/") :] if line.startswith("+++ b/") else line[4:]
+        if match := _HUNK_HEADER.match(line):
+            old, new = int(match.group(1)), int(match.group(2))
+            hunk = DiffHunk(header=line)
+            if kept < max_lines:
+                current.hunks.append(hunk)
+            continue
+        if hunk is None or not line:
+            continue
+        sign, text = line[0], line[1:]
+        if sign == "\\":
+            # "\ No newline at end of file": not a line of the file.
+            continue
+        if sign == "+":
+            current.additions += 1
+            entry = DiffLine("add", None, new, text)
+            new += 1
+        elif sign == "-":
+            current.deletions += 1
+            entry = DiffLine("del", old, None, text)
+            old += 1
+        elif sign == " ":
+            entry = DiffLine("context", old, new, text)
+            old += 1
+            new += 1
+        else:
+            continue
+        if kept < max_lines:
+            hunk.lines.append(entry)
+            kept += 1
+        else:
+            current.truncated += 1
+    close()
+    # A modified file that is not a rename keeps a single path; the old path is only for renames and copies.
+    for file in result.files:
+        if file.status not in ("renamed", "copied"):
+            file.old_path = None
+    return result
 
 
 def truncate_files(files: list[str]) -> list[str]:

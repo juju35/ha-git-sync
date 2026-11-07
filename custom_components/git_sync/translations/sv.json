@@ -267,6 +267,16 @@
           "description": "Git Sync-post som ska användas. Det första förrådet om tomt."
         }
       }
+    },
+    "get_diff": {
+      "name": "Hämta ändringar",
+      "description": "Returnerar de ändringar en commit skulle innehålla, fil för fil, så som kortets diff-vy visar dem.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Förråd",
+          "description": "Git Sync-post som ska användas. Det första förrådet om tomt."
+        }
+      }
     }
   }
 }

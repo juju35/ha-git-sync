@@ -267,6 +267,16 @@
           "description": "Te gebruiken Git Sync-vermelding. De eerste repository als leeg."
         }
       }
+    },
+    "get_diff": {
+      "name": "Wijzigingen ophalen",
+      "description": "Geeft de wijzigingen terug die een commit zou bevatten, bestand per bestand, zoals de diff-weergave van de kaart ze toont.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Te gebruiken Git Sync-vermelding. De eerste repository als leeg."
+        }
+      }
     }
   }
 }

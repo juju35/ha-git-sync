@@ -267,6 +267,16 @@
           "description": "Entrée Git Sync à utiliser. Le premier dépôt si vide."
         }
       }
+    },
+    "get_diff": {
+      "name": "Obtenir les modifications",
+      "description": "Renvoie les modifications qu'un commit inclurait, fichier par fichier, telles que la vue diff de la carte les affiche.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Dépôt",
+          "description": "Entrée Git Sync à utiliser. Le premier dépôt si vide."
+        }
+      }
     }
   }
 }

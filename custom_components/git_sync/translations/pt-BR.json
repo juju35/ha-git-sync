@@ -267,6 +267,16 @@
           "description": "Entrada Git Sync a usar. O primeiro repositório se vazio."
         }
       }
+    },
+    "get_diff": {
+      "name": "Obter alterações",
+      "description": "Retorna as alterações que um commit incluiria, arquivo por arquivo, como o visualizador de diferenças do cartão as mostra.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repositório",
+          "description": "Entrada Git Sync a usar. O primeiro repositório se vazio."
+        }
+      }
     }
   }
 }

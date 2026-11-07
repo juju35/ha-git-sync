@@ -633,3 +633,30 @@ async def test_options_reject_an_unknown_notification_action(hass: HomeAssistant
     assert done["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_NOTIFY_SERVICE] == "mobile_app_phone"
     await hass.async_block_till_done()
+
+
+async def test_get_diff_service(hass: HomeAssistant, repo: Path) -> None:
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=str(repo),
+        data={CONF_REPO_PATH: str(repo), CONF_REMOTE: "origin", CONF_SSH_KEY: ""},
+        options={CONF_COMMIT_INTERVAL: 0, CONF_EXPORT_ENABLED: False},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(DOMAIN, "get_diff", {}, blocking=True, return_response=True)
+    assert response == {"files": [], "more_files": 0, "additions": 0, "deletions": 0}
+
+    (repo / "configuration.yaml").write_text("default_config:\nlogger:\n", encoding="utf-8")
+    response = await hass.services.async_call(
+        DOMAIN, "get_diff", {"config_entry_id": entry.entry_id}, blocking=True, return_response=True
+    )
+    assert response["additions"] == 1
+    (file,) = response["files"]
+    assert file["path"] == "configuration.yaml"
+    assert file["status"] == "modified"
+    assert file["hunks"][0]["lines"][-1] == {"kind": "add", "old": None, "new": 2, "text": "logger:"}
+    # Nothing was committed or staged by looking at the diff.
+    assert git(repo, "status", "--porcelain").rstrip() == " M configuration.yaml"

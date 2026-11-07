@@ -267,6 +267,16 @@
           "description": "Git Sync-post, der skal bruges. Det første repository, hvis tom."
         }
       }
+    },
+    "get_diff": {
+      "name": "Hent ændringer",
+      "description": "Returnerer de ændringer, et commit ville indeholde, fil for fil, som kortets diff-visning viser dem.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Git Sync-post, der skal bruges. Det første repository, hvis tom."
+        }
+      }
     }
   }
 }

@@ -54,7 +54,7 @@ from .const import (
     STORAGE_VERSION,
 )
 from .export import export_dashboards
-from .git import GitCommit, GitError, GitRepo, GitStatus, StagedDiff, generate_ssh_key, redact_url
+from .git import GitCommit, GitError, GitRepo, GitStatus, StagedDiff, WorkTreeDiff, generate_ssh_key, redact_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -306,6 +306,13 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         if message is None:
             raise HomeAssistantError(translation_domain=DOMAIN, translation_key="ai_task_failed")
         return message
+
+    async def async_get_diff(self) -> WorkTreeDiff:
+        """Return the changes a commit would include, file by file, for the card's diff viewer."""
+        try:
+            return await self.repo.preview_files()
+        except GitError as err:
+            raise HomeAssistantError(str(err)) from err
 
     async def _notify(self, message: str) -> None:
         service = (self.settings.get(CONF_NOTIFY_SERVICE) or "").strip()

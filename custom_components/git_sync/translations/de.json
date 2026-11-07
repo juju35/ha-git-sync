@@ -267,6 +267,16 @@
           "description": "Zu verwendender Git-Sync-Eintrag. Das erste Repository, wenn leer."
         }
       }
+    },
+    "get_diff": {
+      "name": "Änderungen abrufen",
+      "description": "Gibt die Änderungen zurück, die ein Commit enthalten würde, Datei für Datei, wie die Diff-Ansicht der Karte sie zeigt.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Zu verwendender Git-Sync-Eintrag. Das erste Repository, wenn leer."
+        }
+      }
     }
   }
 }

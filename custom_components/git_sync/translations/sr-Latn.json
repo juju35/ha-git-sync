@@ -267,6 +267,16 @@
           "description": "Git Sync unos koji se koristi. Prvi repozitorijum kada je prazno."
         }
       }
+    },
+    "get_diff": {
+      "name": "Preuzmi izmene",
+      "description": "Vraća izmene koje bi commit sadržao, datoteku po datoteku, onako kako ih prikazuje pregled razlika kartice.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozitorijum",
+          "description": "Git Sync unos koji se koristi. Prvi repozitorijum kada je prazno."
+        }
+      }
     }
   }
 }

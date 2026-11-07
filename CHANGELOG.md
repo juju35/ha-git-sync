@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0 - 2026-11-07
+
+### What's new
+- **Diff viewer** in the card: the **View changes** button (beside Commit & push and Export dashboards, in the mini card's footer, and as a link in the commit confirmation) opens a full-screen view of what the next commit would include, file by file like an editor's source control view. The files on the left with their status letter (added, modified, deleted, renamed, mode) and their added and removed lines; the selected file on the right hunk by hunk, with the line numbers of both sides, additions in green and deletions in red, renames with their old path, binary files and cut patches flagged. Full screen on a phone, with the files as a row of chips above the diff. ↑ ↓ walk the files, Escape or a click outside closes, **Commit & push** goes straight to the commit confirmation. Translated in every language of the card.
+- New action `git_sync.get_diff`: the same changes, file by file (status, old path, binary, added and removed lines, hunks with both line numbers), computed on a copy of the Git index so nothing is staged or committed. At most 2000 lines per file and 200 files per response, the rest counted.
+
 ## 1.1.2 - 2026-11-04
 
 ### Documentation
