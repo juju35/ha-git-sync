@@ -92,3 +92,19 @@ def fresh_repo(tmp_path: Path) -> Path:
     git(work, "commit", "-q", "-m", "chore: initial")
     git(work, "remote", "add", "origin", str(remote))
     return work
+
+
+def clone(tmp_path: Path, name: str = "other") -> Path:
+    """Another work tree of the bare remote, pushing commits the tested repository does not have yet."""
+    other = tmp_path / name
+    git(tmp_path, "clone", "-q", str(tmp_path / "remote.git"), str(other))
+    git(other, "config", "user.name", "Other")
+    git(other, "config", "user.email", "other@example.com")
+    return other
+
+
+def push_from(other: Path, name: str, content: str) -> None:
+    (other / name).write_text(content, encoding="utf-8")
+    git(other, "add", "-A")
+    git(other, "commit", "-q", "-m", f"chore: {name} from elsewhere")
+    git(other, "push", "-q")

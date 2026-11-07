@@ -547,6 +547,16 @@ test('push pending: the confirmation does not announce 0 changed files', () => {
   assert.match(html(fr), /Les commits en attente seront poussés\./);
 });
 
+test('behind and diverged: their own pill, no commit while diverged', () => {
+  const behind = render({}, makeHass({ status: 'behind' }));
+  assert.match(html(behind), /st-behind/);
+  assert.match(html(behind), /pill-text">Behind</);
+  const diverged = render({}, makeHass({ status: 'diverged', language: 'fr' }));
+  assert.match(html(diverged), /st-diverged/);
+  assert.match(html(diverged), /pill-text">Divergé</);
+  assert.match(html(diverged), /id="commit"\s+disabled/);
+});
+
 test('push only: the toast says it was pushed, not "Nothing to commit"', async () => {
   const hass = makeHass({ status: 'ahead', response: { results: [{ committed: false, pushed: true, message: null }] } });
   const card = render({}, hass);

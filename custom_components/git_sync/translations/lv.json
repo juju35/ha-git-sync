@@ -62,6 +62,9 @@
           "commit_language": "Commit ziņojumu valoda",
           "commit_interval": "Automātiskā commit intervāls",
           "status_interval": "Statusa atsvaidzes intervāls",
+          "fetch_interval": "Remote pārbaudes intervāls",
+          "pull_before_push": "Pull pirms push",
+          "allow_sensitive": "Atļaut izsekotos sensitīvos failus",
           "notify_service": "Paziņojuma darbība",
           "notify_image": "Paziņojuma attēla URL",
           "export_enabled": "Ikdienas paneļu eksports",
@@ -73,6 +76,9 @@
         "data_description": {
           "ai_task_entity": "Ģenerē Conventional Commits ziņojumu no diff. Bez tās tiek izmantots vispārīgs ziņojums.",
           "commit_interval": "Commit un push ik pēc N minūtēm, ja ir izmaiņas. 0 to atspējo.",
+          "fetch_interval": "Fetch no remote ik pēc N minūtēm, lai redzētu no citurienes nosūtītos commit (atpaliek, atšķiras). 0 to izslēdz; pirms katra push fetch tiek veikts jebkurā gadījumā.",
+          "pull_before_push": "Ja remote ir jauni commit, pirms push uz tiem tiek veikts rebase (git pull --rebase --autostash). Konflikta gadījumā rebase tiek pārtraukts, nekas netiek nosūtīts, un labojums paskaidro, kas jādara.",
+          "allow_sensitive": "Veikt commit sensitīvo failu izmaiņām, kurus Git jau izseko (secrets.yaml, .storage, atslēgas, datubāze, žurnāli). Jauni sensitīvie faili vienmēr tiek noraidīti.",
           "notify_service": "Piemēram, notify.mobile_app_telefons. Atstājiet tukšu, lai atspējotu.",
           "notify_image": "Absolūts HTTPS URL (nepieciešams iOS).",
           "export_format": "JSON kopē .storage failus bez izmaiņām; YAML saglabā tikai paneļa konfigurāciju, ko vieglāk lasīt diff."
@@ -126,7 +132,9 @@
           "clean": "Aktuāls",
           "dirty": "Neapstiprinātas izmaiņas",
           "ahead": "Gaida push",
-          "error": "Kļūda"
+          "error": "Kļūda",
+          "behind": "Atpaliek no remote",
+          "diverged": "Atšķiras"
         },
         "state_attributes": {
           "branch": {
@@ -221,6 +229,42 @@
     },
     "ai_task_failed": {
       "message": "AI uzdevums neatgrieza commit ziņojumu."
+    },
+    "diverged": {
+      "message": "Lokālais zars un {remote} ir atšķīrušies ({ahead} lokāli commit, {behind} attāli commit): nekas netika iekļauts commit vai nosūtīts ar push. Skatiet Iestatījumi → Labojumi."
+    },
+    "behind_remote": {
+      "message": "{remote} ir {behind} jauni commit, un Pull pirms push ir izslēgts: nekas netika iekļauts commit vai nosūtīts ar push. Skatiet Iestatījumi → Labojumi."
+    },
+    "rebase_conflict": {
+      "message": "Commit ir konfliktā ar {upstream} jaunajiem commit: rebase tika pārtraukts, un nekas netika nosūtīts. Skatiet Iestatījumi → Labojumi."
+    },
+    "sensitive_files": {
+      "message": "Noraidīts: izmaiņās ir sensitīvi faili ({files}), kas netiek ne iekļauti commit, ne nosūtīti AI task. Pievienojiet tos .gitignore vai atļaujiet izsekotos Git Sync opcijās."
+    }
+  },
+  "issues": {
+    "diverged": {
+      "title": "Git Sync nevar veikt push {repo}",
+      "description": "Zaram ir {ahead} lokāli commit, kuru nav {upstream}, un {upstream} ir {behind} commit, kuru šeit nav. Git Sync pats neapvieno atšķirīgas vēstures, tāpēc nekas netiek nosūtīts.\n\nLai to atrisinātu, atveriet termināli mapē {repo} un izpildiet:\n\n```\ngit pull --rebase\n```\n\nNovērsiet konfliktus, ja tādi ir (rediģējiet failus, `git add`, pēc tam `git rebase --continue`), un tad vēlreiz nospiediet **Commit un push**. Šis labojums pazūd pēc nākamā veiksmīgā push."
+    },
+    "behind_remote": {
+      "title": "Git Sync nevar veikt push {repo}",
+      "description": "{upstream} ir {behind} commit, kuru šeit nav, un **Pull pirms push** ir izslēgts Git Sync opcijās, tāpēc nekas netiek nosūtīts. Ieslēdziet to vai izpildiet `git pull --rebase` terminālī mapē {repo}. Šis labojums pazūd pēc nākamā veiksmīgā push."
+    },
+    "gitignore_missing": {
+      "title": "{repo} .gitignore neizslēdz noslēpumus",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Pievienot trūkstošās rindas .gitignore",
+            "description": "Bez šīm rindām Git Sync veiktu commit un push Home Assistant parolēm, marķieriem un autentifikācijas krātuvei:\n\n{lines}\n\nIesniedziet, lai tās pievienotu {repo}/.gitignore. Jau izsekots fails paliek izsekots: izņemiet to no repozitorija ar `git rm -r --cached secrets.yaml .storage` (faili paliek diskā)."
+          }
+        },
+        "abort": {
+          "not_loaded": "Git Sync repozitorijs nav ielādēts."
+        }
+      }
     }
   },
   "services": {

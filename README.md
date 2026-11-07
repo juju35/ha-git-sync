@@ -23,7 +23,9 @@ It replaces the usual stack of `shell_command`, `command_line` sensor, script an
 
 ## Features
 
-- **Status** of the work tree: clean, changes pending, push pending or error, with the changed files, the branch and the remote
+- **Status** of the work tree: clean, changes pending, push pending, behind or diverged from the remote, or error, with the changed files, the branch and the remote. The remote is fetched every 15 minutes and before each push
+- **Pull before push**: when the remote has new commits, the commit is rebased on them before the push; a conflict or a diverged history is never pushed and raises a repair explaining how to resolve it
+- **Secret guard**: `secrets.yaml`, `.storage/`, keys, the database and logs are never committed nor sent to the AI task, secret-looking values are hidden from the AI prompt, and a repair offers to complete a `.gitignore` that does not exclude `secrets.yaml` and `.storage`
 - **Automatic commit and push** every N minutes (60 by default) when something changed, and on demand from a button, an action or the card
 - **AI commit messages**: the staged diff is sent to an `ai_task` entity (Google, OpenAI, Ollama…), which writes a one-line [Conventional Commits](https://www.conventionalcommits.org/) message in any of the integration's languages. Without AI task, or if it fails, a generic message is used
 - **Notification** after each real commit, with an optional image
@@ -109,6 +111,9 @@ Copy `custom_components/git_sync/` to `/config/custom_components/git_sync/`, the
 | Commit message language | Home Assistant's, else English | `en`, `fr`, `de`, `es`, `sr`, `sr-latn`, `it`, `nl`, `pt`, `pl`, `ro`, `da`, `sv`, `bg`, `ru`, `uk`, `hu`, `sk`, `cs`, `sl`, `lv` or `el` |
 | Automatic commit interval | 60 min | Commit and push every N minutes when something changed, 0 to disable, up to 1440 |
 | Status refresh interval | 60 s | How often `git status` is read, from 10 to 3600 |
+| Remote check interval | 15 min | How often the status refresh also runs `git fetch`, so that commits pushed from elsewhere show as `behind` or `diverged`; 0 to disable, up to 1440. A fetch always runs before each push |
+| Pull before push | on | When the remote has new commits, rebase on them (`git pull --rebase --autostash`) before pushing. Off: nothing is committed nor pushed while the remote is ahead, and a repair says so |
+| Allow tracked sensitive files | off | Commit the changes of sensitive files that Git already tracks (see [Secret guard](#secret-guard)). A new sensitive file is always refused |
 | Notification action | none | Sent after each commit, for example `notify.mobile_app_phone`. An action that does not exist is refused by the form |
 | Notification image URL | none | Absolute HTTPS URL (required by iOS) |
 | Daily dashboard export | on | Export the dashboards every day |
@@ -126,7 +131,7 @@ Copy `custom_components/git_sync/` to `/config/custom_components/git_sync/`, the
 
 | Entity | Description |
 |---|---|
-| `sensor.git_sync_<repo>_status` | `clean`, `dirty`, `ahead` (committed, push pending, or a branch never pushed) or `error` (last push failed; retried by the automatic commit). Attributes: `branch`, `upstream`, `remote_url` (without the user or token of an HTTPS remote), `ahead`, `behind`, `changed_count`, `changed_files` (first 50), `last_error`, `ai_task` |
+| `sensor.git_sync_<repo>_status` | `clean`, `dirty`, `ahead` (committed, push pending, or a branch never pushed), `behind` (the remote has commits that are not here: the next commit pulls them first), `diverged` (both sides have commits: nothing is pushed until it is resolved, see [Repairs](#repairs)) or `error` (last push failed; retried by the automatic commit). Attributes: `branch`, `upstream`, `remote_url` (without the user or token of an HTTPS remote), `ahead`, `behind`, `changed_count`, `changed_files` (first 50), `last_error`, `ai_task` |
 | `sensor.git_sync_<repo>_changed_files` | Number of changed files |
 | `sensor.git_sync_<repo>_last_commit` | Time of the HEAD commit. Attributes: `message`, `sha`, `short_sha` |
 | `sensor.git_sync_<repo>_last_push` | Time of the last push made by Git Sync. Attribute: `message` |
@@ -137,7 +142,7 @@ Copy `custom_components/git_sync/` to `/config/custom_components/git_sync/`, the
 
 ### Action `git_sync.commit_push`
 
-Stages every change, commits and pushes. Without `message`, the AI task writes it. With nothing to commit, pushes the commits left pending by an earlier failure. Returns whether a commit was made and whether it pushed.
+Fetches the remote, stages every change, commits, rebases on the remote's new commits if any, and pushes. Without `message`, the AI task writes it. Refused when the changes include a sensitive file, or when the branch has diverged from the remote. With nothing to commit, pushes the commits left pending by an earlier failure. Returns whether a commit was made and whether it pushed.
 
 ```yaml
 action: git_sync.commit_push
@@ -213,7 +218,7 @@ type: custom:git-sync-card
 | <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-error.png" alt="Card, push failed" width="400"> | <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-confirm.png" alt="Card, commit confirmation" width="400"> |
 | <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-error-dark.png" alt="Card, push failed, dark theme" width="400"> | <img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/screenshots/card-confirm-dark.png" alt="Card, commit confirmation, dark theme" width="400"> |
 
-- **Header**: status (up to date, changes, push pending, error, working…), branch and remote repository
+- **Header**: status (up to date, changes, push pending, behind, diverged, error, working…), branch and remote repository
 - **Last commit**: message, short hash and how long ago
 - **Changed files**: collapsible list, folded again when you click elsewhere
 - **Last push** and **Dashboard export**, with the number of exported files
@@ -274,7 +279,29 @@ Point Git Sync to the same key (`/config/.ssh/id_ed25519`) and export folder to 
 
 ## How it works
 
-Git Sync runs the `git` command line in the configuration folder. Every status interval it reads `git status`, the HEAD commit and the remote. A commit stages everything (`git add -A`), sends the statistics and the first 8000 characters of the diff to the AI task, keeps the first line of its answer without quotes, backticks or dollar signs (100 characters max), commits and pushes. Commits and exports never run at the same time. The last push and export are kept across restarts.
+Git Sync runs the `git` command line in the configuration folder, never prompting (no terminal, SSH in batch mode). Every status interval it reads `git status`, the HEAD commit and the remote; every remote check interval it also runs `git fetch` (30 s timeout, skipped while a commit runs; a failed fetch is only logged), so that the `behind` count is current. A commit:
+
+1. fetches the remote, and stops if the branch has **diverged** (local commits not pushed and new remote commits), or is **behind** with *Pull before push* off;
+2. checks the changes for [sensitive files](#secret-guard), on a copy of the Git index;
+3. stages everything (`git add -A`), sends the statistics and the first 8000 characters of the diff, secret values hidden, to the AI task, keeps the first line of its answer without quotes, backticks or dollar signs (100 characters max), and commits;
+4. if the remote had new commits, runs `git pull --rebase --autostash`; on a conflict the rebase is aborted (`git rebase --abort`), the commit stays local and nothing is pushed;
+5. pushes.
+
+Commits and exports never run at the same time. The last push and export are kept across restarts.
+
+### Secret guard
+
+A commit, and the ✨ message generation, are refused when the changes include `secrets.yaml`, a file under `.storage/` or `.ssh/`, `*.pem`, `*.key`, `id_rsa*`, `known_devices.yaml`, `home-assistant_v2.db*` or `*.log`. A sensitive file that Git already tracks can be allowed with the **Allow tracked sensitive files** option; a new one never is, and deleting one from the repository is always allowed. In the diff sent to the AI task, the value of every `password`, `token`, `api_key`, `secret` or `client_secret` key (`key: value`, `"key": "value"`, `key = value`) is replaced with `<redacted>`; `!secret` references are kept.
+
+### Repairs
+
+Git Sync raises these issues in **Settings → System → Repairs**:
+
+| Issue | When | Resolution |
+|---|---|---|
+| Cannot push (diverged) | The branch and the remote both have commits the other lacks, or the rebase of a commit stopped on a conflict | In a terminal in the repository: `git pull --rebase`, fix the conflicts (`git add`, `git rebase --continue`), then Commit & push. Removed by the next successful push |
+| Cannot push (behind) | The remote has new commits and *Pull before push* is off | Turn the option on, or run `git pull --rebase`. Removed by the next successful push |
+| `.gitignore` does not exclude secrets | The repository holds a `configuration.yaml` and its `.gitignore` lets `secrets.yaml` or `.storage/` be committed | **Fix** shows the lines to add and appends them to `.gitignore` once confirmed (repairs are for administrators only). A file already tracked stays tracked: `git rm -r --cached secrets.yaml .storage` removes it from the repository, not from the disk |
 
 To debug:
 

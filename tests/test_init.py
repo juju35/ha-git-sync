@@ -21,7 +21,7 @@ from custom_components.git_sync.const import (
     DOMAIN,
 )
 
-from .conftest import git
+from .conftest import clone, git, push_from
 
 
 async def test_config_flow(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
@@ -714,3 +714,226 @@ async def test_admin_can_call_the_services(hass: HomeAssistant, repo: Path, hass
     )
     assert response["results"][0]["pushed"] is True
     assert git(repo, "log", "-1", "--format=%s", "origin/main").strip() == "feat: logger"
+
+
+def _issue(hass: HomeAssistant, key: str, entry: MockConfigEntry):
+    from homeassistant.helpers import issue_registry as ir
+
+    return ir.async_get(hass).async_get_issue(DOMAIN, f"{key}_{entry.entry_id}")
+
+
+async def _setup(hass: HomeAssistant, entry: MockConfigEntry):
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry.runtime_data
+
+
+async def test_status_refresh_fetches_the_remote(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    """The polling fetches (at most every fetch_interval): a commit pushed elsewhere shows as behind."""
+    coordinator = await _setup(hass, _entry(repo))
+    push_from(clone(tmp_path), "automations.yaml", "[]\n")
+
+    # The first refresh (setup) does not fetch; the next one does, then not before the interval.
+    await coordinator.async_refresh()
+    assert _status(hass).state == "behind"
+    assert _status(hass).attributes["behind"] == 1
+    push_from(tmp_path / "other", "scripts.yaml", "{}\n")
+    await coordinator.async_refresh()
+    assert _status(hass).attributes["behind"] == 1
+
+    coordinator._last_fetch -= 15 * 60
+    await coordinator.async_refresh()
+    assert _status(hass).attributes["behind"] == 2
+
+
+async def test_fetch_interval_zero_does_not_fetch(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    from custom_components.git_sync.const import CONF_FETCH_INTERVAL
+
+    coordinator = await _setup(hass, _entry(repo, **{CONF_FETCH_INTERVAL: 0}))
+    push_from(clone(tmp_path), "automations.yaml", "[]\n")
+    await coordinator.async_refresh()
+    assert _status(hass).state == "clean"
+
+
+async def test_commit_pulls_the_remote_commits_first(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    """The remote moved: the commit is rebased on it (pull --rebase) and pushed, history stays linear."""
+    coordinator = await _setup(hass, _entry(repo))
+    push_from(clone(tmp_path), "automations.yaml", "[]\n")
+
+    (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    result = await coordinator.async_commit_push("feat: add scripts")
+    assert (result.committed, result.pushed) == (True, True)
+    log = git(repo, "log", "--format=%s", "origin/main").split("\n")
+    assert log[:3] == ["feat: add scripts", "chore: automations.yaml from elsewhere", "chore: initial"]
+    assert git(repo, "rev-list", "--merges", "--count", "HEAD").strip() == "0"
+    assert _status(hass).state == "clean"
+
+
+async def test_diverged_is_not_pushed_and_raises_a_repair(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    """Local commits never pushed and new remote commits: nothing is committed or pushed, a repair explains."""
+    from homeassistant.exceptions import HomeAssistantError
+
+    entry = _entry(repo)
+    coordinator = await _setup(hass, entry)
+    (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: local commit")
+    push_from(clone(tmp_path), "automations.yaml", "[]\n")
+    remote_head = git(tmp_path / "remote.git", "rev-parse", "main")
+
+    (repo / "groups.yaml").write_text("{}\n", encoding="utf-8")
+    with pytest.raises(HomeAssistantError) as err:
+        await coordinator.async_commit_push("feat: groups")
+    assert err.value.translation_key == "diverged"
+    assert err.value.translation_placeholders["behind"] == "1"
+    assert coordinator.data.last_error.startswith("The local branch and origin have diverged")
+    assert git(tmp_path / "remote.git", "rev-parse", "main") == remote_head
+    assert git(repo, "log", "-1", "--format=%s").strip() == "feat: local commit"
+    issue = _issue(hass, "push_blocked", entry)
+    assert issue is not None
+    assert issue.translation_key == "diverged"
+    assert issue.translation_placeholders["upstream"] == "origin/main"
+    await coordinator.async_refresh()
+    assert _status(hass).state == "diverged"
+    assert not coordinator.dirty
+
+    # Resolved in a terminal, then Commit and push: pushed, the repair is gone.
+    git(repo, "pull", "-q", "--rebase", "--autostash")
+    result = await coordinator.async_commit_push("feat: groups")
+    assert result.pushed
+    assert git(tmp_path / "remote.git", "log", "-1", "--format=%s", "main").strip() == "feat: groups"
+    assert _issue(hass, "push_blocked", entry) is None
+
+
+async def test_rebase_conflict_is_aborted_and_not_pushed(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    from homeassistant.exceptions import HomeAssistantError
+
+    entry = _entry(repo)
+    coordinator = await _setup(hass, entry)
+    push_from(clone(tmp_path), "configuration.yaml", "default_config:\nhttp:\n")
+    remote_head = git(tmp_path / "remote.git", "rev-parse", "main")
+
+    (repo / "configuration.yaml").write_text("default_config:\nlogger:\n", encoding="utf-8")
+    with pytest.raises(HomeAssistantError) as err:
+        await coordinator.async_commit_push("feat: logger")
+    assert err.value.translation_key == "rebase_conflict"
+    assert git(tmp_path / "remote.git", "rev-parse", "main") == remote_head
+    assert not (repo / ".git" / "rebase-merge").exists()
+    assert (repo / "configuration.yaml").read_text(encoding="utf-8") == "default_config:\nlogger:\n"
+    assert _issue(hass, "push_blocked", entry).translation_key == "diverged"
+    await coordinator.async_refresh()
+    assert _status(hass).state == "diverged"
+
+
+async def test_behind_without_pull_before_push(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    from homeassistant.exceptions import HomeAssistantError
+
+    from custom_components.git_sync.const import CONF_PULL_BEFORE_PUSH
+
+    entry = _entry(repo, **{CONF_PULL_BEFORE_PUSH: False})
+    coordinator = await _setup(hass, entry)
+    push_from(clone(tmp_path), "automations.yaml", "[]\n")
+    (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    with pytest.raises(HomeAssistantError) as err:
+        await coordinator.async_commit_push("feat: add scripts")
+    assert err.value.translation_key == "behind_remote"
+    assert git(repo, "log", "-1", "--format=%s").strip() == "chore: initial"
+    assert _issue(hass, "push_blocked", entry).translation_key == "behind_remote"
+
+
+async def test_sensitive_files_block_the_commit(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    """A new secrets.yaml is never committed; a tracked .storage file only when allowed."""
+    from homeassistant.exceptions import ServiceValidationError
+
+    from custom_components.git_sync.const import CONF_ALLOW_SENSITIVE
+
+    entry = _entry(repo)
+    coordinator = await _setup(hass, entry)
+    (repo / "secrets.yaml").write_text("wifi: hunter2\n", encoding="utf-8")
+    (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    with pytest.raises(ServiceValidationError) as err:
+        await coordinator.async_commit_push("feat: add scripts")
+    assert err.value.translation_key == "sensitive_files"
+    assert err.value.translation_placeholders == {"files": "secrets.yaml"}
+    assert git(repo, "log", "-1", "--format=%s").strip() == "chore: initial"
+    # Neither committed nor staged.
+    assert git(repo, "diff", "--cached", "--name-only").strip() == ""
+    assert git(tmp_path / "remote.git", "log", "-1", "--format=%s", "main").strip() == "chore: initial"
+
+    # A .storage file committed by hand earlier: refused, unless allowed in the options.
+    (repo / "secrets.yaml").unlink()
+    (repo / ".storage").mkdir()
+    (repo / ".storage" / "lovelace").write_text("{}\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "chore: storage")
+    (repo / ".storage" / "lovelace").write_text('{"views": []}\n', encoding="utf-8")
+    with pytest.raises(ServiceValidationError):
+        await coordinator.async_commit_push("feat: dashboard")
+
+    hass.config_entries.async_update_entry(entry, options={**entry.options, CONF_ALLOW_SENSITIVE: True})
+    await hass.async_block_till_done()
+    result = await entry.runtime_data.async_commit_push("feat: dashboard")
+    assert result.pushed
+    assert git(tmp_path / "remote.git", "log", "-1", "--format=%s", "main").strip() == "feat: dashboard"
+
+
+async def test_ai_prompt_is_redacted_and_refuses_secrets(hass: HomeAssistant, repo: Path) -> None:
+    from homeassistant.exceptions import ServiceValidationError
+
+    from custom_components.git_sync.const import CONF_AI_TASK_ENTITY
+
+    calls = _mock_ai_task(hass, "feat: mqtt broker")
+    await _setup(hass, _entry(repo, **{CONF_AI_TASK_ENTITY: "ai_task.test"}))
+    (repo / "configuration.yaml").write_text(
+        "default_config:\nmqtt:\n  username: ha\n  password: hunter2\n  client_secret: s3cr3t\n", encoding="utf-8"
+    )
+    response = await hass.services.async_call(DOMAIN, "generate_message", {}, blocking=True, return_response=True)
+    assert response == {"message": "feat: mqtt broker"}
+    prompt = calls[0]["instructions"]
+    assert "username: ha" in prompt
+    assert "hunter2" not in prompt
+    assert "s3cr3t" not in prompt
+    assert "password: <redacted>" in prompt
+
+    # A sensitive file is not even sent to the AI task.
+    (repo / "secrets.yaml").write_text("wifi: hunter2\n", encoding="utf-8")
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(DOMAIN, "generate_message", {}, blocking=True, return_response=True)
+    assert len(calls) == 1
+
+
+async def test_gitignore_repair_and_fix_flow(hass: HomeAssistant, repo: Path) -> None:
+    from custom_components.git_sync.repairs import async_create_fix_flow
+
+    entry = _entry(repo)
+    await _setup(hass, entry)
+    issue = _issue(hass, "gitignore_missing", entry)
+    assert issue is not None
+    assert issue.is_fixable
+    assert issue.translation_placeholders["lines"] == "- `secrets.yaml`\n- `.storage/`"
+
+    flow = await async_create_fix_flow(hass, issue.issue_id, issue.data)
+    flow.hass = hass
+    flow.handler = DOMAIN
+    flow.issue_id = issue.issue_id
+    form = await flow.async_step_init()
+    assert form["type"] is FlowResultType.FORM
+    assert form["step_id"] == "confirm"
+    assert form["description_placeholders"]["repo"] == str(repo)
+    # Nothing written before the confirmation.
+    assert not (repo / ".gitignore").exists()
+
+    done = await flow.async_step_confirm({})
+    assert done["type"] is FlowResultType.CREATE_ENTRY
+    lines = (repo / ".gitignore").read_text(encoding="utf-8").splitlines()
+    assert "secrets.yaml" in lines
+    assert ".storage/" in lines
+    assert _issue(hass, "gitignore_missing", entry) is None
+
+
+async def test_gitignore_covering_secrets_raises_no_repair(hass: HomeAssistant, repo: Path) -> None:
+    (repo / ".gitignore").write_text("secrets.yaml\n.storage\n", encoding="utf-8")
+    entry = _entry(repo)
+    await _setup(hass, entry)
+    assert _issue(hass, "gitignore_missing", entry) is None

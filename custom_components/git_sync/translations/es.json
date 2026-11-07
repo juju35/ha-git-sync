@@ -62,6 +62,9 @@
           "commit_language": "Idioma del mensaje de commit",
           "commit_interval": "Intervalo de commit automático",
           "status_interval": "Intervalo de actualización del estado",
+          "fetch_interval": "Intervalo de comprobación del remoto",
+          "pull_before_push": "Pull antes del push",
+          "allow_sensitive": "Permitir archivos sensibles seguidos",
           "notify_service": "Acción de notificación",
           "notify_image": "URL de la imagen de notificación",
           "export_enabled": "Exportación diaria de paneles",
@@ -73,6 +76,9 @@
         "data_description": {
           "ai_task_entity": "Genera un mensaje Conventional Commits a partir del diff. Sin ella se usa un mensaje genérico.",
           "commit_interval": "Commit y push cada N minutos si hay cambios. 0 lo desactiva.",
+          "fetch_interval": "Hace fetch del remoto cada N minutos para ver los commits enviados desde otro sitio (atrasado, divergido). 0 lo desactiva; antes de cada push se hace igualmente un fetch.",
+          "pull_before_push": "Cuando el remoto tiene commits nuevos, hace rebase sobre ellos (git pull --rebase --autostash) antes del push. Si hay conflicto, el rebase se cancela, no se envía nada y una reparación explica qué hacer.",
+          "allow_sensitive": "Hace commit de los cambios de archivos sensibles ya seguidos por Git (secrets.yaml, .storage, claves, base de datos, logs). Los archivos sensibles nuevos siempre se rechazan.",
           "notify_service": "Por ejemplo notify.mobile_app_telefono. Déjalo vacío para desactivarlo.",
           "notify_image": "URL HTTPS absoluta (requerida por iOS).",
           "export_format": "JSON copia los archivos .storage tal cual; YAML solo conserva la configuración del panel, más legible en los diffs."
@@ -126,7 +132,9 @@
           "clean": "Al día",
           "dirty": "Cambios pendientes",
           "ahead": "Push pendiente",
-          "error": "Error"
+          "error": "Error",
+          "behind": "Atrasado respecto al remoto",
+          "diverged": "Divergido"
         },
         "state_attributes": {
           "branch": {
@@ -221,6 +229,42 @@
     },
     "ai_task_failed": {
       "message": "La AI task no devolvió ningún mensaje de commit."
+    },
+    "diverged": {
+      "message": "La rama local y {remote} han divergido ({ahead} commits locales, {behind} commits remotos): no se hizo commit ni push de nada. Consulta Ajustes → Reparaciones."
+    },
+    "behind_remote": {
+      "message": "{remote} tiene {behind} commits nuevos y Pull antes del push está desactivado: no se hizo commit ni push de nada. Consulta Ajustes → Reparaciones."
+    },
+    "rebase_conflict": {
+      "message": "El commit entra en conflicto con los commits nuevos de {upstream}: el rebase se canceló y no se envió nada. Consulta Ajustes → Reparaciones."
+    },
+    "sensitive_files": {
+      "message": "Rechazado: los cambios incluyen archivos sensibles ({files}), que ni se incluyen en el commit ni se envían a la AI task. Añádelos al .gitignore o permite los seguidos en las opciones de Git Sync."
+    }
+  },
+  "issues": {
+    "diverged": {
+      "title": "Git Sync no puede hacer push de {repo}",
+      "description": "La rama tiene {ahead} commits locales que no están en {upstream}, y {upstream} tiene {behind} commits que no están aquí. Git Sync no fusiona por sí solo historiales divergidos, así que no se envía nada.\n\nPara resolverlo, abre un terminal en {repo} y ejecuta:\n\n```\ngit pull --rebase\n```\n\nCorrige los conflictos que haya (edita los archivos, `git add` y luego `git rebase --continue`) y pulsa de nuevo **Commit y push**. Esta reparación desaparece con el siguiente push correcto."
+    },
+    "behind_remote": {
+      "title": "Git Sync no puede hacer push de {repo}",
+      "description": "{upstream} tiene {behind} commits que no están aquí y **Pull antes del push** está desactivado en las opciones de Git Sync, así que no se envía nada. Actívalo o ejecuta `git pull --rebase` en un terminal en {repo}. Esta reparación desaparece con el siguiente push correcto."
+    },
+    "gitignore_missing": {
+      "title": "El .gitignore de {repo} no excluye los secretos",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Añadir las líneas que faltan al .gitignore",
+            "description": "Sin estas líneas, Git Sync haría commit y push de las contraseñas, los tokens y el almacén de autenticación de Home Assistant:\n\n{lines}\n\nEnvía para añadirlas a {repo}/.gitignore. Un archivo ya seguido sigue seguido: quítalo del repositorio con `git rm -r --cached secrets.yaml .storage` (los archivos se quedan en el disco)."
+          }
+        },
+        "abort": {
+          "not_loaded": "El repositorio de Git Sync no está cargado."
+        }
+      }
     }
   },
   "services": {

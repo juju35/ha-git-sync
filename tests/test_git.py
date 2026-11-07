@@ -21,7 +21,7 @@ from custom_components.git_sync.git import (
     redact_url,
 )
 
-from .conftest import git
+from .conftest import clone, git, push_from
 
 
 def _repo(path: Path) -> GitRepo:
@@ -400,3 +400,118 @@ async def test_preview_files_keeps_the_index(repo: Path) -> None:
     ]
     # The untracked file was diffed from a copy of the index: the real one still holds only scripts.yaml.
     assert git(repo, "diff", "--cached", "--name-only").split() == ["scripts.yaml"]
+
+
+async def test_fetch_counts_the_commits_behind(repo: Path, tmp_path: Path) -> None:
+    git_repo = _repo(repo)
+    push_from(clone(tmp_path), "automations.yaml", "[]\n")
+    assert (await git_repo.status()).behind == 0
+    await git_repo.fetch()
+    status = await git_repo.status()
+    assert (status.ahead, status.behind, status.diverged) == (0, 1, False)
+
+    (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    await git_repo.stage_all()
+    await git_repo.commit("feat: scripts")
+    assert (await git_repo.status()).diverged
+
+
+async def test_pull_rebase_conflict_is_aborted(repo: Path, tmp_path: Path) -> None:
+    from custom_components.git_sync.git import RebaseConflictError
+
+    git_repo = _repo(repo)
+    push_from(clone(tmp_path), "configuration.yaml", "default_config:\nhttp:\n")
+    (repo / "configuration.yaml").write_text("default_config:\nlogger:\n", encoding="utf-8")
+    await git_repo.stage_all()
+    await git_repo.commit("feat: logger")
+    await git_repo.fetch()
+    with pytest.raises(RebaseConflictError):
+        await git_repo.pull_rebase()
+    # Back on the local commit, no rebase left in progress, nothing changed in the files.
+    assert not (repo / ".git" / "rebase-merge").exists()
+    assert not (repo / ".git" / "rebase-apply").exists()
+    assert git(repo, "log", "-1", "--format=%s").strip() == "feat: logger"
+    assert git(repo, "status", "--porcelain").strip() == ""
+    assert (await git_repo.status()).diverged
+
+
+def test_redact_secrets() -> None:
+    from custom_components.git_sync.git import StagedDiff, redact_secrets
+
+    patch = "\n".join(
+        [
+            "+++ b/configuration.yaml",
+            "+  password: hunter2",
+            "-  api_key: 'abc123'",
+            '+    "access_token": "eyJhbGciOi",',
+            "+  client_secret = s3cr3t",
+            "+  wifi_password: !secret wifi",
+            "+  name: Kitchen",
+            "+  secrets:",
+        ]
+    )
+    redacted = redact_secrets(patch)
+    for secret in ("hunter2", "abc123", "eyJhbGciOi", "s3cr3t"):
+        assert secret not in redacted
+    assert "+  password: <redacted>" in redacted
+    assert "+  wifi_password: !secret wifi" in redacted
+    assert "+  name: Kitchen" in redacted
+    assert "+  secrets:" in redacted
+    assert "hunter2" not in StagedDiff(stat="1 file", patch=patch, files=1).as_prompt()
+
+
+@pytest.mark.parametrize(
+    ("path", "sensitive"),
+    [
+        ("secrets.yaml", True),
+        ("packages/secrets.yaml", True),
+        (".storage/auth", True),
+        (".storage/lovelace.dashboard", True),
+        (".ssh/id_ed25519", True),
+        ("certs/server.pem", True),
+        ("certs/private.key", True),
+        ("id_rsa.pub", True),
+        ("known_devices.yaml", True),
+        ("home-assistant_v2.db", True),
+        ("home-assistant_v2.db-wal", True),
+        ("home-assistant.log", True),
+        ("configuration.yaml", False),
+        ("dashboards_export/lovelace.yaml", False),
+        ("keys.yaml", False),
+    ],
+)
+def test_is_sensitive(path: str, sensitive: bool) -> None:
+    from custom_components.git_sync.git import is_sensitive
+
+    assert is_sensitive(path) is sensitive
+
+
+def test_blocked_sensitive() -> None:
+    from custom_components.git_sync.git import blocked_sensitive
+
+    changes = [("A", "secrets.yaml"), ("M", ".storage/core.config"), ("D", "old.pem"), ("M", "automations.yaml")]
+    assert blocked_sensitive(changes, allow_tracked=False) == ["secrets.yaml", ".storage/core.config"]
+    # Allowed: only the tracked file; a new one is still refused, a deletion never is.
+    assert blocked_sensitive(changes, allow_tracked=True) == ["secrets.yaml"]
+
+
+async def test_preview_changes_keeps_the_index(repo: Path) -> None:
+    git_repo = _repo(repo)
+    (repo / "secrets.yaml").write_text("x: y\n", encoding="utf-8")
+    (repo / "configuration.yaml").write_text("default_config:\nlogger:\n", encoding="utf-8")
+    assert sorted(await git_repo.preview_changes()) == [("A", "secrets.yaml"), ("M", "configuration.yaml")]
+    assert git(repo, "diff", "--cached", "--name-only").strip() == ""
+
+
+async def test_gitignore_missing_and_append(repo: Path) -> None:
+    from custom_components.git_sync.git import append_gitignore
+
+    git_repo = _repo(repo)
+    assert await git_repo.gitignore_missing() == ["secrets.yaml", ".storage/"]
+    (repo / ".gitignore").write_text("*.log", encoding="utf-8")  # no final newline
+    append_gitignore(str(repo), ["secrets.yaml", ".storage/"])
+    assert await git_repo.gitignore_missing() == []
+    assert (repo / ".gitignore").read_text(encoding="utf-8").splitlines()[:2] == [
+        "*.log",
+        "# Added by Git Sync: never commit secrets",
+    ]

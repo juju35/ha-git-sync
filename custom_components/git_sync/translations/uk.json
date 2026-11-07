@@ -62,6 +62,9 @@
           "commit_language": "Мова повідомлень commit",
           "commit_interval": "Інтервал автоматичного commit",
           "status_interval": "Інтервал оновлення стану",
+          "fetch_interval": "Інтервал перевірки remote",
+          "pull_before_push": "Pull перед push",
+          "allow_sensitive": "Дозволити відстежувані конфіденційні файли",
           "notify_service": "Дія сповіщення",
           "notify_image": "URL зображення сповіщення",
           "export_enabled": "Щоденний експорт панелей",
@@ -73,6 +76,9 @@
         "data_description": {
           "ai_task_entity": "Генерує повідомлення у форматі Conventional Commits за diff. Без нього використовується загальне повідомлення.",
           "commit_interval": "Commit і push кожні N хвилин, якщо є зміни. 0 вимикає.",
+          "fetch_interval": "Fetch з remote кожні N хвилин, щоб бачити commit, надіслані з іншого місця (відставання, розбіжність). 0 вимикає; перед кожним push fetch однаково виконується.",
+          "pull_before_push": "Якщо в remote є нові commit, перед push виконується rebase на них (git pull --rebase --autostash). У разі конфлікту rebase скасовується, нічого не надсилається, а виправлення пояснює, що робити.",
+          "allow_sensitive": "Робити commit змін конфіденційних файлів, які Git уже відстежує (secrets.yaml, .storage, ключі, база даних, журнали). Нові конфіденційні файли завжди відхиляються.",
           "notify_service": "Наприклад, notify.mobile_app_phone. Залиште порожнім, щоб вимкнути.",
           "notify_image": "Абсолютний HTTPS URL (потрібен для iOS).",
           "export_format": "JSON копіює файли .storage як є; YAML зберігає лише конфігурацію панелі, її простіше читати в diff."
@@ -126,7 +132,9 @@
           "clean": "Актуально",
           "dirty": "Є зміни",
           "ahead": "Очікує push",
-          "error": "Помилка"
+          "error": "Помилка",
+          "behind": "Відстає від remote",
+          "diverged": "Розбіжність"
         },
         "state_attributes": {
           "branch": {
@@ -221,6 +229,42 @@
     },
     "ai_task_failed": {
       "message": "AI-завдання не повернуло повідомлення commit."
+    },
+    "diverged": {
+      "message": "Локальна гілка та {remote} розійшлися ({ahead} локальних commit, {behind} віддалених commit): нічого не було зроблено commit чи push. Див. Налаштування → Виправлення."
+    },
+    "behind_remote": {
+      "message": "У {remote} {behind} нових commit, а Pull перед push вимкнено: нічого не було зроблено commit чи push. Див. Налаштування → Виправлення."
+    },
+    "rebase_conflict": {
+      "message": "Commit конфліктує з новими commit у {upstream}: rebase скасовано, нічого не надіслано. Див. Налаштування → Виправлення."
+    },
+    "sensitive_files": {
+      "message": "Відхилено: зміни містять конфіденційні файли ({files}), які не потрапляють у commit і не надсилаються AI-завданню. Додайте їх до .gitignore або дозвольте відстежувані в параметрах Git Sync."
+    }
+  },
+  "issues": {
+    "diverged": {
+      "title": "Git Sync не може виконати push {repo}",
+      "description": "У гілці {ahead} локальних commit, яких немає в {upstream}, а в {upstream} {behind} commit, яких немає тут. Git Sync сам не об'єднує розбіжні історії, тому нічого не надсилається.\n\nЩоб це виправити, відкрийте термінал у {repo} і виконайте:\n\n```\ngit pull --rebase\n```\n\nУсуньте конфлікти, якщо вони є (відредагуйте файли, `git add`, потім `git rebase --continue`), і знову натисніть **Commit і push**. Це виправлення зникне після наступного успішного push."
+    },
+    "behind_remote": {
+      "title": "Git Sync не може виконати push {repo}",
+      "description": "У {upstream} {behind} commit, яких немає тут, а **Pull перед push** вимкнено в параметрах Git Sync, тому нічого не надсилається. Увімкніть його або виконайте `git pull --rebase` у терміналі в {repo}. Це виправлення зникне після наступного успішного push."
+    },
+    "gitignore_missing": {
+      "title": ".gitignore у {repo} не виключає секрети",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Додати відсутні рядки до .gitignore",
+            "description": "Без цих рядків Git Sync зробив би commit і push паролів, токенів і сховища автентифікації Home Assistant:\n\n{lines}\n\nНадішліть, щоб дописати їх до {repo}/.gitignore. Файл, який уже відстежується, залишається відстежуваним: видаліть його з репозиторію командою `git rm -r --cached secrets.yaml .storage` (файли залишаться на диску)."
+          }
+        },
+        "abort": {
+          "not_loaded": "Репозиторій Git Sync не завантажено."
+        }
+      }
     }
   },
   "services": {

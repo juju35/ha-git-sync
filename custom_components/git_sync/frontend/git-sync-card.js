@@ -5,7 +5,7 @@
  * Served and added to the dashboard resources by the Git Sync integration.
  * https://github.com/juju35/ha-git-sync
  */
-var GIT_SYNC_CARD_VERSION = '1.2.1';
+var GIT_SYNC_CARD_VERSION = '1.3.0';
 
 const GS_I18N = {
   en: {
@@ -13,6 +13,8 @@ const GS_I18N = {
     clean: 'Up to date',
     dirty: 'Changes',
     ahead: 'Push pending',
+    behind: 'Behind',
+    diverged: 'Diverged',
     error: 'Error',
     unavailable: 'Unavailable',
     working: 'Working…',
@@ -77,6 +79,8 @@ const GS_I18N = {
     clean: 'À jour',
     dirty: 'Modifications',
     ahead: 'Push en attente',
+    behind: 'En retard',
+    diverged: 'Divergé',
     error: 'Erreur',
     unavailable: 'Indisponible',
     working: 'En cours…',
@@ -141,6 +145,8 @@ const GS_I18N = {
     clean: 'Aktuell',
     dirty: 'Änderungen',
     ahead: 'Push ausstehend',
+    behind: 'Zurück',
+    diverged: 'Divergiert',
     error: 'Fehler',
     unavailable: 'Nicht verfügbar',
     working: 'Läuft…',
@@ -205,6 +211,8 @@ const GS_I18N = {
     clean: 'Al día',
     dirty: 'Cambios',
     ahead: 'Push pendiente',
+    behind: 'Atrasado',
+    diverged: 'Divergido',
     error: 'Error',
     unavailable: 'No disponible',
     working: 'En curso…',
@@ -269,6 +277,8 @@ const GS_I18N = {
     clean: 'Aggiornato',
     dirty: 'Modifiche',
     ahead: 'Push in sospeso',
+    behind: 'Indietro',
+    diverged: 'Divergente',
     error: 'Errore',
     unavailable: 'Non disponibile',
     working: 'In corso…',
@@ -333,6 +343,8 @@ const GS_I18N = {
     clean: 'Bijgewerkt',
     dirty: 'Wijzigingen',
     ahead: 'Push in afwachting',
+    behind: 'Achter',
+    diverged: 'Uiteengelopen',
     error: 'Fout',
     unavailable: 'Niet beschikbaar',
     working: 'Bezig…',
@@ -397,6 +409,8 @@ const GS_I18N = {
     clean: 'Atualizado',
     dirty: 'Alterações',
     ahead: 'Push pendente',
+    behind: 'Atrasado',
+    diverged: 'Divergente',
     error: 'Erro',
     unavailable: 'Indisponível',
     working: 'A processar…',
@@ -461,6 +475,8 @@ const GS_I18N = {
     clean: 'Aktualne',
     dirty: 'Zmiany',
     ahead: 'Oczekuje na push',
+    behind: 'W tyle',
+    diverged: 'Rozbieżność',
     error: 'Błąd',
     unavailable: 'Niedostępne',
     working: 'W toku…',
@@ -525,6 +541,8 @@ const GS_I18N = {
     clean: 'Actualizat',
     dirty: 'Modificări',
     ahead: 'Push restant',
+    behind: 'În urmă',
+    diverged: 'Divergent',
     error: 'Eroare',
     unavailable: 'Indisponibil',
     working: 'În curs…',
@@ -589,6 +607,8 @@ const GS_I18N = {
     clean: 'Opdateret',
     dirty: 'Ændringer',
     ahead: 'Push afventer',
+    behind: 'Bagud',
+    diverged: 'Divergeret',
     error: 'Fejl',
     unavailable: 'Utilgængelig',
     working: 'I gang…',
@@ -653,6 +673,8 @@ const GS_I18N = {
     clean: 'Uppdaterad',
     dirty: 'Ändringar',
     ahead: 'Push väntar',
+    behind: 'Efter',
+    diverged: 'Divergerat',
     error: 'Fel',
     unavailable: 'Ej tillgänglig',
     working: 'Pågår…',
@@ -717,6 +739,8 @@ const GS_I18N = {
     clean: 'Актуално',
     dirty: 'Промени',
     ahead: 'Чакащ push',
+    behind: 'Изостава',
+    diverged: 'Разклонено',
     error: 'Грешка',
     unavailable: 'Недостъпно',
     working: 'В процес…',
@@ -781,6 +805,8 @@ const GS_I18N = {
     clean: 'Актуально',
     dirty: 'Изменения',
     ahead: 'Ждёт push',
+    behind: 'Отстаёт',
+    diverged: 'Расхождение',
     error: 'Ошибка',
     unavailable: 'Недоступно',
     working: 'В работе…',
@@ -845,6 +871,8 @@ const GS_I18N = {
     clean: 'Актуально',
     dirty: 'Зміни',
     ahead: 'Очікує push',
+    behind: 'Відстає',
+    diverged: 'Розбіжність',
     error: 'Помилка',
     unavailable: 'Недоступно',
     working: 'Триває…',
@@ -909,6 +937,8 @@ const GS_I18N = {
     clean: 'Naprakész',
     dirty: 'Változások',
     ahead: 'Push vár',
+    behind: 'Lemaradás',
+    diverged: 'Elágazott',
     error: 'Hiba',
     unavailable: 'Nem elérhető',
     working: 'Dolgozik…',
@@ -973,6 +1003,8 @@ const GS_I18N = {
     clean: 'Aktuálne',
     dirty: 'Zmeny',
     ahead: 'Čaká na push',
+    behind: 'Pozadu',
+    diverged: 'Rozchádza sa',
     error: 'Chyba',
     unavailable: 'Nedostupné',
     working: 'Prebieha…',
@@ -1037,6 +1069,8 @@ const GS_I18N = {
     clean: 'Aktuální',
     dirty: 'Změny',
     ahead: 'Čeká na push',
+    behind: 'Pozadu',
+    diverged: 'Rozchází se',
     error: 'Chyba',
     unavailable: 'Nedostupné',
     working: 'Probíhá…',
@@ -1101,6 +1135,8 @@ const GS_I18N = {
     clean: 'Ažurno',
     dirty: 'Spremembe',
     ahead: 'Čaka na push',
+    behind: 'Zaostaja',
+    diverged: 'Razhaja se',
     error: 'Napaka',
     unavailable: 'Ni na voljo',
     working: 'V teku…',
@@ -1165,6 +1201,8 @@ const GS_I18N = {
     clean: 'Aktuāls',
     dirty: 'Izmaiņas',
     ahead: 'Gaida push',
+    behind: 'Atpaliek',
+    diverged: 'Atšķiras',
     error: 'Kļūda',
     unavailable: 'Nav pieejams',
     working: 'Notiek…',
@@ -1229,6 +1267,8 @@ const GS_I18N = {
     clean: 'Ενήμερο',
     dirty: 'Αλλαγές',
     ahead: 'Εκκρεμεί push',
+    behind: 'Πίσω',
+    diverged: 'Απόκλιση',
     error: 'Σφάλμα',
     unavailable: 'Μη διαθέσιμο',
     working: 'Εκτέλεση…',
@@ -1293,6 +1333,8 @@ const GS_I18N = {
     clean: 'Ажурирано',
     dirty: 'Измене',
     ahead: 'Push на чекању',
+    behind: 'Заостаје',
+    diverged: 'Разилази се',
     error: 'Грешка',
     unavailable: 'Недоступно',
     working: 'У току…',
@@ -1357,6 +1399,8 @@ const GS_I18N = {
     clean: 'Ažurirano',
     dirty: 'Izmene',
     ahead: 'Push na čekanju',
+    behind: 'Zaostaje',
+    diverged: 'Razilazi se',
     error: 'Greška',
     unavailable: 'Nedostupno',
     working: 'U toku…',
@@ -1447,7 +1491,9 @@ const gsEsc = (s) =>
 const GS_DEFAULTS = { show_files: true, show_export: true };
 const GS_MINI_DEFAULTS = { ...GS_DEFAULTS, zoom: true };
 const GS_FILES_SHOWN = 30;
-const GS_STATUSES = ['clean', 'dirty', 'ahead', 'error'];
+// behind: the remote has commits that are not here (the next commit pulls them first);
+// diverged: both sides have commits, nothing is pushed until it is resolved by hand (see Settings → Repairs).
+const GS_STATUSES = ['clean', 'dirty', 'ahead', 'error', 'behind', 'diverged'];
 
 // Minutes elapsed since `iso` (0 for a date in the future or unreadable).
 const gsMinutes = (iso, now = Date.now()) => {
@@ -1960,7 +2006,8 @@ class GitSyncCard extends HTMLElement {
       ha-card.st-clean { --s: var(--gs-ok); }
       ha-card.st-dirty { --s: var(--gs-warn); }
       ha-card.st-ahead { --s: var(--gs-info); }
-      ha-card.st-error { --s: var(--gs-alert); }
+      ha-card.st-error, ha-card.st-diverged { --s: var(--gs-alert); }
+      ha-card.st-behind { --s: var(--gs-info); }
       .empty { padding: 8px 0; color: var(--secondary-text-color); }
 
       /* Same header as the other cards: the title keeps a few letters, the pill shrinks, nothing leaves the card. */

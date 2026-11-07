@@ -62,6 +62,9 @@
           "commit_language": "Език на commit съобщенията",
           "commit_interval": "Интервал на автоматичния commit",
           "status_interval": "Интервал на опресняване на състоянието",
+          "fetch_interval": "Интервал на проверка на remote",
+          "pull_before_push": "Pull преди push",
+          "allow_sensitive": "Разрешаване на следени чувствителни файлове",
           "notify_service": "Действие за известие",
           "notify_image": "URL на изображение за известие",
           "export_enabled": "Ежедневен експорт на таблата",
@@ -73,6 +76,9 @@
         "data_description": {
           "ai_task_entity": "Генерира съобщение във формат Conventional Commits от diff-а. Без него се използва общо съобщение.",
           "commit_interval": "Commit и push на всеки N минути, когато има промени. 0 го изключва.",
+          "fetch_interval": "Fetch от remote на всеки N минути, за да се виждат commit-ите, изпратени от другаде (изоставане, разклоняване). 0 го изключва; преди всеки push все пак се прави fetch.",
+          "pull_before_push": "Когато remote има нови commit-и, преди push се прави rebase върху тях (git pull --rebase --autostash). При конфликт rebase се прекратява, нищо не се изпраща и поправка обяснява какво да се направи.",
+          "allow_sensitive": "Commit на промените в чувствителни файлове, които Git вече следи (secrets.yaml, .storage, ключове, база данни, журнали). Новите чувствителни файлове винаги се отказват.",
           "notify_service": "Например notify.mobile_app_phone. Оставете празно, за да изключите.",
           "notify_image": "Абсолютен HTTPS URL (изисква се от iOS).",
           "export_format": "JSON копира файловете от .storage без промяна; YAML запазва само конфигурацията на таблото, по-лесна за четене в diff-ове."
@@ -126,7 +132,9 @@
           "clean": "Актуално",
           "dirty": "Чакащи промени",
           "ahead": "Чакащ push",
-          "error": "Грешка"
+          "error": "Грешка",
+          "behind": "Изостава от remote",
+          "diverged": "Разклонено"
         },
         "state_attributes": {
           "branch": {
@@ -221,6 +229,42 @@
     },
     "ai_task_failed": {
       "message": "AI задачата не върна commit съобщение."
+    },
+    "diverged": {
+      "message": "Локалният клон и {remote} са се разклонили ({ahead} локални commit-а, {behind} отдалечени commit-а): нищо не е направено commit или push. Вижте Настройки → Поправки."
+    },
+    "behind_remote": {
+      "message": "{remote} има {behind} нови commit-а, а Pull преди push е изключено: нищо не е направено commit или push. Вижте Настройки → Поправки."
+    },
+    "rebase_conflict": {
+      "message": "Commit-ът е в конфликт с новите commit-и на {upstream}: rebase е прекратен и нищо не е изпратено. Вижте Настройки → Поправки."
+    },
+    "sensitive_files": {
+      "message": "Отказано: промените включват чувствителни файлове ({files}), които нито влизат в commit, нито се изпращат на AI task. Добавете ги в .gitignore или разрешете следените в опциите на Git Sync."
+    }
+  },
+  "issues": {
+    "diverged": {
+      "title": "Git Sync не може да направи push на {repo}",
+      "description": "Клонът има {ahead} локални commit-а, които ги няма в {upstream}, а {upstream} има {behind} commit-а, които ги няма тук. Git Sync не обединява сам разклонени истории, затова нищо не се изпраща.\n\nЗа да го решите, отворете терминал в {repo} и изпълнете:\n\n```\ngit pull --rebase\n```\n\nОтстранете евентуалните конфликти (редактирайте файловете, `git add`, после `git rebase --continue`), след което натиснете отново **Commit и push**. Тази поправка изчезва при следващия успешен push."
+    },
+    "behind_remote": {
+      "title": "Git Sync не може да направи push на {repo}",
+      "description": "{upstream} има {behind} commit-а, които ги няма тук, а **Pull преди push** е изключено в опциите на Git Sync, затова нищо не се изпраща. Включете го или изпълнете `git pull --rebase` в терминал в {repo}. Тази поправка изчезва при следващия успешен push."
+    },
+    "gitignore_missing": {
+      "title": ".gitignore на {repo} не изключва тайните",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Добавяне на липсващите редове в .gitignore",
+            "description": "Без тези редове Git Sync би направил commit и push на паролите, токените и хранилището за удостоверяване на Home Assistant:\n\n{lines}\n\nИзпратете, за да ги добавите в {repo}/.gitignore. Файл, който вече се следи, остава следен: премахнете го от хранилището с `git rm -r --cached secrets.yaml .storage` (файловете остават на диска)."
+          }
+        },
+        "abort": {
+          "not_loaded": "Хранилището на Git Sync не е заредено."
+        }
+      }
     }
   },
   "services": {

@@ -62,6 +62,9 @@
           "commit_language": "Commitüzenet nyelve",
           "commit_interval": "Automatikus commit időköze",
           "status_interval": "Állapotfrissítés időköze",
+          "fetch_interval": "A remote ellenőrzési időköze",
+          "pull_before_push": "Pull a push előtt",
+          "allow_sensitive": "Követett érzékeny fájlok engedélyezése",
           "notify_service": "Értesítési művelet",
           "notify_image": "Értesítési kép URL-je",
           "export_enabled": "Napi irányítópult-exportálás",
@@ -73,6 +76,9 @@
         "data_description": {
           "ai_task_entity": "Conventional Commits üzenetet generál a diffből. Nélküle általános üzenet készül.",
           "commit_interval": "Commit és push N percenként, ha vannak módosítások. 0 letiltja.",
+          "fetch_interval": "N percenként fetch a remote-ról, hogy látszódjanak a máshonnan pusholt commitok (lemaradás, elágazás). 0 kikapcsolja; minden push előtt így is fut egy fetch.",
+          "pull_before_push": "Ha a remote-on új commitok vannak, push előtt rebase történik rájuk (git pull --rebase --autostash). Ütközéskor a rebase megszakad, semmi sem kerül push-ra, és egy javítás elmagyarázza a teendőket.",
+          "allow_sensitive": "A Git által már követett érzékeny fájlok (secrets.yaml, .storage, kulcsok, adatbázis, naplók) módosításainak commitja. Az új érzékeny fájlokat mindig elutasítja.",
           "notify_service": "Például notify.mobile_app_telefon. Hagyja üresen a letiltáshoz.",
           "notify_image": "Abszolút HTTPS URL (az iOS megköveteli).",
           "export_format": "A JSON változatlanul másolja a .storage fájlokat; a YAML csak az irányítópult konfigurációját tartja meg, ami a diffekben könnyebben olvasható."
@@ -126,7 +132,9 @@
           "clean": "Naprakész",
           "dirty": "Függőben lévő módosítások",
           "ahead": "Push függőben",
-          "error": "Hiba"
+          "error": "Hiba",
+          "behind": "Lemaradás a remote-hoz képest",
+          "diverged": "Elágazott"
         },
         "state_attributes": {
           "branch": {
@@ -221,6 +229,42 @@
     },
     "ai_task_failed": {
       "message": "Az MI-feladat nem adott vissza commitüzenetet."
+    },
+    "diverged": {
+      "message": "A helyi ág és a(z) {remote} elágazott ({ahead} helyi commit, {behind} távoli commit): semmi sem lett commitolva vagy pusholva. Lásd: Beállítások → Javítások."
+    },
+    "behind_remote": {
+      "message": "A(z) {remote} {behind} új committal rendelkezik, és a Pull a push előtt ki van kapcsolva: semmi sem lett commitolva vagy pusholva. Lásd: Beállítások → Javítások."
+    },
+    "rebase_conflict": {
+      "message": "A commit ütközik a(z) {upstream} új commitjaival: a rebase megszakadt, és semmi sem lett pusholva. Lásd: Beállítások → Javítások."
+    },
+    "sensitive_files": {
+      "message": "Elutasítva: a módosítások érzékeny fájlokat tartalmaznak ({files}), amelyek nem kerülnek commitba, és az AI task sem kapja meg őket. Vedd fel őket a .gitignore-ba, vagy engedélyezd a követetteket a Git Sync beállításaiban."
+    }
+  },
+  "issues": {
+    "diverged": {
+      "title": "A Git Sync nem tudja pusholni ezt: {repo}",
+      "description": "Az ágon {ahead} helyi commit van, amely nincs a(z) {upstream} ágon, a(z) {upstream} ágon pedig {behind} commit van, amely itt hiányzik. A Git Sync magától nem egyesít elágazott előzményeket, ezért semmi sem kerül push-ra.\n\nA megoldáshoz nyiss egy terminált itt: {repo}, és futtasd:\n\n```\ngit pull --rebase\n```\n\nOldd fel az esetleges ütközéseket (szerkeszd a fájlokat, `git add`, majd `git rebase --continue`), aztán nyomd meg újra a **Commit és push** gombot. Ez a javítás a következő sikeres push után eltűnik."
+    },
+    "behind_remote": {
+      "title": "A Git Sync nem tudja pusholni ezt: {repo}",
+      "description": "A(z) {upstream} ágon {behind} commit van, amely itt hiányzik, és a **Pull a push előtt** ki van kapcsolva a Git Sync beállításaiban, ezért semmi sem kerül push-ra. Kapcsold be, vagy futtasd a `git pull --rebase` parancsot egy terminálban itt: {repo}. Ez a javítás a következő sikeres push után eltűnik."
+    },
+    "gitignore_missing": {
+      "title": "A(z) {repo} .gitignore fájlja nem zárja ki a titkokat",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "A hiányzó sorok hozzáadása a .gitignore-hoz",
+            "description": "Ezek nélkül a sorok nélkül a Git Sync commitolná és pusholná a Home Assistant jelszavait, tokenjeit és hitelesítési tárolóját:\n\n{lines}\n\nKüldd el, hogy hozzáfűzze őket ehhez: {repo}/.gitignore. A már követett fájl követett marad: vedd ki a tárolóból a `git rm -r --cached secrets.yaml .storage` paranccsal (a fájlok a lemezen maradnak)."
+          }
+        },
+        "abort": {
+          "not_loaded": "A Git Sync tároló nincs betöltve."
+        }
+      }
     }
   },
   "services": {

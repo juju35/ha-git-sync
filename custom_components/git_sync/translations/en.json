@@ -62,6 +62,9 @@
           "commit_language": "Commit message language",
           "commit_interval": "Automatic commit interval",
           "status_interval": "Status refresh interval",
+          "fetch_interval": "Remote check interval",
+          "pull_before_push": "Pull before push",
+          "allow_sensitive": "Allow tracked sensitive files",
           "notify_service": "Notification action",
           "notify_image": "Notification image URL",
           "export_enabled": "Daily dashboard export",
@@ -73,6 +76,9 @@
         "data_description": {
           "ai_task_entity": "Generates a Conventional Commits message from the diff. Without it, a generic message is used.",
           "commit_interval": "Commit and push every N minutes when there are changes. 0 disables it.",
+          "fetch_interval": "Fetch the remote every N minutes to see the commits pushed from elsewhere (behind, diverged). 0 disables it; a fetch still runs before each push.",
+          "pull_before_push": "When the remote has new commits, rebase on them (git pull --rebase --autostash) before pushing. On a conflict the rebase is aborted, nothing is pushed and a repair explains what to do.",
+          "allow_sensitive": "Commit the changes of sensitive files already tracked by Git (secrets.yaml, .storage, keys, database, logs). New sensitive files are always refused.",
           "notify_service": "For example notify.mobile_app_phone. Leave empty to disable.",
           "notify_image": "Absolute HTTPS URL (required by iOS).",
           "export_format": "JSON copies the .storage files as is; YAML keeps only the dashboard configuration, easier to read in diffs."
@@ -126,7 +132,9 @@
           "clean": "Up to date",
           "dirty": "Changes pending",
           "ahead": "Push pending",
-          "error": "Error"
+          "error": "Error",
+          "behind": "Behind remote",
+          "diverged": "Diverged"
         },
         "state_attributes": {
           "branch": {
@@ -221,6 +229,42 @@
     },
     "ai_task_failed": {
       "message": "The AI task returned no commit message."
+    },
+    "diverged": {
+      "message": "The local branch and {remote} have diverged ({ahead} local commits, {behind} remote commits): nothing was committed or pushed. See Settings → Repairs."
+    },
+    "behind_remote": {
+      "message": "{remote} has {behind} new commits and Pull before push is off: nothing was committed or pushed. See Settings → Repairs."
+    },
+    "rebase_conflict": {
+      "message": "The commit conflicts with the new commits of {upstream}: the rebase was aborted and nothing was pushed. See Settings → Repairs."
+    },
+    "sensitive_files": {
+      "message": "Refused: the changes include sensitive files ({files}), which are neither committed nor sent to the AI task. Add them to .gitignore, or allow the tracked ones in the Git Sync options."
+    }
+  },
+  "issues": {
+    "diverged": {
+      "title": "Git Sync cannot push {repo}",
+      "description": "The branch has {ahead} local commits that are not on {upstream}, and {upstream} has {behind} commits that are not here. Git Sync does not merge diverged histories by itself, so nothing is pushed.\n\nTo resolve it, open a terminal in {repo} and run:\n\n```\ngit pull --rebase\n```\n\nFix any conflict (edit the files, `git add` them, then `git rebase --continue`), then press **Commit and push** again. This repair goes away with the next successful push."
+    },
+    "behind_remote": {
+      "title": "Git Sync cannot push {repo}",
+      "description": "{upstream} has {behind} commits that are not here and **Pull before push** is off in the Git Sync options, so nothing is pushed. Turn it on, or run `git pull --rebase` in a terminal in {repo}. This repair goes away with the next successful push."
+    },
+    "gitignore_missing": {
+      "title": "The .gitignore of {repo} does not exclude secrets",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Add the missing lines to .gitignore",
+            "description": "Without these lines, Git Sync would commit and push the passwords, the tokens and the authentication store of Home Assistant:\n\n{lines}\n\nSubmit to append them to {repo}/.gitignore. A file already tracked stays tracked: remove it from the repository with `git rm -r --cached secrets.yaml .storage` (the files stay on disk)."
+          }
+        },
+        "abort": {
+          "not_loaded": "The Git Sync repository is not loaded."
+        }
+      }
     }
   },
   "services": {
