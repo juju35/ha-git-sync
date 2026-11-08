@@ -109,11 +109,22 @@ const REGISTRY = {
   'sensor.other': { platform: 'demo', device_id: 'd2' },
 };
 
-function makeHass({ status = 'clean', files = [], error = null, language = 'en', response, aiTask = null } = {}) {
+function makeHass({
+  status = 'clean',
+  files = [],
+  error = null,
+  language = 'en',
+  response,
+  aiTask = null,
+  admin = true,
+  ahead = ['ahead', 'diverged'].includes(status) ? 1 : 0,
+  behind = ['behind', 'diverged'].includes(status) ? 1 : 0,
+} = {}) {
   const calls = [];
   return {
     calls,
     language,
+    user: { is_admin: admin },
     entities: REGISTRY,
     devices: { d1: { config_entries: ['entry1'] } },
     states: {
@@ -124,6 +135,8 @@ function makeHass({ status = 'clean', files = [], error = null, language = 'en',
           remote_url: 'git@github.com:me/homeassistant-config.git',
           changed_count: files.length,
           changed_files: files,
+          ahead,
+          behind,
           last_error: error,
           ai_task: aiTask,
         },
@@ -886,7 +899,13 @@ test('card: the View changes button opens the viewer on the entry, from the acti
 
 test('behind: a Pull button (full and mini card) calls the pull action and says how many commits came in', async () => {
   assert.doesNotMatch(html(render({}, makeHass({ status: 'clean' }))), /id="pull"/);
-  assert.doesNotMatch(html(render({}, makeHass({ status: 'diverged' }))), /id="pull"/);
+  // Changes on top of local commits: the action refuses it, so no button.
+  assert.doesNotMatch(html(render({}, makeHass({ status: 'diverged', files: ['a.yaml'] }))), /id="pull"/);
+  // Behind with changes (fast-forward), behind after a failure, clean diverged (rebase): offered.
+  assert.match(html(render({}, makeHass({ status: 'dirty', files: ['a.yaml'], behind: 2 }))), /id="pull"/);
+  assert.match(html(render({}, makeHass({ status: 'error', behind: 1 }))), /id="pull"/);
+  assert.match(html(render({}, makeHass({ status: 'diverged' }))), /id="pull"/);
+  assert.match(html(mini({}, makeHass({ status: 'diverged' }))), /id="pull"/);
   const hass = makeHass({ status: 'behind', response: { results: [{ pulled: 2 }] } });
   const card = render({}, hass);
   assert.match(html(card), /id="pull"[^>]*>\s*<ha-icon icon="mdi:source-pull"><\/ha-icon>Pull/);
@@ -900,4 +919,21 @@ test('behind: a Pull button (full and mini card) calls the pull action and says 
   small.shadowRoot.querySelector('#pull').click();
   await new Promise((r) => setTimeout(r, 0));
   assert.deepEqual(small.toasts, ['À jour']);
+});
+
+test('non-admin: the status only, no commit, pull, export, diff or AI message', () => {
+  const hass = makeHass({ status: 'dirty', files: ['a.yaml'], behind: 1, aiTask: 'ai_task.openai', admin: false });
+  for (const card of [render({}, hass), mini({}, hass)]) {
+    const out = html(card);
+    assert.match(out, /st-dirty/);
+    for (const id of ['commit', 'pull', 'export', 'diff', 'generate', 'confirm']) {
+      assert.doesNotMatch(out, new RegExp(`id="${id}"`), id);
+    }
+  }
+  const admin = render({}, makeHass({ status: 'dirty', files: ['a.yaml'], behind: 1, aiTask: 'ai_task.openai' }));
+  for (const id of ['commit', 'pull', 'export', 'diff']) assert.match(html(admin), new RegExp(`id="${id}"`), id);
+  // No user in hass (not known yet): treated as non-admin.
+  const unknown = makeHass({ status: 'dirty', files: ['a.yaml'] });
+  delete unknown.user;
+  assert.doesNotMatch(html(render({}, unknown)), /id="commit"/);
 });

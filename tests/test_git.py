@@ -461,6 +461,37 @@ def test_redact_secrets() -> None:
 
 
 @pytest.mark.parametrize(
+    ("line", "expected"),
+    [
+        ("+  - password: hunter2", "+  - password: <redacted>"),
+        ("+    -   token: abc", "+    -   token: <redacted>"),
+        ("+  authorization: Basic dXNlcjpwdw==", "+  authorization: <redacted>"),
+        ('+    "Authorization": "Bearer eyJhbGciOi",', '+    "Authorization": <redacted>'),
+        ("+  bearer: eyJhbGciOi", "+  bearer: <redacted>"),
+        ("+  api-key: k3y", "+  api-key: <redacted>"),
+        ("+  apikey: k3y", "+  apikey: <redacted>"),
+        ("+  x-api-key: k3y", "+  x-api-key: <redacted>"),
+        ("+  ApiKey = k3y", "+  ApiKey = <redacted>"),
+        ("+  private_key: k3y", "+  private_key: <redacted>"),
+        ("+  passwd: hunter2", "+  passwd: <redacted>"),
+        ("+  pin: 1234", "+  pin: <redacted>"),
+        ("+  - door_pin: 1234", "+  - door_pin: <redacted>"),
+        ("+  headers: {Authorization: Bearer eyJhbGciOi}", "+  headers: {Authorization: Bearer <redacted>}"),
+        ("+  url: https://x/?a=1 bearer eyJhbGciOi", "+  url: https://x/?a=1 bearer <redacted>"),
+        # Not secrets: kept as they are.
+        ("+  pinned: true", "+  pinned: true"),
+        ("+  - name: Kitchen", "+  - name: Kitchen"),
+        ("+  - pin: !secret door", "+  - pin: !secret door"),
+        ("--- a/configuration.yaml", "--- a/configuration.yaml"),
+    ],
+)
+def test_redact_secrets_forms(line: str, expected: str) -> None:
+    from custom_components.git_sync.git import redact_secrets
+
+    assert redact_secrets(line) == expected
+
+
+@pytest.mark.parametrize(
     ("path", "sensitive"),
     [
         ("secrets.yaml", True),

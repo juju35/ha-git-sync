@@ -1028,6 +1028,16 @@ async def test_pull_action(hass: HomeAssistant, repo: Path, tmp_path: Path, hass
     response = await hass.services.async_call(DOMAIN, "pull", {}, blocking=True, return_response=True)
     assert response["results"][0]["pulled"] == 0
 
+    # Behind with a change in the work tree (nothing ahead): fast-forward, the change is kept.
+    push_from(other, "customize.yaml", "{}\n")
+    (repo / "configuration.yaml").write_text("default_config:\nlogger:\n", encoding="utf-8")
+    await coordinator.async_refresh()
+    assert _status(hass).state == "dirty"
+    assert await coordinator.async_pull() == 1
+    assert git(repo, "rev-parse", "HEAD") == git(tmp_path / "remote.git", "rev-parse", "main")
+    assert (repo / "configuration.yaml").read_text(encoding="utf-8") == "default_config:\nlogger:\n"
+    git(repo, "checkout", "--", "configuration.yaml")
+
     # Diverged with a change in the work tree: refused, nothing moved.
     (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
     git(repo, "add", "-A")
@@ -1046,7 +1056,7 @@ async def test_pull_action(hass: HomeAssistant, repo: Path, tmp_path: Path, hass
     assert git(repo, "log", "--format=%s", "-3").split("\n")[:3] == [
         "feat: local commit",
         "chore: groups.yaml from elsewhere",
-        "chore: automations.yaml from elsewhere",
+        "chore: customize.yaml from elsewhere",
     ]
     assert _status(hass).state == "ahead"
 
@@ -1065,3 +1075,33 @@ async def test_notification_image_with_a_query_string(hass: HomeAssistant, repo:
     await coordinator.async_commit_push("feat: add scripts")
     await hass.async_block_till_done()
     assert calls[0].data["data"]["attachment"] == {"url": "https://x/git.png?v=2", "content-type": "png"}
+
+
+async def test_failed_auto_commit_warns_once_per_message_and_retries(
+    hass: HomeAssistant, repo: Path, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A push failure is retried at every interval, logged once per distinct message, without a traceback."""
+    coordinator = await _setup(hass, _entry(repo))
+    remote = git(repo, "remote", "get-url", "origin").strip()
+    git(repo, "remote", "set-url", "origin", str(tmp_path / "missing.git"))
+    (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    for _ in range(3):
+        await coordinator.async_refresh()
+        await coordinator.async_auto_commit()
+    failures = [r for r in caplog.records if "Automatic commit failed" in r.getMessage()]
+    assert len(failures) == 1
+    assert failures[0].levelname == "WARNING"
+    assert failures[0].exc_info is None
+    assert _status(hass).state == "error"
+
+    # Reachable again: the pending commit is pushed; a new failure afterwards is logged again.
+    git(repo, "remote", "set-url", "origin", remote)
+    await coordinator.async_refresh()
+    await coordinator.async_auto_commit()
+    assert git(tmp_path / "remote.git", "rev-parse", "main") == git(repo, "rev-parse", "HEAD")
+    git(repo, "remote", "set-url", "origin", str(tmp_path / "missing.git"))
+    (repo / "groups.yaml").write_text("{}\n", encoding="utf-8")
+    await coordinator.async_refresh()
+    await coordinator.async_auto_commit()
+    failures = [r for r in caplog.records if "Automatic commit failed" in r.getMessage()]
+    assert len(failures) == 2

@@ -153,7 +153,7 @@ response_variable: result  # {"results": [{"config_entry_id": "...", "committed"
 
 ### Action `git_sync.pull`
 
-Fetches the remote and brings in its new commits: a fast-forward (`git pull --ff-only`, which Git refuses if it would overwrite a local change), or, when local commits are waiting to be pushed, those commits rebased on the remote ones (`git pull --rebase --autostash`, only on a clean work tree; a conflict aborts the rebase). Nothing is committed or pushed. This is what the **Pull** button of the card calls in the `behind` state. Returns how many remote commits came in.
+Fetches the remote and brings in its new commits: a fast-forward (`git pull --ff-only`, which Git refuses if it would overwrite a local change), or, when local commits are waiting to be pushed, those commits rebased on the remote ones (`git pull --rebase --autostash`, only on a clean work tree; a conflict aborts the rebase). Nothing is committed or pushed. This is what the **Pull** button of the card calls. Returns how many remote commits came in.
 
 ```yaml
 action: git_sync.pull
@@ -232,7 +232,8 @@ type: custom:git-sync-card
 - **Changed files**: collapsible list, folded again when you click elsewhere
 - **Last push** and **Dashboard export**, with the number of exported files
 - **Commit & push** opens a confirmation at the top of the card with a message box, as in VS Code: the placeholder names the branch, and the ✨ button inside it (shown when an AI task is set) writes the message for the current changes without committing, so you can read and edit it before **Commit & push**. Left empty, the AI task writes it when committing. **Enter** commits, **Escape** closes. **Export dashboards** runs the export right away. The result is shown in a toast
-- **Pull** (shown in the `behind` state) brings in the remote commits right away, with `git_sync.pull`
+- **Pull** (shown when the remote has commits that are not here, unless local changes sit on top of unpushed commits: commit first) brings in the remote commits right away, with `git_sync.pull`
+- The actions (**Commit & push**, **Pull**, **Export dashboards**, **View changes**, ✨) are shown to administrators only, as the actions themselves are reserved to them; other users see the status
 - **View changes** (the compare button beside the actions, also linked from the commit confirmation, shown when something changed) opens the **diff viewer** below
 
 ### Diff viewer
@@ -256,7 +257,7 @@ Every option is in the visual editor:
 
 ### Mini card
 
-A compact version for a 6-column slot: status, branch, last commit on one line, number of changed files, last push and **Commit & push** as an icon button (plus **Pull** in the `behind` state). The zoom button at the top right switches it to the full card (same options) and back; a click anywhere else brings back the compact view.
+A compact version for a 6-column slot: status, branch, last commit on one line, number of changed files, last push and **Commit & push** as an icon button (plus **Pull** when the remote has new commits; administrators only). The zoom button at the top right switches it to the full card (same options) and back; a click anywhere else brings back the compact view.
 
 ```yaml
 type: custom:git-sync-mini-card
@@ -297,11 +298,11 @@ Git Sync runs the `git` command line in the configuration folder, never promptin
 4. if the remote had new commits, runs `git pull --rebase --autostash`; on a conflict the rebase is aborted (`git rebase --abort`), the commit stays local and nothing is pushed;
 5. pushes.
 
-Commits and exports never run at the same time. An automatic commit refused for a sensitive file, or blocked by a diverged or behind branch or a rebase conflict, is logged once as a warning and not tried again until the changed files or the commits ahead or behind change. The last push and export are kept across restarts.
+Commits and exports never run at the same time. An automatic commit refused for a sensitive file, or blocked by a diverged or behind branch or a rebase conflict, is logged once as a warning and not tried again until the changed files or the commits ahead or behind change. Any other failure (remote unreachable, authentication refused) is tried again at every interval and logged as a warning once per distinct message, without a traceback. The last push and export are kept across restarts.
 
 ### Secret guard
 
-A commit, and the ✨ message generation, are refused when the changes include `secrets.yaml`, a file under `.storage/` or `.ssh/`, `*.pem`, `*.key`, `id_rsa*`, `known_devices.yaml`, `home-assistant_v2.db*` or `*.log`. A sensitive file that Git already tracks can be allowed with the **Allow tracked sensitive files** option; a new one never is, and deleting one from the repository is always allowed. In the diff sent to the AI task, the value of every `password`, `token`, `api_key`, `secret` or `client_secret` key (`key: value`, `"key": "value"`, `key = value`) is replaced with `<redacted>`; `!secret` references are kept.
+A commit, and the ✨ message generation, are refused when the changes include `secrets.yaml`, a file under `.storage/` or `.ssh/`, `*.pem`, `*.key`, `id_rsa*`, `known_devices.yaml`, `home-assistant_v2.db*` or `*.log`. A sensitive file that Git already tracks can be allowed with the **Allow tracked sensitive files** option; a new one never is, and deleting one from the repository is always allowed. In the diff sent to the AI task, the value of every key naming a secret (`password`, `passwd`, `token`, `api_key`, `api-key`, `apikey`, `x-api-key`, `secret`, `client_secret`, `private_key`, `authorization`, `bearer`, and `pin` as a whole word such as `door_pin`) is replaced with `<redacted>`, in `key: value`, `- key: value` (YAML list item), `"key": "value"` and `key = value` lines, and so is any `Bearer <token>`; `!secret` references are kept.
 
 ### Repairs
 

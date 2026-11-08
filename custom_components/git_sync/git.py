@@ -53,12 +53,17 @@ def redact_url(url: str | None) -> str | None:
     return urlunsplit(parts._replace(netloc=parts.netloc.rpartition("@")[2]))
 
 
-# A "key: value" (YAML) or "key": "value" / key = value line whose key names a secret, in a patch line (+, - or space).
+# A "key: value" (YAML, also as a "- key: value" list item) or "key": "value" / key = value line whose key names a
+# secret, in a patch line (+, - or space). "pin" only as a whole word of the key ("pin", "door_pin", not "pinned").
 _SECRET_LINE = re.compile(
-    r"""^(?P<head>[-+ ]\s*["']?[\w.-]*(?:password|token|api_key|client_secret|secret)[\w.-]*["']?\s*[:=]\s*)"""
+    r"""^(?P<head>[-+ ]\s*(?:-\s+)?["']?(?:[\w.-]*"""
+    r"(?:password|passwd|token|api[-_]?key|apikey|client_secret|secret|private_key|authorization|bearer)"
+    r"""[\w.-]*|(?:[\w.-]*[_.-])?pin(?:[_.-][\w.-]*)?)["']?\s*[:=]\s*)"""
     r"(?P<value>.+)$",
     re.IGNORECASE,
 )
+# An HTTP bearer credential anywhere in a line ("Authorization: Bearer eyJ…", headers in a JSON string).
+_BEARER = re.compile(r"(\bBearer\s+)[^\s\"',}]+", re.IGNORECASE)
 
 
 def redact_secrets(patch: str) -> str:
@@ -73,7 +78,7 @@ def redact_secrets(patch: str) -> str:
         if match and value and not value.startswith("!secret") and value not in ("{", "[", "|", ">"):
             lines.append(f"{match.group('head')}<redacted>")
         else:
-            lines.append(line)
+            lines.append(_BEARER.sub(r"\1<redacted>", line))
     return "\n".join(lines)
 
 

@@ -5,7 +5,7 @@
  * Served and added to the dashboard resources by the Git Sync integration.
  * https://github.com/juju35/ha-git-sync
  */
-var GIT_SYNC_CARD_VERSION = '1.5.0';
+var GIT_SYNC_CARD_VERSION = '1.5.1';
 
 const GS_I18N = {
   en: {
@@ -1561,6 +1561,15 @@ const GS_FILES_SHOWN = 30;
 // diverged: both sides have commits, nothing is pushed until it is resolved by hand (see Settings → Repairs).
 const GS_STATUSES = ['clean', 'dirty', 'ahead', 'error', 'behind', 'diverged'];
 
+// Pull is offered whenever the remote has commits that are not here (status behind, but also dirty or error),
+// except with local changes on top of local commits: the action refuses that case (commit first, then pull).
+function gsPullable(a) {
+  const behind = Number(a?.behind) || 0;
+  const ahead = Number(a?.ahead) || 0;
+  const dirty = (Number(a?.changed_count) || 0) > 0;
+  return behind > 0 && !(dirty && ahead > 0);
+}
+
 // Minutes elapsed since `iso` (0 for a date in the future or unreadable).
 const gsMinutes = (iso, now = Date.now()) => {
   const t = new Date(iso).getTime();
@@ -1691,6 +1700,7 @@ class GitSyncCard extends HTMLElement {
       hass.entities === old.entities &&
       Object.values(ids).every((id) => !id || hass.states[id] === old.states[id]) &&
       gsLang(hass, this._config) === gsLang(old, this._config) &&
+      !!hass.user?.is_admin === !!old.user?.is_admin &&
       Math.floor(Date.now() / 60000) === this._sigMinute
     ) {
       return;
@@ -1919,6 +1929,9 @@ class GitSyncCard extends HTMLElement {
     const exportObj = hass.states[ids.last_export];
     const busy = this._busy;
     const compact = this._compact();
+    // The actions (commit, pull, export, diff, AI message) are for administrators only: others see the status.
+    const admin = hass.user?.is_admin === true;
+    const pullable = gsPullable(a);
     // Compact view: the branch alone, the remote repository is in the full card.
     const subtitle = [a.branch, compact ? '' : gsRepo(a.remote_url)].filter(Boolean).map(gsEsc).join(' → ');
 
@@ -1972,8 +1985,9 @@ class GitSyncCard extends HTMLElement {
       : '';
 
     // Compact view: the confirmation takes the place of the content (no room for a popup over it).
-    const popup = this._confirm
-      ? `${compact ? '' : '<div class="overlay"></div>'}
+    const popup =
+      this._confirm && admin
+        ? `${compact ? '' : '<div class="overlay"></div>'}
         <div class="popup${compact ? ' inline' : ''}" role="dialog" aria-modal="true">
           <div class="p-title">${gsEsc(this._t('confirm_title'))}</div>
           <div class="p-text">${gsEsc(count > 0 ? this._n('confirm_text', count) : this._t('confirm_push'))}</div>
@@ -1997,6 +2011,7 @@ class GitSyncCard extends HTMLElement {
       : '';
 
     const canCommit = ['dirty', 'ahead', 'error'].includes(status) && !busy;
+    const pullAllowed = admin && pullable;
     const button = (id, service, icon, label, enabled) =>
       `<button class="action${busy === service ? ' busy' : ''}" id="${id}" ${enabled ? '' : 'disabled'}>
         <ha-icon icon="${busy === service ? 'mdi:loading' : icon}"></ha-icon>${gsEsc(label)}</button>`;
@@ -2011,7 +2026,7 @@ class GitSyncCard extends HTMLElement {
     const pullIcon = `<button class="icon-btn${busy === 'pull' ? ' busy' : ''}" id="pull" title="${gsEsc(pullLabel)}" aria-label="${gsEsc(pullLabel)}" ${busy ? 'disabled' : ''}>
         <ha-icon icon="${busy === 'pull' ? 'mdi:loading' : 'mdi:source-pull'}"></ha-icon></button>`;
     let body;
-    if (compact && this._confirm) body = popup;
+    if (compact && this._confirm && admin) body = popup;
     else if (compact) {
       // Compact view: the last commit on one line, the changes and the last push, Commit & push as an icon.
       const commitLine = valid(commitObj)
@@ -2030,10 +2045,14 @@ class GitSyncCard extends HTMLElement {
             <ha-icon icon="mdi:file-document-multiple-outline"></ha-icon><span class="m-txt">${gsEsc(changesText)}</span></span>
           <span class="m-chip" title="${gsEsc(this._t('last_push'))}: ${gsEsc(pushText)}">
             <ha-icon icon="mdi:cloud-check-outline"></ha-icon><span class="m-txt">${gsEsc(pushText)}</span></span>
-          ${count > 0 ? diffButton : ''}
-          ${status === 'behind' ? pullIcon : ''}
-          <button class="icon-btn${busy === 'commit_push' ? ' busy' : ''}" id="commit" title="${gsEsc(commitLabel)}" aria-label="${gsEsc(commitLabel)}" ${canCommit ? '' : 'disabled'}>
-            <ha-icon icon="${busy === 'commit_push' ? 'mdi:loading' : 'mdi:source-commit-end'}"></ha-icon></button>
+          ${admin && count > 0 ? diffButton : ''}
+          ${pullAllowed ? pullIcon : ''}
+          ${
+            admin
+              ? `<button class="icon-btn${busy === 'commit_push' ? ' busy' : ''}" id="commit" title="${gsEsc(commitLabel)}" aria-label="${gsEsc(commitLabel)}" ${canCommit ? '' : 'disabled'}>
+            <ha-icon icon="${busy === 'commit_push' ? 'mdi:loading' : 'mdi:source-commit-end'}"></ha-icon></button>`
+              : ''
+          }
         </div>`;
     } else {
       body = `${commit}
@@ -2043,12 +2062,16 @@ class GitSyncCard extends HTMLElement {
           ${exportRow}
         </div>
         ${error}
-        <div class="actions">
-          ${status === 'behind' ? button('pull', 'pull', 'mdi:source-pull', this._t('pull'), !busy) : ''}
+        ${
+          admin
+            ? `<div class="actions">
+          ${pullAllowed ? button('pull', 'pull', 'mdi:source-pull', this._t('pull'), !busy) : ''}
           ${button('commit', 'commit_push', 'mdi:source-commit-end', this._t('commit'), canCommit)}
           ${c.show_export ? button('export', 'export_dashboards', 'mdi:export', this._t('export'), !busy) : ''}
           ${count > 0 && !this._confirm ? diffButton : ''}
-        </div>
+        </div>`
+            : ''
+        }
         ${popup}`;
     }
     this.shadowRoot.innerHTML = `

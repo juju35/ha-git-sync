@@ -166,6 +166,8 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         self.gitignore_missing: list[str] | None = None
         # The changes (files, commits ahead and behind) whose automatic commit was refused or blocked.
         self._auto_blocked: tuple[tuple[str, ...], int, int] | None = None
+        # Last error of an automatic commit that is retried at every interval (push or fetch failure): logged once.
+        self._auto_error: str | None = None
 
     @staticmethod
     def _make_store(hass: HomeAssistant, entry: ConfigEntry) -> Store[dict[str, Any]]:
@@ -417,7 +419,9 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         """Commit and push on the commit interval, without retrying a blocked change set every time.
 
         A refused commit (sensitive files) or a blocked push (diverged, behind with Pull before push off, rebase
-        conflict) is logged once, then skipped until the changed files or the commits ahead/behind differ.
+        conflict) is logged once, then skipped until the changed files or the commits ahead/behind differ. Any other
+        failure (remote unreachable, authentication) is retried at every interval, with one warning per distinct
+        message and no traceback.
         """
         await self.async_request_refresh()
         if not self.dirty:
@@ -428,7 +432,10 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
             await self.async_commit_push()
         except HomeAssistantError as err:
             if not isinstance(err, ServiceValidationError) and err.translation_key not in _BLOCKED_PUSH:
-                raise
+                if str(err) != self._auto_error:
+                    self._auto_error = str(err)
+                    _LOGGER.warning("Automatic commit failed, retried at the next interval: %s", err)
+                return
             # Taken after the attempt: the commit fetched, so the commits behind are counted as the polling will.
             try:
                 self._auto_blocked = _signature(await self.repo.status())
@@ -437,6 +444,7 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
             _LOGGER.warning("Automatic commit skipped until the changes differ: %s", err)
             return
         self._auto_blocked = None
+        self._auto_error = None
 
     async def async_pull(self) -> int:
         """Bring in the remote commits and return how many there were.
