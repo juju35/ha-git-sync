@@ -321,6 +321,16 @@
           "description": "Entrée Git Sync à utiliser. Le premier dépôt si vide."
         }
       }
+    },
+    "pull": {
+      "name": "Pull",
+      "description": "Récupère le distant et intègre ses nouveaux commits : avance rapide, ou commits locaux rebasés par-dessus (arbre de travail propre uniquement). Un conflit annule le rebase.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Dépôt",
+          "description": "Entrée Git Sync à utiliser. Tous les dépôts si vide."
+        }
+      }
     }
   }
 }

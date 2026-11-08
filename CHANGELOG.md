@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.0 - 2026-11-07
+
+### What's new
+- New action `git_sync.pull` (administrators only) that brings in the remote commits, by fast-forward or by rebasing the local commits on a clean work tree, and a **Pull** button in the card and the mini card when the status is `behind`.
+
+### Security
+- The secret guard now checks the files really staged by `git add -A` as well: a sensitive file written between the check and the staging is unstaged and the commit is refused.
+
+### Fixes
+- An automatic commit refused for a sensitive file or blocked by the remote is logged once as a warning, without a traceback, and is not retried until the changed files or the commits ahead or behind change.
+- The notification image content type is taken from the URL path, so an image URL with a query string (`…/git.png?v=2`) gives `png`.
+
 ## 1.4.0 - 2026-11-07
 
 ### What's new

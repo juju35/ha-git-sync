@@ -5,7 +5,7 @@
  * Served and added to the dashboard resources by the Git Sync integration.
  * https://github.com/juju35/ha-git-sync
  */
-var GIT_SYNC_CARD_VERSION = '1.4.0';
+var GIT_SYNC_CARD_VERSION = '1.5.0';
 
 const GS_I18N = {
   en: {
@@ -45,6 +45,9 @@ const GS_I18N = {
     pushed: 'Pending commits pushed',
     exported_one: '{n} dashboard file exported',
     exported_many: '{n} dashboard files exported',
+    pull: 'Pull',
+    pulled_one: '{n} commit pulled',
+    pulled_many: '{n} commits pulled',
     failed: 'Failed: {e}',
     zoom_in: 'Show the full card',
     zoom_out: 'Back to the compact view',
@@ -111,6 +114,9 @@ const GS_I18N = {
     pushed: 'Commits en attente poussés',
     exported_one: '{n} fichier de dashboard exporté',
     exported_many: '{n} fichiers de dashboard exportés',
+    pull: 'Pull',
+    pulled_one: '{n} commit récupéré',
+    pulled_many: '{n} commits récupérés',
     failed: 'Échec : {e}',
     zoom_in: 'Afficher la carte complète',
     zoom_out: 'Revenir à la vue compacte',
@@ -177,6 +183,9 @@ const GS_I18N = {
     pushed: 'Ausstehende Commits gepusht',
     exported_one: '{n} Dashboard-Datei exportiert',
     exported_many: '{n} Dashboard-Dateien exportiert',
+    pull: 'Pull',
+    pulled_one: '{n} Commit geholt',
+    pulled_many: '{n} Commits geholt',
     failed: 'Fehlgeschlagen: {e}',
     zoom_in: 'Vollständige Karte anzeigen',
     zoom_out: 'Zurück zur kompakten Ansicht',
@@ -243,6 +252,9 @@ const GS_I18N = {
     pushed: 'Commits pendientes enviados',
     exported_one: '{n} archivo de panel exportado',
     exported_many: '{n} archivos de panel exportados',
+    pull: 'Pull',
+    pulled_one: '{n} commit traído',
+    pulled_many: '{n} commits traídos',
     failed: 'Error: {e}',
     zoom_in: 'Mostrar la tarjeta completa',
     zoom_out: 'Volver a la vista compacta',
@@ -309,6 +321,9 @@ const GS_I18N = {
     pushed: 'Commit in sospeso inviati con push',
     exported_one: '{n} file di dashboard esportato',
     exported_many: '{n} file di dashboard esportati',
+    pull: 'Pull',
+    pulled_one: '{n} commit scaricato',
+    pulled_many: '{n} commit scaricati',
     failed: 'Non riuscito: {e}',
     zoom_in: 'Mostra la scheda completa',
     zoom_out: 'Torna alla vista compatta',
@@ -375,6 +390,9 @@ const GS_I18N = {
     pushed: 'Wachtende commits gepusht',
     exported_one: '{n} dashboardbestand geëxporteerd',
     exported_many: '{n} dashboardbestanden geëxporteerd',
+    pull: 'Pull',
+    pulled_one: '{n} commit opgehaald',
+    pulled_many: '{n} commits opgehaald',
     failed: 'Mislukt: {e}',
     zoom_in: 'Volledige kaart weergeven',
     zoom_out: 'Terug naar de compacte weergave',
@@ -441,6 +459,9 @@ const GS_I18N = {
     pushed: 'Commits pendentes enviados com push',
     exported_one: '{n} ficheiro de painel exportado',
     exported_many: '{n} ficheiros de painéis exportados',
+    pull: 'Pull',
+    pulled_one: '{n} commit obtido',
+    pulled_many: '{n} commits obtidos',
     failed: 'Falhou: {e}',
     zoom_in: 'Mostrar o cartão completo',
     zoom_out: 'Voltar à vista compacta',
@@ -507,6 +528,9 @@ const GS_I18N = {
     pushed: 'Wykonano push oczekujących commitów',
     exported_one: 'Wyeksportowano {n} plik dashboardu',
     exported_many: 'Wyeksportowane pliki dashboardów: {n}',
+    pull: 'Pull',
+    pulled_one: 'Pobrano {n} commit',
+    pulled_many: 'Pobrane commity: {n}',
     failed: 'Niepowodzenie: {e}',
     zoom_in: 'Pokaż pełną kartę',
     zoom_out: 'Wróć do widoku kompaktowego',
@@ -573,6 +597,9 @@ const GS_I18N = {
     pushed: 'Commiturile în așteptare au fost trimise prin push',
     exported_one: '{n} fișier de tablou de bord exportat',
     exported_many: 'Fișiere de tablouri de bord exportate: {n}',
+    pull: 'Pull',
+    pulled_one: '{n} commit preluat',
+    pulled_many: 'Commit-uri preluate: {n}',
     failed: 'Eșuat: {e}',
     zoom_in: 'Afișează cardul complet',
     zoom_out: 'Înapoi la vizualizarea compactă',
@@ -639,6 +666,9 @@ const GS_I18N = {
     pushed: 'Ventende commits pushet',
     exported_one: '{n} dashboardfil eksporteret',
     exported_many: '{n} dashboardfiler eksporteret',
+    pull: 'Pull',
+    pulled_one: '{n} commit hentet',
+    pulled_many: '{n} commits hentet',
     failed: 'Mislykkedes: {e}',
     zoom_in: 'Vis hele kortet',
     zoom_out: 'Tilbage til kompakt visning',
@@ -705,6 +735,9 @@ const GS_I18N = {
     pushed: 'Väntande commits pushade',
     exported_one: '{n} instrumentpanelsfil exporterad',
     exported_many: '{n} instrumentpanelsfiler exporterade',
+    pull: 'Pull',
+    pulled_one: '{n} commit hämtad',
+    pulled_many: '{n} commits hämtade',
     failed: 'Misslyckades: {e}',
     zoom_in: 'Visa hela kortet',
     zoom_out: 'Tillbaka till kompakt vy',
@@ -771,6 +804,9 @@ const GS_I18N = {
     pushed: 'Чакащите commit-и са изпратени с push',
     exported_one: 'Експортиран е {n} файл на табло',
     exported_many: 'Експортирани са {n} файла на табла',
+    pull: 'Pull',
+    pulled_one: 'Изтеглен е {n} commit',
+    pulled_many: 'Изтеглени commit-и: {n}',
     failed: 'Неуспех: {e}',
     zoom_in: 'Показване на цялата карта',
     zoom_out: 'Обратно към компактния изглед',
@@ -837,6 +873,9 @@ const GS_I18N = {
     pushed: 'Ожидающие commit-ы отправлены через push',
     exported_one: 'Экспортирован {n} файл панели',
     exported_many: 'Экспортированные файлы панелей: {n}',
+    pull: 'Pull',
+    pulled_one: 'Получен {n} commit',
+    pulled_many: 'Полученные commit-ы: {n}',
     failed: 'Ошибка: {e}',
     zoom_in: 'Показать полную карточку',
     zoom_out: 'Вернуться к компактному виду',
@@ -903,6 +942,9 @@ const GS_I18N = {
     pushed: 'Commit-и, що очікували, надіслано через push',
     exported_one: 'Експортовано {n} файл панелі',
     exported_many: 'Експортовані файли панелей: {n}',
+    pull: 'Pull',
+    pulled_one: 'Отримано {n} commit',
+    pulled_many: 'Отримані commit-и: {n}',
     failed: 'Помилка: {e}',
     zoom_in: 'Показати повну картку',
     zoom_out: 'Повернутися до компактного вигляду',
@@ -969,6 +1011,9 @@ const GS_I18N = {
     pushed: 'A várakozó commitok pusholva',
     exported_one: '{n} irányítópultfájl exportálva',
     exported_many: '{n} irányítópultfájl exportálva',
+    pull: 'Pull',
+    pulled_one: '{n} commit lekérve',
+    pulled_many: '{n} commit lekérve',
     failed: 'Sikertelen: {e}',
     zoom_in: 'Teljes kártya megjelenítése',
     zoom_out: 'Vissza a kompakt nézethez',
@@ -1035,6 +1080,9 @@ const GS_I18N = {
     pushed: 'Čakajúce commity odoslané cez push',
     exported_one: 'Exportovaný {n} súbor dashboardu',
     exported_many: 'Exportované súbory dashboardov: {n}',
+    pull: 'Pull',
+    pulled_one: 'Načítaný {n} commit',
+    pulled_many: 'Načítané commity: {n}',
     failed: 'Zlyhalo: {e}',
     zoom_in: 'Zobraziť celú kartu',
     zoom_out: 'Späť na kompaktné zobrazenie',
@@ -1101,6 +1149,9 @@ const GS_I18N = {
     pushed: 'Čekající commity odeslány pomocí push',
     exported_one: 'Exportován {n} soubor dashboardu',
     exported_many: 'Exportované soubory dashboardů: {n}',
+    pull: 'Pull',
+    pulled_one: 'Načten {n} commit',
+    pulled_many: 'Načtené commity: {n}',
     failed: 'Selhalo: {e}',
     zoom_in: 'Zobrazit celou kartu',
     zoom_out: 'Zpět na kompaktní zobrazení',
@@ -1167,6 +1218,9 @@ const GS_I18N = {
     pushed: 'Commiti na čakanju so poslani s push',
     exported_one: 'Izvožena {n} datoteka nadzorne plošče',
     exported_many: 'Izvožene datoteke nadzornih plošč: {n}',
+    pull: 'Pull',
+    pulled_one: 'Pridobljen {n} commit',
+    pulled_many: 'Pridobljeni commiti: {n}',
     failed: 'Ni uspelo: {e}',
     zoom_in: 'Prikaži celotno kartico',
     zoom_out: 'Nazaj na strnjen pogled',
@@ -1233,6 +1287,9 @@ const GS_I18N = {
     pushed: 'Gaidošajiem commit veikts push',
     exported_one: 'Eksportēts {n} paneļa fails',
     exported_many: 'Eksportētie paneļu faili: {n}',
+    pull: 'Pull',
+    pulled_one: 'Ielādēts {n} commit',
+    pulled_many: 'Ielādētie commit: {n}',
     failed: 'Neizdevās: {e}',
     zoom_in: 'Rādīt pilno karti',
     zoom_out: 'Atpakaļ uz kompakto skatu',
@@ -1299,6 +1356,9 @@ const GS_I18N = {
     pushed: 'Έγινε push των commit σε αναμονή',
     exported_one: 'Εξήχθη {n} αρχείο πίνακα ελέγχου',
     exported_many: 'Εξήχθησαν {n} αρχεία πινάκων ελέγχου',
+    pull: 'Pull',
+    pulled_one: 'Λήφθηκε {n} commit',
+    pulled_many: 'Λήφθηκαν {n} commit',
     failed: 'Απέτυχε: {e}',
     zoom_in: 'Εμφάνιση πλήρους κάρτας',
     zoom_out: 'Επιστροφή στη συμπαγή προβολή',
@@ -1365,6 +1425,9 @@ const GS_I18N = {
     pushed: 'Commit-ови на чекању су push-овани',
     exported_one: '{n} датотека контролне табле је извезена',
     exported_many: 'Извезено датотека контролних табли: {n}',
+    pull: 'Pull',
+    pulled_one: 'Преузет је {n} commit',
+    pulled_many: 'Преузетих commit-ова: {n}',
     failed: 'Није успело: {e}',
     zoom_in: 'Прикажи целу картицу',
     zoom_out: 'Назад на компактни приказ',
@@ -1431,6 +1494,9 @@ const GS_I18N = {
     pushed: 'Commit-ovi na čekanju su push-ovani',
     exported_one: '{n} datoteka kontrolne table je izvezena',
     exported_many: 'Izvezeno datoteka kontrolnih tabli: {n}',
+    pull: 'Pull',
+    pulled_one: 'Preuzet je {n} commit',
+    pulled_many: 'Preuzetih commit-ova: {n}',
     failed: 'Nije uspelo: {e}',
     zoom_in: 'Prikaži celu karticu',
     zoom_out: 'Nazad na kompaktni prikaz',
@@ -1711,7 +1777,7 @@ class GitSyncCard extends HTMLElement {
       if (service === 'commit_push') {
         if (first?.committed) this._toast(this._t('committed', { m: first.message }));
         else this._toast(this._t(first?.pushed ? 'pushed' : 'nothing'));
-      }
+      } else if (service === 'pull') this._toast(first?.pulled ? this._n('pulled', first.pulled) : this._t('clean'));
       else this._toast(this._n('exported', first?.files?.length ?? 0));
     } catch (err) {
       this._toast(this._t('failed', { e: err?.message || String(err) }));
@@ -1790,6 +1856,7 @@ class GitSyncCard extends HTMLElement {
       root.querySelector('#message')?.focus?.({ preventScroll: true });
     });
     on('#export', () => this._call('export_dashboards'));
+    on('#pull', () => this._call('pull'));
     on('.zoom', () => this._toggleZoom?.());
     const close = () => {
       this._confirm = false;
@@ -1939,6 +2006,10 @@ class GitSyncCard extends HTMLElement {
     // Opens the full-screen diff viewer; only when something changed (the popup has its own link).
     const diffButton = `<button class="icon-btn" id="diff" title="${gsEsc(this._t('diff'))}" aria-label="${gsEsc(this._t('diff'))}">
         <ha-icon icon="mdi:file-compare"></ha-icon></button>`;
+    // Behind: bring in the remote commits (the next commit would pull them too).
+    const pullLabel = busy === 'pull' ? this._t('working') : this._t('pull');
+    const pullIcon = `<button class="icon-btn${busy === 'pull' ? ' busy' : ''}" id="pull" title="${gsEsc(pullLabel)}" aria-label="${gsEsc(pullLabel)}" ${busy ? 'disabled' : ''}>
+        <ha-icon icon="${busy === 'pull' ? 'mdi:loading' : 'mdi:source-pull'}"></ha-icon></button>`;
     let body;
     if (compact && this._confirm) body = popup;
     else if (compact) {
@@ -1960,6 +2031,7 @@ class GitSyncCard extends HTMLElement {
           <span class="m-chip" title="${gsEsc(this._t('last_push'))}: ${gsEsc(pushText)}">
             <ha-icon icon="mdi:cloud-check-outline"></ha-icon><span class="m-txt">${gsEsc(pushText)}</span></span>
           ${count > 0 ? diffButton : ''}
+          ${status === 'behind' ? pullIcon : ''}
           <button class="icon-btn${busy === 'commit_push' ? ' busy' : ''}" id="commit" title="${gsEsc(commitLabel)}" aria-label="${gsEsc(commitLabel)}" ${canCommit ? '' : 'disabled'}>
             <ha-icon icon="${busy === 'commit_push' ? 'mdi:loading' : 'mdi:source-commit-end'}"></ha-icon></button>
         </div>`;
@@ -1972,6 +2044,7 @@ class GitSyncCard extends HTMLElement {
         </div>
         ${error}
         <div class="actions">
+          ${status === 'behind' ? button('pull', 'pull', 'mdi:source-pull', this._t('pull'), !busy) : ''}
           ${button('commit', 'commit_push', 'mdi:source-commit-end', this._t('commit'), canCommit)}
           ${c.show_export ? button('export', 'export_dashboards', 'mdi:export', this._t('export'), !busy) : ''}
           ${count > 0 && !this._confirm ? diffButton : ''}

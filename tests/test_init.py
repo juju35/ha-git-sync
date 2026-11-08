@@ -664,7 +664,7 @@ async def test_get_diff_service(hass: HomeAssistant, repo: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    "service", ["commit_push", "export_dashboards", "generate_message", "get_diff", "generate_ssh_key"]
+    "service", ["commit_push", "export_dashboards", "generate_message", "get_diff", "generate_ssh_key", "pull"]
 )
 async def test_services_require_admin(
     hass: HomeAssistant, repo: Path, hass_admin_user, hass_read_only_user, service: str
@@ -937,3 +937,131 @@ async def test_gitignore_covering_secrets_raises_no_repair(hass: HomeAssistant, 
     entry = _entry(repo)
     await _setup(hass, entry)
     assert _issue(hass, "gitignore_missing", entry) is None
+
+
+async def test_secret_written_during_the_commit_is_unstaged(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
+    """A sensitive file appearing between the check and `git add -A` is caught on the real index and unstaged."""
+    from homeassistant.exceptions import ServiceValidationError
+
+    coordinator = await _setup(hass, _entry(repo))
+    stage_all = coordinator.repo.stage_all
+
+    async def racing_stage_all():
+        (repo / "secrets.yaml").write_text("wifi: hunter2\n", encoding="utf-8")
+        return await stage_all()
+
+    coordinator.repo.stage_all = racing_stage_all
+    (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    with pytest.raises(ServiceValidationError) as err:
+        await coordinator.async_commit_push("feat: add scripts")
+    assert err.value.translation_placeholders == {"files": "secrets.yaml"}
+    assert git(repo, "log", "-1", "--format=%s").strip() == "chore: initial"
+    assert git(repo, "diff", "--cached", "--name-only").strip() == ""
+    assert git(tmp_path / "remote.git", "log", "-1", "--format=%s", "main").strip() == "chore: initial"
+
+
+async def test_blocked_auto_commit_warns_once_until_the_changes_differ(
+    hass: HomeAssistant, repo: Path, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    from custom_components.git_sync.const import CONF_PULL_BEFORE_PUSH
+
+    coordinator = await _setup(hass, _entry(repo, **{CONF_PULL_BEFORE_PUSH: False}))
+    attempts = 0
+    commit_push = coordinator.async_commit_push
+
+    async def counting_commit_push(*args):
+        nonlocal attempts
+        attempts += 1
+        return await commit_push(*args)
+
+    coordinator.async_commit_push = counting_commit_push
+
+    # Sensitive file: refused once, with a warning and no traceback, then skipped while nothing changes.
+    (repo / "secrets.yaml").write_text("wifi: hunter2\n", encoding="utf-8")
+    for _ in range(3):
+        await coordinator.async_refresh()
+        await coordinator.async_auto_commit()
+    assert attempts == 1
+    warnings = [r for r in caplog.records if "Automatic commit skipped" in r.getMessage()]
+    assert len(warnings) == 1
+    assert warnings[0].levelname == "WARNING"
+    assert warnings[0].exc_info is None
+
+    # Another file changed: tried again (still refused).
+    (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    await coordinator.async_refresh()
+    await coordinator.async_auto_commit()
+    assert attempts == 2
+
+    # Behind with Pull before push off: blocked once, then skipped.
+    (repo / "secrets.yaml").unlink()
+    push_from(clone(tmp_path), "automations.yaml", "[]\n")
+    for _ in range(2):
+        await coordinator.async_refresh()
+        await coordinator.async_auto_commit()
+    assert attempts == 3
+    assert git(repo, "log", "-1", "--format=%s").strip() == "chore: initial"
+
+    # Resolved (pulled): committed and pushed at the next interval.
+    git(repo, "pull", "-q", "--rebase", "--autostash")
+    await coordinator.async_refresh()
+    await coordinator.async_auto_commit()
+    assert attempts == 4
+    assert git(tmp_path / "remote.git", "log", "-1", "--format=%s", "main").strip().startswith("chore: update")
+
+
+async def test_pull_action(hass: HomeAssistant, repo: Path, tmp_path: Path, hass_admin_user) -> None:
+    """Behind: fast-forward; nothing new: 0; diverged: local commits rebased, unless the work tree has changes."""
+    from homeassistant.exceptions import HomeAssistantError
+
+    coordinator = await _setup(hass, _entry(repo))
+    other = clone(tmp_path)
+    push_from(other, "automations.yaml", "[]\n")
+    await coordinator.async_refresh()
+    assert _status(hass).state == "behind"
+
+    context = Context(user_id=hass_admin_user.id)
+    response = await hass.services.async_call(DOMAIN, "pull", {}, blocking=True, return_response=True, context=context)
+    assert response["results"][0]["pulled"] == 1
+    assert git(repo, "rev-parse", "HEAD") == git(tmp_path / "remote.git", "rev-parse", "main")
+    assert _status(hass).state == "clean"
+    response = await hass.services.async_call(DOMAIN, "pull", {}, blocking=True, return_response=True)
+    assert response["results"][0]["pulled"] == 0
+
+    # Diverged with a change in the work tree: refused, nothing moved.
+    (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: local commit")
+    push_from(other, "groups.yaml", "{}\n")
+    (repo / "configuration.yaml").write_text("default_config:\nlogger:\n", encoding="utf-8")
+    head = git(repo, "rev-parse", "HEAD")
+    with pytest.raises(HomeAssistantError) as err:
+        await coordinator.async_pull()
+    assert err.value.translation_key == "diverged"
+    assert git(repo, "rev-parse", "HEAD") == head
+
+    # Clean work tree: the local commit is rebased on the remote one, not pushed.
+    git(repo, "checkout", "--", "configuration.yaml")
+    assert await coordinator.async_pull() == 1
+    assert git(repo, "log", "--format=%s", "-3").split("\n")[:3] == [
+        "feat: local commit",
+        "chore: groups.yaml from elsewhere",
+        "chore: automations.yaml from elsewhere",
+    ]
+    assert _status(hass).state == "ahead"
+
+
+async def test_notification_image_with_a_query_string(hass: HomeAssistant, repo: Path) -> None:
+    from pytest_homeassistant_custom_component.common import async_mock_service
+
+    from custom_components.git_sync.const import CONF_NOTIFY_IMAGE, CONF_NOTIFY_SERVICE
+
+    calls = async_mock_service(hass, "notify", "mobile_app_phone")
+    coordinator = await _setup(
+        hass,
+        _entry(repo, **{CONF_NOTIFY_SERVICE: "notify.mobile_app_phone", CONF_NOTIFY_IMAGE: "https://x/git.png?v=2"}),
+    )
+    (repo / "scripts.yaml").write_text("{}\n", encoding="utf-8")
+    await coordinator.async_commit_push("feat: add scripts")
+    await hass.async_block_till_done()
+    assert calls[0].data["data"]["attachment"] == {"url": "https://x/git.png?v=2", "content-type": "png"}

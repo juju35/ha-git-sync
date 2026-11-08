@@ -321,6 +321,16 @@
           "description": "Te gebruiken Git Sync-vermelding. De eerste repository als leeg."
         }
       }
+    },
+    "pull": {
+      "name": "Pull",
+      "description": "Haalt de remote op en neemt de nieuwe commits over: fast-forward, of de lokale commits erbovenop gerebased (alleen bij een schone werkmap). Een conflict breekt de rebase af.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Te gebruiken Git Sync-vermelding. Alle repositories als leeg."
+        }
+      }
     }
   }
 }

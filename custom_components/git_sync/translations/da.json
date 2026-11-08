@@ -321,6 +321,16 @@
           "description": "Git Sync-post, der skal bruges. Det første repository, hvis tom."
         }
       }
+    },
+    "pull": {
+      "name": "Pull",
+      "description": "Henter fjernlageret og tager dets nye commits ind: fast-forward, eller de lokale commits rebaset ovenpå (kun med et rent arbejdstræ). En konflikt afbryder rebase.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Git Sync-post, der skal bruges. Alle repositories, hvis tom."
+        }
+      }
     }
   }
 }

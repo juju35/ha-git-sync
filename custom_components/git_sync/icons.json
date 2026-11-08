@@ -47,6 +47,9 @@
     },
     "generate_message": {
       "service": "mdi:creation-outline"
+    },
+    "pull": {
+      "service": "mdi:source-pull"
     }
   }
 }

@@ -321,6 +321,16 @@
           "description": "Intrarea Git Sync de utilizat. Primul depozit dacă este gol."
         }
       }
+    },
+    "pull": {
+      "name": "Pull",
+      "description": "Preia depozitul la distanță și integrează commit-urile noi: avans rapid sau commit-urile locale rebazate deasupra (doar cu arborele de lucru curat). Un conflict anulează rebase-ul.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Depozit",
+          "description": "Intrarea Git Sync de utilizat. Toate depozitele dacă este gol."
+        }
+      }
     }
   }
 }

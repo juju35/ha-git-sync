@@ -36,3 +36,10 @@ get_diff:
       selector:
         config_entry:
           integration: git_sync
+
+pull:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: git_sync

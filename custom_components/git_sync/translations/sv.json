@@ -321,6 +321,16 @@
           "description": "Git Sync-post som ska användas. Det första förrådet om tomt."
         }
       }
+    },
+    "pull": {
+      "name": "Pull",
+      "description": "Hämtar fjärrförrådet och tar in dess nya commits: snabbspolning, eller de lokala commits ombaserade ovanpå (bara med ett rent arbetsträd). En konflikt avbryter rebase.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Förråd",
+          "description": "Git Sync-post som ska användas. Alla förråd om tomt."
+        }
+      }
     }
   }
 }

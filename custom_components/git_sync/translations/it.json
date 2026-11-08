@@ -321,6 +321,16 @@
           "description": "Voce Git Sync da usare. Il primo repository se vuoto."
         }
       }
+    },
+    "pull": {
+      "name": "Pull",
+      "description": "Recupera il remoto e integra i suoi nuovi commit: avanzamento rapido, oppure i commit locali ribasati sopra (solo con albero di lavoro pulito). Un conflitto annulla il rebase.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repository",
+          "description": "Voce Git Sync da usare. Tutti i repository se vuoto."
+        }
+      }
     }
   }
 }

@@ -321,6 +321,16 @@
           "description": "Wpis Git Sync do użycia. Pierwsze repozytorium, gdy puste."
         }
       }
+    },
+    "pull": {
+      "name": "Pull",
+      "description": "Pobiera zdalne repozytorium i dołącza jego nowe commity: przewinięcie do przodu albo lokalne commity przeniesione na wierzch (tylko przy czystym drzewie roboczym). Konflikt przerywa rebase.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Repozytorium",
+          "description": "Wpis Git Sync do użycia. Wszystkie repozytoria, gdy puste."
+        }
+      }
     }
   }
 }

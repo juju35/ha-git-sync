@@ -151,6 +151,15 @@ data:
 response_variable: result  # {"results": [{"config_entry_id": "...", "committed": true, "pushed": true, "message": "..."}]}
 ```
 
+### Action `git_sync.pull`
+
+Fetches the remote and brings in its new commits: a fast-forward (`git pull --ff-only`, which Git refuses if it would overwrite a local change), or, when local commits are waiting to be pushed, those commits rebased on the remote ones (`git pull --rebase --autostash`, only on a clean work tree; a conflict aborts the rebase). Nothing is committed or pushed. This is what the **Pull** button of the card calls in the `behind` state. Returns how many remote commits came in.
+
+```yaml
+action: git_sync.pull
+response_variable: result  # {"results": [{"config_entry_id": "...", "pulled": 2}]}
+```
+
 ### Action `git_sync.generate_message`
 
 Writes a commit message for the current changes with the AI task, **without committing**: the diff is computed on a copy of the Git index, so what you staged by hand stays as it is. Returns `null` when nothing changed; fails when no AI task is set in the options. This is what the ✨ button of the card calls.
@@ -187,7 +196,7 @@ action: git_sync.generate_ssh_key
 response_variable: key  # {"public_key": "ssh-ed25519 AAAA... homeassistant"}
 ```
 
-Every action takes an optional `config_entry_id` to target one repository; without it, `commit_push` and `export_dashboards` run on all of them, `generate_message`, `get_diff` and `generate_ssh_key` on the first one. The actions are reserved to administrators (the diff can show `secrets.yaml`): a call from another user is refused, automations and scripts are not affected.
+Every action takes an optional `config_entry_id` to target one repository; without it, `commit_push`, `pull` and `export_dashboards` run on all of them, `generate_message`, `get_diff` and `generate_ssh_key` on the first one. The actions are reserved to administrators (the diff can show `secrets.yaml`): a call from another user is refused, automations and scripts are not affected.
 
 ### Event `git_sync_committed`
 
@@ -223,6 +232,7 @@ type: custom:git-sync-card
 - **Changed files**: collapsible list, folded again when you click elsewhere
 - **Last push** and **Dashboard export**, with the number of exported files
 - **Commit & push** opens a confirmation at the top of the card with a message box, as in VS Code: the placeholder names the branch, and the ✨ button inside it (shown when an AI task is set) writes the message for the current changes without committing, so you can read and edit it before **Commit & push**. Left empty, the AI task writes it when committing. **Enter** commits, **Escape** closes. **Export dashboards** runs the export right away. The result is shown in a toast
+- **Pull** (shown in the `behind` state) brings in the remote commits right away, with `git_sync.pull`
 - **View changes** (the compare button beside the actions, also linked from the commit confirmation, shown when something changed) opens the **diff viewer** below
 
 ### Diff viewer
@@ -246,7 +256,7 @@ Every option is in the visual editor:
 
 ### Mini card
 
-A compact version for a 6-column slot: status, branch, last commit on one line, number of changed files, last push and **Commit & push** as an icon button. The zoom button at the top right switches it to the full card (same options) and back; a click anywhere else brings back the compact view.
+A compact version for a 6-column slot: status, branch, last commit on one line, number of changed files, last push and **Commit & push** as an icon button (plus **Pull** in the `behind` state). The zoom button at the top right switches it to the full card (same options) and back; a click anywhere else brings back the compact view.
 
 ```yaml
 type: custom:git-sync-mini-card
@@ -283,11 +293,11 @@ Git Sync runs the `git` command line in the configuration folder, never promptin
 
 1. fetches the remote, and stops if the branch has **diverged** (local commits not pushed and new remote commits), or is **behind** with *Pull before push* off;
 2. checks the changes for [sensitive files](#secret-guard), on a copy of the Git index;
-3. stages everything (`git add -A`), sends the statistics and the first 8000 characters of the diff, secret values hidden, to the AI task, keeps the first line of its answer without quotes, backticks or dollar signs (100 characters max), and commits;
+3. stages everything (`git add -A`) and checks the staged files again, so a sensitive file written in the meantime is unstaged (`git reset`) and refused; sends the statistics and the first 8000 characters of the diff, secret values hidden, to the AI task, keeps the first line of its answer without quotes, backticks or dollar signs (100 characters max), and commits;
 4. if the remote had new commits, runs `git pull --rebase --autostash`; on a conflict the rebase is aborted (`git rebase --abort`), the commit stays local and nothing is pushed;
 5. pushes.
 
-Commits and exports never run at the same time. The last push and export are kept across restarts.
+Commits and exports never run at the same time. An automatic commit refused for a sensitive file, or blocked by a diverged or behind branch or a rebase conflict, is logged once as a warning and not tried again until the changed files or the commits ahead or behind change. The last push and export are kept across restarts.
 
 ### Secret guard
 
