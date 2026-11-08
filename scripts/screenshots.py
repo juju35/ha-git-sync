@@ -149,6 +149,8 @@ def mock_hass(status, files, error=None):
         "devices": {"repo": {"config_entries": ["entry"]}},
         "language": "en",
         "locale": {"language": "en"},
+        # The actions are shown to administrators only.
+        "user": {"is_admin": True},
     }
 
 

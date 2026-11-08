@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.1 - 2026-11-08
+
+### Security
+- The diff sent to the AI task also hides the values of `authorization`, `bearer`, `api-key`/`apikey`/`x-api-key`, `private_key`, `passwd` and `pin` keys, of YAML list items (`- password: …`), and any `Bearer` token.
+- The card and the mini card show the actions (commit, pull, export, diff, AI message) to administrators only; other users see the status.
+
+### Fixes
+- The **Pull** button is shown whenever the remote has new commits (also with local changes or after an error, and on a clean diverged branch), except with local changes on top of unpushed commits.
+- An automatic commit that fails to push or fetch is logged as one warning per distinct error, without a traceback, and is still retried at every interval.
+
 ## 1.5.0 - 2026-11-07
 
 ### What's new
