@@ -72,7 +72,8 @@
           "export_time": "Время экспорта",
           "export_dir": "Папка экспорта",
           "export_format": "Формат экспорта",
-          "export_before_commit": "Экспортировать панели перед каждым commit"
+          "export_before_commit": "Экспортировать панели перед каждым commit",
+          "commit_before_update": "Коммит перед обновлениями"
         },
         "data_description": {
           "ai_task_entity": "Генерирует сообщение в формате Conventional Commits по diff. Без неё используется общее сообщение.",
@@ -83,7 +84,8 @@
           "notify_service": "Например, notify.mobile_app_phone. Оставьте пустым, чтобы отключить.",
           "notify_image": "Абсолютный HTTPS URL (требуется для iOS).",
           "export_format": "JSON копирует файлы .storage как есть; YAML сохраняет только конфигурацию панели, её проще читать в diff.",
-          "export_dir": "В папке конфигурации (относительный путь начинается от неё) или в папке из allowlist_external_dirs."
+          "export_dir": "В папке конфигурации (относительный путь начинается от неё) или в папке из allowlist_external_dirs.",
+          "commit_before_update": "При установке обновления (Home Assistant, дополнения, интеграции) сначала выполнять коммит и push конфигурации, чтобы было к чему вернуться. Один коммит для обновлений, установленных вместе."
         }
       }
     },

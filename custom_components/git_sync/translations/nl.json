@@ -72,7 +72,8 @@
           "export_time": "Tijdstip van de export",
           "export_dir": "Exportmap",
           "export_format": "Exportformaat",
-          "export_before_commit": "Dashboards exporteren vóór elke commit"
+          "export_before_commit": "Dashboards exporteren vóór elke commit",
+          "commit_before_update": "Commit vóór updates"
         },
         "data_description": {
           "ai_task_entity": "Genereert een Conventional Commits-bericht uit de diff. Zonder deze entiteit wordt een algemeen bericht gebruikt.",
@@ -83,7 +84,8 @@
           "notify_service": "Bijvoorbeeld notify.mobile_app_telefoon. Leeg laten om uit te schakelen.",
           "notify_image": "Absolute HTTPS-URL (vereist door iOS).",
           "export_format": "JSON kopieert de .storage-bestanden ongewijzigd; YAML bewaart alleen de dashboardconfiguratie, beter leesbaar in diffs.",
-          "export_dir": "In de configuratiemap (een relatief pad begint daar) of in een map van allowlist_external_dirs."
+          "export_dir": "In de configuratiemap (een relatief pad begint daar) of in een map van allowlist_external_dirs.",
+          "commit_before_update": "Wanneer een update wordt geïnstalleerd (Home Assistant, een add-on, een integratie), eerst de configuratie committen en pushen, zodat er een commit is om naar terug te gaan. Eén commit voor updates die samen worden geïnstalleerd."
         }
       }
     },

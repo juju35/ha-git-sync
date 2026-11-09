@@ -72,7 +72,8 @@
           "export_time": "Eksporttidspunkt",
           "export_dir": "Eksportmappe",
           "export_format": "Eksportformat",
-          "export_before_commit": "Eksportér dashboards før hvert commit"
+          "export_before_commit": "Eksportér dashboards før hvert commit",
+          "commit_before_update": "Commit før opdateringer"
         },
         "data_description": {
           "ai_task_entity": "Genererer en Conventional Commits-besked ud fra diffen. Uden den bruges en generisk besked.",
@@ -83,7 +84,8 @@
           "notify_service": "For eksempel notify.mobile_app_telefon. Lad feltet være tomt for at deaktivere.",
           "notify_image": "Absolut HTTPS-URL (krævet af iOS).",
           "export_format": "JSON kopierer .storage-filerne som de er; YAML beholder kun dashboardets konfiguration, som er lettere at læse i diffs.",
-          "export_dir": "I konfigurationsmappen (en relativ sti starter der) eller i en mappe fra allowlist_external_dirs."
+          "export_dir": "I konfigurationsmappen (en relativ sti starter der) eller i en mappe fra allowlist_external_dirs.",
+          "commit_before_update": "Når en opdatering installeres (Home Assistant, en tilføjelse, en integration), commit og push konfigurationen først, så der er et commit at vende tilbage til. Ét commit for opdateringer installeret samlet."
         }
       }
     },

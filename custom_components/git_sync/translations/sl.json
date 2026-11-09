@@ -72,7 +72,8 @@
           "export_time": "Čas izvoza",
           "export_dir": "Mapa za izvoz",
           "export_format": "Oblika izvoza",
-          "export_before_commit": "Izvozi nadzorne plošče pred vsakim commitom"
+          "export_before_commit": "Izvozi nadzorne plošče pred vsakim commitom",
+          "commit_before_update": "Commit pred posodobitvami"
         },
         "data_description": {
           "ai_task_entity": "Iz diffa ustvari sporočilo Conventional Commits. Brez nje se uporabi splošno sporočilo.",
@@ -83,7 +84,8 @@
           "notify_service": "Na primer notify.mobile_app_telefon. Pustite prazno za onemogočanje.",
           "notify_image": "Absolutni URL HTTPS (zahteva ga iOS).",
           "export_format": "JSON kopira datoteke .storage nespremenjene; YAML ohrani le konfiguracijo nadzorne plošče, ki je v diffih lažje berljiva.",
-          "export_dir": "V mapi konfiguracije (relativna pot se začne tam) ali v mapi iz allowlist_external_dirs."
+          "export_dir": "V mapi konfiguracije (relativna pot se začne tam) ali v mapi iz allowlist_external_dirs.",
+          "commit_before_update": "Ko se namesti posodobitev (Home Assistant, dodatek, integracija), najprej naredi commit in push konfiguracije, da obstaja commit, h kateremu se lahko vrnete. En commit za posodobitve, nameščene skupaj."
         }
       }
     },

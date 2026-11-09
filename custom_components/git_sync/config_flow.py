@@ -21,6 +21,7 @@ from .const import (
     CONF_AUTHOR_EMAIL,
     CONF_AUTHOR_NAME,
     CONF_BRANCH,
+    CONF_COMMIT_BEFORE_UPDATE,
     CONF_COMMIT_INTERVAL,
     CONF_COMMIT_LANGUAGE,
     CONF_EXPORT_BEFORE_COMMIT,
@@ -161,6 +162,9 @@ def _options_schema(hass: HomeAssistant, options: dict[str, Any]) -> vol.Schema:
             ): _number(0, 1440, "min"),
             vol.Required(
                 CONF_PULL_BEFORE_PUSH, default=options.get(CONF_PULL_BEFORE_PUSH, DEFAULT_PULL_BEFORE_PUSH)
+            ): selector.BooleanSelector(),
+            vol.Required(
+                CONF_COMMIT_BEFORE_UPDATE, default=options.get(CONF_COMMIT_BEFORE_UPDATE, False)
             ): selector.BooleanSelector(),
             vol.Required(
                 CONF_ALLOW_SENSITIVE, default=options.get(CONF_ALLOW_SENSITIVE, DEFAULT_ALLOW_SENSITIVE)

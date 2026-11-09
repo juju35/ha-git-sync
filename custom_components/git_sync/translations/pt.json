@@ -72,7 +72,8 @@
           "export_time": "Hora da exportação",
           "export_dir": "Pasta de exportação",
           "export_format": "Formato de exportação",
-          "export_before_commit": "Exportar os painéis antes de cada commit"
+          "export_before_commit": "Exportar os painéis antes de cada commit",
+          "commit_before_update": "Commit antes das atualizações"
         },
         "data_description": {
           "ai_task_entity": "Gera uma mensagem Conventional Commits a partir do diff. Sem ela, é usada uma mensagem genérica.",
@@ -83,7 +84,8 @@
           "notify_service": "Por exemplo notify.mobile_app_telemovel. Deixe vazio para desativar.",
           "notify_image": "URL HTTPS absoluto (exigido pelo iOS).",
           "export_format": "JSON copia os ficheiros .storage tal como estão; YAML mantém apenas a configuração do painel, mais legível nos diffs.",
-          "export_dir": "Dentro da pasta de configuração (um caminho relativo começa aí) ou de uma pasta de allowlist_external_dirs."
+          "export_dir": "Dentro da pasta de configuração (um caminho relativo começa aí) ou de uma pasta de allowlist_external_dirs.",
+          "commit_before_update": "Quando é instalada uma atualização (Home Assistant, um suplemento, uma integração), fazer primeiro commit e push da configuração, para haver um commit para onde voltar. Um só commit para atualizações instaladas em conjunto."
         }
       }
     },

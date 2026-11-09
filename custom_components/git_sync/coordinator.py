@@ -59,6 +59,7 @@ from .const import (
     ISSUE_GITIGNORE,
     ISSUE_PUSH_BLOCKED,
     LANGUAGE_NAMES,
+    SNAPSHOT_COOLDOWN,
     STATUS_AHEAD,
     STATUS_BEHIND,
     STATUS_CLEAN,
@@ -166,6 +167,7 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         self.gitignore_missing: list[str] | None = None
         # The changes (files, commits ahead and behind) whose automatic commit was refused or blocked.
         self._auto_blocked: tuple[tuple[str, ...], int, int] | None = None
+        self._last_snapshot: float | None = None  # time.monotonic() of the last snapshot before an update
         # Last error of an automatic commit that is retried at every interval (push or fetch failure): logged once.
         self._auto_error: str | None = None
 
@@ -414,6 +416,34 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         )
         await self._notify(commit_message)
         return CommitResult(message=commit_message, pushed=True)
+
+    async def async_snapshot_before_update(self, entity_ids: list[str]) -> CommitResult | None:
+        """Commit and push the configuration as it is before an update gets installed (Commit before updates).
+
+        Runs when the update.install action is called: the commit stages the files within moments, while the
+        update is still downloading. Once per SNAPSHOT_COOLDOWN, so that Update all (one install after the
+        other) gets one snapshot from before the first, not commits of the files the first install changed.
+        None when skipped; a failure is logged, never raised (the update goes on either way).
+        """
+        now = time.monotonic()
+        if self._last_snapshot is not None and now - self._last_snapshot < SNAPSHOT_COOLDOWN:
+            return None
+        self._last_snapshot = now
+        names = []
+        for entity_id in entity_ids:
+            state = self.hass.states.get(entity_id)
+            if state is None:
+                continue
+            title = state.attributes.get("title") or state.attributes.get("friendly_name") or entity_id
+            latest = state.attributes.get("latest_version")
+            names.append(f"{title} to {latest}" if latest else str(title))
+        what = ", ".join(names[:3]) + (f" and {len(names) - 3} more" if len(names) > 3 else "")
+        message = f"chore: snapshot before updating {what}" if what else "chore: snapshot before an update"
+        try:
+            return await self.async_commit_push(message)
+        except HomeAssistantError as err:
+            _LOGGER.warning("Snapshot before the update failed, the update goes on: %s", err)
+            return None
 
     async def async_auto_commit(self) -> None:
         """Commit and push on the commit interval, without retrying a blocked change set every time.

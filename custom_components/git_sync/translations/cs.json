@@ -72,7 +72,8 @@
           "export_time": "Čas exportu",
           "export_dir": "Složka exportu",
           "export_format": "Formát exportu",
-          "export_before_commit": "Exportovat dashboardy před každým commitem"
+          "export_before_commit": "Exportovat dashboardy před každým commitem",
+          "commit_before_update": "Commit před aktualizacemi"
         },
         "data_description": {
           "ai_task_entity": "Vygeneruje zprávu Conventional Commits z diffu. Bez ní se použije obecná zpráva.",
@@ -83,7 +84,8 @@
           "notify_service": "Například notify.mobile_app_telefon. Ponechte prázdné pro vypnutí.",
           "notify_image": "Absolutní URL HTTPS (vyžaduje iOS).",
           "export_format": "JSON zkopíruje soubory .storage beze změny; YAML ponechá pouze konfiguraci dashboardu, která se v diffech snáze čte.",
-          "export_dir": "Ve složce konfigurace (relativní cesta začíná v ní) nebo ve složce z allowlist_external_dirs."
+          "export_dir": "Ve složce konfigurace (relativní cesta začíná v ní) nebo ve složce z allowlist_external_dirs.",
+          "commit_before_update": "Když se instaluje aktualizace (Home Assistant, doplněk, integrace), nejprve se provede commit a push konfigurace, aby byl commit, ke kterému se lze vrátit. Jeden commit pro aktualizace instalované společně."
         }
       }
     },

@@ -72,7 +72,8 @@
           "export_time": "Export time",
           "export_dir": "Export folder",
           "export_format": "Export format",
-          "export_before_commit": "Export dashboards before each commit"
+          "export_before_commit": "Export dashboards before each commit",
+          "commit_before_update": "Commit before updates"
         },
         "data_description": {
           "ai_task_entity": "Generates a Conventional Commits message from the diff. Without it, a generic message is used.",
@@ -83,7 +84,8 @@
           "notify_service": "For example notify.mobile_app_phone. Leave empty to disable.",
           "notify_image": "Absolute HTTPS URL (required by iOS).",
           "export_format": "JSON copies the .storage files as is; YAML keeps only the dashboard configuration, easier to read in diffs.",
-          "export_dir": "Inside the configuration folder (a relative path starts there) or a folder of allowlist_external_dirs."
+          "export_dir": "Inside the configuration folder (a relative path starts there) or a folder of allowlist_external_dirs.",
+          "commit_before_update": "When an update is installed (Home Assistant, an add-on, an integration), commit and push the configuration first, so there is a commit to go back to. One commit for updates installed together."
         }
       }
     },
