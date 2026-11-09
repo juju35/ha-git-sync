@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Deze map is geen Git-repository.",
       "unknown_remote": "Deze remote bestaat niet in de repository.",
+      "invalid_branch": "Git accepteert deze branchnaam niet.",
       "author_required": "Git weet hier niet wie de commits ondertekent: vul het e-mailadres (en de naam) van de auteur in."
     },
     "abort": {

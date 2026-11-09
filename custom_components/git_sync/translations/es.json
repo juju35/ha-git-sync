@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Esta carpeta no es un repositorio Git.",
       "unknown_remote": "Este remoto no existe en el repositorio.",
+      "invalid_branch": "Git no acepta este nombre de rama.",
       "author_required": "Git no sabe quién firma los commits aquí: indica el correo (y el nombre) del autor."
     },
     "abort": {

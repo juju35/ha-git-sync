@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Dieser Ordner ist kein Git-Arbeitsverzeichnis.",
       "unknown_remote": "Dieses Remote existiert im Repository nicht.",
+      "invalid_branch": "Git akzeptiert diesen Branch-Namen nicht.",
       "author_required": "Git weiß hier nicht, wer die Commits signiert: Autor-E-Mail (und Namen) angeben."
     },
     "abort": {

@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Ta mapa ni delovno drevo Gita.",
       "unknown_remote": "Ta remote v repozitoriju ne obstaja.",
+      "invalid_branch": "Git ne sprejme tega imena veje.",
       "author_required": "Git ne ve, kdo tukaj podpisuje commite: vnesite e-pošto (in ime) avtorja."
     },
     "abort": {

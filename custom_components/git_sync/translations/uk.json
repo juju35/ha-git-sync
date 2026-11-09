@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Ця тека не є робочим деревом Git.",
       "unknown_remote": "Такого remote немає в репозиторії.",
+      "invalid_branch": "Git не приймає таку назву гілки.",
       "author_required": "Git не знає, хто підписує тут commit-и: вкажіть email (та ім'я) автора."
     },
     "abort": {

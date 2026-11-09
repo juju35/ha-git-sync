@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Tento priečinok nie je pracovný strom Gitu.",
       "unknown_remote": "Tento remote v repozitári neexistuje.",
+      "invalid_branch": "Git neprijíma tento názov vetvy.",
       "author_required": "Git nevie, kto tu podpisuje commity: zadajte e-mail (a meno) autora."
     },
     "abort": {

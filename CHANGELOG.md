@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.2 - 2026-11-09
+
+### Fixes
+- Setup and reconfiguration check the target branch with `git check-ref-format --branch`: a name git refuses (`main..`, a space, a leading `-`) is reported on the form instead of making the first push fail after a successful setup.
+
 ## 1.5.1 - 2026-11-08
 
 ### Security

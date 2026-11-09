@@ -197,6 +197,9 @@ async def _validate(data: dict[str, Any]) -> dict[str, str]:
         return {CONF_REPO_PATH: "not_a_repository"}
     if await repo.remote_url() is None:
         return {CONF_REMOTE: "unknown_remote"}
+    # A name git refuses ("main..", "a b", "-x") would only fail at the first push, after the setup succeeded.
+    if not await repo.valid_branch():
+        return {CONF_BRANCH: "invalid_branch"}
     # The Home Assistant container does not see the `git config --global` made in the Terminal add-on: without
     # an identity, every commit would fail with "Author identity unknown".
     if not await repo.has_identity():

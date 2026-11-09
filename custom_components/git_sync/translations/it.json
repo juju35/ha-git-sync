@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Questa cartella non è un repository Git.",
       "unknown_remote": "Questo remote non esiste nel repository.",
+      "invalid_branch": "Git non accetta questo nome di branch.",
       "author_required": "Git non sa chi firma i commit qui: inserisci l'email (e il nome) dell'autore."
     },
     "abort": {

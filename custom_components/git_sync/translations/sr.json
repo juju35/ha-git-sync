@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Ова фасцикла није Git радно стабло.",
       "unknown_remote": "Овај remote не постоји у репозиторијуму.",
+      "invalid_branch": "Git не прихвата овај назив гране.",
       "author_required": "Git овде не зна ко потписује commit-ове: унесите имејл (и име) аутора."
     },
     "abort": {

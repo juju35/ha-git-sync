@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Ce dossier n'est pas un dépôt Git.",
       "unknown_remote": "Ce remote n'existe pas dans le dépôt.",
+      "invalid_branch": "Git n'accepte pas ce nom de branche.",
       "author_required": "Git ne sait pas qui signe les commits ici : renseignez l'e-mail (et le nom) de l'auteur."
     },
     "abort": {

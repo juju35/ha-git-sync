@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Тази папка не е работно дърво на Git.",
       "unknown_remote": "Този remote не съществува в хранилището.",
+      "invalid_branch": "Git не приема това име на клон.",
       "author_required": "Git не знае кой подписва commit-ите тук: въведете имейла (и името) на автора."
     },
     "abort": {

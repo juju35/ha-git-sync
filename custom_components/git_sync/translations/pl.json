@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Ten folder nie jest repozytorium Git.",
       "unknown_remote": "Ten remote nie istnieje w repozytorium.",
+      "invalid_branch": "Git nie akceptuje tej nazwy gałęzi.",
       "author_required": "Git nie wie, kto podpisuje tu commity: podaj e-mail (oraz imię i nazwisko) autora."
     },
     "abort": {
