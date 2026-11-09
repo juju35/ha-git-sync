@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Šī mape nav Git darba koks.",
       "unknown_remote": "Šāds remote repozitorijā nepastāv.",
+      "invalid_branch": "Git nepieņem šo zara nosaukumu.",
       "author_required": "Git nezina, kas šeit paraksta commit: ievadiet autora e-pastu (un vārdu)."
     },
     "abort": {

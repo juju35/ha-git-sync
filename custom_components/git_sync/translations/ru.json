@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Эта папка не является рабочим деревом Git.",
       "unknown_remote": "Такого remote нет в репозитории.",
+      "invalid_branch": "Git не принимает такое имя ветки.",
       "author_required": "Git не знает, кто подписывает здесь commit-ы: укажите email (и имя) автора."
     },
     "abort": {

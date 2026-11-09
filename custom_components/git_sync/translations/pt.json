@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Esta pasta não é um repositório Git.",
       "unknown_remote": "Este remote não existe no repositório.",
+      "invalid_branch": "O Git não aceita este nome de ramo.",
       "author_required": "O Git não sabe quem assina os commits aqui: indique o e-mail (e o nome) do autor."
     },
     "abort": {

@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Tato složka není pracovní strom Gitu.",
       "unknown_remote": "Tento remote v repozitáři neexistuje.",
+      "invalid_branch": "Git nepřijímá tento název větve.",
       "author_required": "Git neví, kdo zde podepisuje commity: zadejte e-mail (a jméno) autora."
     },
     "abort": {

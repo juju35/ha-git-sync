@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "This folder is not a Git work tree.",
       "unknown_remote": "This remote does not exist in the repository.",
+      "invalid_branch": "Git does not accept this branch name.",
       "author_required": "Git does not know who signs the commits here: enter the author email (and name)."
     },
     "abort": {

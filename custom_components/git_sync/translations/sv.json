@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Den här mappen är inte ett Git-arbetsträd.",
       "unknown_remote": "Den här remoten finns inte i förrådet.",
+      "invalid_branch": "Git godtar inte det här grennamnet.",
       "author_required": "Git vet inte vem som signerar commitarna här: ange författarens e-post (och namn)."
     },
     "abort": {

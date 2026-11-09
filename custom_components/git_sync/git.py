@@ -352,6 +352,16 @@ class GitRepo:
             return False
         return code == 0
 
+    async def valid_branch(self) -> bool:
+        """Return True when no target branch is set, or when git accepts its name as a branch."""
+        if not self.branch:
+            return True
+        try:
+            code, _ = await self.run("check-ref-format", "--branch", self.branch, check=False)
+        except (OSError, GitError):
+            return False
+        return code == 0
+
     async def remote_url(self) -> str | None:
         """Return the URL of the configured remote."""
         code, out = await self.run("remote", "get-url", self.remote, check=False)

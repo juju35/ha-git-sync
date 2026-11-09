@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Ova fascikla nije Git radno stablo.",
       "unknown_remote": "Ovaj remote ne postoji u repozitorijumu.",
+      "invalid_branch": "Git ne prihvata ovaj naziv grane.",
       "author_required": "Git ovde ne zna ko potpisuje commit-ove: unesite imejl (i ime) autora."
     },
     "abort": {

@@ -42,6 +42,20 @@ async def test_config_flow(hass: HomeAssistant, repo: Path, tmp_path: Path) -> N
     assert done["data"][CONF_REPO_PATH] == str(repo)
 
 
+@pytest.mark.parametrize("branch", ["main..", "a b", "-x", "feature/"])
+async def test_config_flow_refuses_a_branch_name_git_refuses(hass: HomeAssistant, repo: Path, branch: str) -> None:
+    """The name is checked with git at setup, not discovered wrong at the first push."""
+    from custom_components.git_sync.const import CONF_BRANCH
+
+    data = {CONF_REPO_PATH: str(repo), CONF_REMOTE: "origin", CONF_SSH_KEY: ""}
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    bad = await hass.config_entries.flow.async_configure(result["flow_id"], {**data, CONF_BRANCH: branch})
+    assert bad["errors"] == {CONF_BRANCH: "invalid_branch"}
+
+    done = await hass.config_entries.flow.async_configure(result["flow_id"], {**data, CONF_BRANCH: "release/1.x"})
+    assert done["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_setup_and_commit(hass: HomeAssistant, repo: Path, tmp_path: Path) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,

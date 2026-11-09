@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.6.0 - 2026-11-09
+
+### Performance
+- **Translations load on demand**: in the release zip, the frontend files keep English only (`git-sync-card.js` 118 KB → 68 KB) and each other language is its own `<file>.i18n.<lang>.js` file next to them, fetched the first time a card or the panel needs it. Home Assistant loads the card on every dashboard, so each page used to download and parse all 22 languages to use one. The cards and panel are defined once the page's language has arrived (a few milliseconds), so they render translated from the start.
+
+### Maintenance
+- The repository keeps every language in the sources: the release runs `scripts/split-frontend.mjs` before building the zip, and the Validate workflow checks the split on a copy (every table is rebuilt from the split files and compared).
+
+### Fixes
+- Setup and reconfiguration check the target branch with `git check-ref-format --branch`: a name git refuses (`main..`, a space, a leading `-`) is reported on the form instead of making the first push fail after a successful setup.
+
 ## 1.5.1 - 2026-11-08
 
 ### Security

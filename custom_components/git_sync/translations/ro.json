@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Acest folder nu este un arbore de lucru Git.",
       "unknown_remote": "Acest remote nu există în depozit.",
+      "invalid_branch": "Git nu acceptă acest nume de ramură.",
       "author_required": "Git nu știe cine semnează aici commiturile: introduceți e-mailul (și numele) autorului."
     },
     "abort": {

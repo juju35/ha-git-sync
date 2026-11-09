@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Denne mappe er ikke et Git-arbejdstræ.",
       "unknown_remote": "Denne remote findes ikke i repositoriet.",
+      "invalid_branch": "Git accepterer ikke dette branch-navn.",
       "author_required": "Git ved ikke, hvem der signerer commits her: angiv forfatterens e-mail (og navn)."
     },
     "abort": {

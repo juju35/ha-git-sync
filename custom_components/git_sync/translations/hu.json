@@ -44,6 +44,7 @@
     "error": {
       "not_a_repository": "Ez a mappa nem Git munkafa.",
       "unknown_remote": "Ez a remote nem létezik a tárolóban.",
+      "invalid_branch": "A Git nem fogadja el ezt az ágnevet.",
       "author_required": "A Git nem tudja, ki írja alá itt a commitokat: adja meg a szerző e-mail-címét (és nevét)."
     },
     "abort": {
