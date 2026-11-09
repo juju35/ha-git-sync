@@ -72,7 +72,8 @@
           "export_time": "Ώρα εξαγωγής",
           "export_dir": "Φάκελος εξαγωγής",
           "export_format": "Μορφή εξαγωγής",
-          "export_before_commit": "Εξαγωγή πινάκων ελέγχου πριν από κάθε commit"
+          "export_before_commit": "Εξαγωγή πινάκων ελέγχου πριν από κάθε commit",
+          "commit_before_update": "Commit πριν από τις ενημερώσεις"
         },
         "data_description": {
           "ai_task_entity": "Δημιουργεί μήνυμα Conventional Commits από το diff. Χωρίς αυτήν χρησιμοποιείται ένα γενικό μήνυμα.",
@@ -83,7 +84,8 @@
           "notify_service": "Για παράδειγμα notify.mobile_app_phone. Αφήστε κενό για απενεργοποίηση.",
           "notify_image": "Απόλυτο URL HTTPS (απαιτείται από το iOS).",
           "export_format": "Το JSON αντιγράφει τα αρχεία .storage ως έχουν· το YAML κρατά μόνο τη διαμόρφωση του πίνακα ελέγχου, πιο ευανάγνωστη στα diff.",
-          "export_dir": "Στον φάκελο ρυθμίσεων (μια σχετική διαδρομή ξεκινά από εκεί) ή σε φάκελο του allowlist_external_dirs."
+          "export_dir": "Στον φάκελο ρυθμίσεων (μια σχετική διαδρομή ξεκινά από εκεί) ή σε φάκελο του allowlist_external_dirs.",
+          "commit_before_update": "Όταν εγκαθίσταται μια ενημέρωση (Home Assistant, πρόσθετο, ενσωμάτωση), γίνεται πρώτα commit και push της διαμόρφωσης, ώστε να υπάρχει commit για επιστροφή. Ένα commit για ενημερώσεις που εγκαθίστανται μαζί."
         }
       }
     },

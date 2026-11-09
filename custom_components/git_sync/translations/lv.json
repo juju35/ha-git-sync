@@ -72,7 +72,8 @@
           "export_time": "Eksporta laiks",
           "export_dir": "Eksporta mape",
           "export_format": "Eksporta formāts",
-          "export_before_commit": "Eksportēt paneļus pirms katra commit"
+          "export_before_commit": "Eksportēt paneļus pirms katra commit",
+          "commit_before_update": "Commit pirms atjauninājumiem"
         },
         "data_description": {
           "ai_task_entity": "Ģenerē Conventional Commits ziņojumu no diff. Bez tās tiek izmantots vispārīgs ziņojums.",
@@ -83,7 +84,8 @@
           "notify_service": "Piemēram, notify.mobile_app_telefons. Atstājiet tukšu, lai atspējotu.",
           "notify_image": "Absolūts HTTPS URL (nepieciešams iOS).",
           "export_format": "JSON kopē .storage failus bez izmaiņām; YAML saglabā tikai paneļa konfigurāciju, ko vieglāk lasīt diff.",
-          "export_dir": "Konfigurācijas mapē (relatīvs ceļš sākas tur) vai allowlist_external_dirs mapē."
+          "export_dir": "Konfigurācijas mapē (relatīvs ceļš sākas tur) vai allowlist_external_dirs mapē.",
+          "commit_before_update": "Kad tiek instalēts atjauninājums (Home Assistant, papildinājums, integrācija), vispirms veikt konfigurācijas commit un push, lai būtu commit, pie kura atgriezties. Viens commit kopā instalētiem atjauninājumiem."
         }
       }
     },

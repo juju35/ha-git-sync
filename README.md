@@ -27,6 +27,7 @@ It replaces the usual stack of `shell_command`, `command_line` sensor, script an
 - **Pull before push**: when the remote has new commits, the commit is rebased on them before the push; a conflict or a diverged history is never pushed and raises a repair explaining how to resolve it
 - **Secret guard**: `secrets.yaml`, `.storage/`, keys, the database and logs are never committed nor sent to the AI task, secret-looking values are hidden from the AI prompt, and a repair offers to complete a `.gitignore` that does not exclude `secrets.yaml` and `.storage`
 - **Automatic commit and push** every N minutes (60 by default) when something changed, and on demand from a button, an action or the card
+- **Commit before updates** (option): when an update is installed (Home Assistant, an add-on, an integration), the configuration is committed and pushed first — *chore: snapshot before updating Home Assistant Core to 2026.12.0* — so there is always a commit to go back to; one commit for updates installed together
 - **AI commit messages**: the staged diff is sent to an `ai_task` entity (Google, OpenAI, Ollama…), which writes a one-line [Conventional Commits](https://www.conventionalcommits.org/) message in any of the integration's languages. Without AI task, or if it fails, a generic message is used
 - **Notification** after each real commit, with an optional image
 - **Dashboard export**: copies `.storage/lovelace*` to a folder, as raw JSON, readable YAML or both, every day at a set time and optionally right before each commit. A file is only rewritten when it changes
@@ -113,6 +114,7 @@ Copy `custom_components/git_sync/` to `/config/custom_components/git_sync/`, the
 | Status refresh interval | 60 s | How often `git status` is read, from 10 to 3600 |
 | Remote check interval | 15 min | How often the status refresh also runs `git fetch`, so that commits pushed from elsewhere show as `behind` or `diverged`; 0 to disable, up to 1440. A fetch always runs before each push |
 | Pull before push | on | When the remote has new commits, rebase on them (`git pull --rebase --autostash`) before pushing. Off: nothing is committed nor pushed while the remote is ahead, and a repair says so |
+| Commit before updates | off | When the `update.install` action runs (from an update entity, the Settings page, an automation or Update all), commit and push the configuration first, while the update downloads. Once per 10 minutes, so a batch of updates gets one snapshot from before the first. A failed snapshot is logged and never stops the update |
 | Allow tracked sensitive files | off | Commit the changes of sensitive files that Git already tracks (see [Secret guard](#secret-guard)). A new sensitive file is always refused |
 | Notification action | none | Sent after each commit, for example `notify.mobile_app_phone`. An action that does not exist is refused by the form |
 | Notification image URL | none | Absolute HTTPS URL (required by iOS) |

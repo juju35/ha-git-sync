@@ -7,7 +7,7 @@ from typing import Final
 DOMAIN: Final = "git_sync"
 NAME: Final = "Git Sync"
 # Same as manifest.json and the card: the card URL carries it, so that browsers load a new release.
-VERSION: Final = "1.6.1"
+VERSION: Final = "1.7.0"
 
 # Config entry data / options
 CONF_REPO_PATH: Final = "repo_path"
@@ -27,11 +27,14 @@ CONF_EXPORT_TIME: Final = "export_time"
 CONF_EXPORT_DIR: Final = "export_dir"
 CONF_EXPORT_FORMAT: Final = "export_format"
 CONF_EXPORT_BEFORE_COMMIT: Final = "export_before_commit"
+CONF_COMMIT_BEFORE_UPDATE: Final = "commit_before_update"
 CONF_FETCH_INTERVAL: Final = "fetch_interval"
 CONF_PULL_BEFORE_PUSH: Final = "pull_before_push"
 CONF_ALLOW_SENSITIVE: Final = "allow_sensitive"
 
 DEFAULT_REPO_PATH: Final = "/config"
+# One snapshot for a batch of updates (Update all installs them one after the other): the first one covers them all.
+SNAPSHOT_COOLDOWN: Final = 600  # seconds
 DEFAULT_BRANCH: Final = ""
 DEFAULT_REMOTE: Final = "origin"
 DEFAULT_SSH_KEY: Final = "/config/.ssh/id_ed25519"

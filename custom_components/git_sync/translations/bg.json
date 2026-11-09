@@ -72,7 +72,8 @@
           "export_time": "Час на експорта",
           "export_dir": "Папка за експорт",
           "export_format": "Формат на експорта",
-          "export_before_commit": "Експортиране на таблата преди всеки commit"
+          "export_before_commit": "Експортиране на таблата преди всеки commit",
+          "commit_before_update": "Commit преди обновления"
         },
         "data_description": {
           "ai_task_entity": "Генерира съобщение във формат Conventional Commits от diff-а. Без него се използва общо съобщение.",
@@ -83,7 +84,8 @@
           "notify_service": "Например notify.mobile_app_phone. Оставете празно, за да изключите.",
           "notify_image": "Абсолютен HTTPS URL (изисква се от iOS).",
           "export_format": "JSON копира файловете от .storage без промяна; YAML запазва само конфигурацията на таблото, по-лесна за четене в diff-ове.",
-          "export_dir": "В папката с конфигурацията (относителен път започва оттам) или в папка от allowlist_external_dirs."
+          "export_dir": "В папката с конфигурацията (относителен път започва оттам) или в папка от allowlist_external_dirs.",
+          "commit_before_update": "Когато се инсталира обновление (Home Assistant, добавка, интеграция), първо се прави commit и push на конфигурацията, за да има commit, към който да се върнете. Един commit за обновления, инсталирани заедно."
         }
       }
     },

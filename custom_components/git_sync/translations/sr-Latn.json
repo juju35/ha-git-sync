@@ -72,7 +72,8 @@
           "export_time": "Vreme izvoza",
           "export_dir": "Fascikla za izvoz",
           "export_format": "Format izvoza",
-          "export_before_commit": "Izvezi kontrolne table pre svakog commit-a"
+          "export_before_commit": "Izvezi kontrolne table pre svakog commit-a",
+          "commit_before_update": "Commit pre ažuriranja"
         },
         "data_description": {
           "ai_task_entity": "Piše poruku u formatu Conventional Commits na osnovu diff-a. Bez njega se koristi opšta poruka.",
@@ -83,7 +84,8 @@
           "notify_service": "Na primer notify.mobile_app_phone. Ostavi prazno da isključiš.",
           "notify_image": "Apsolutni HTTPS URL (zahteva ga iOS).",
           "export_format": "JSON kopira datoteke iz .storage kakve jesu; YAML zadržava samo konfiguraciju kontrolne table, lakšu za čitanje u diff-ovima.",
-          "export_dir": "U fascikli konfiguracije (relativna putanja počinje odatle) ili u fascikli iz allowlist_external_dirs."
+          "export_dir": "U fascikli konfiguracije (relativna putanja počinje odatle) ili u fascikli iz allowlist_external_dirs.",
+          "commit_before_update": "Kada se instalira ažuriranje (Home Assistant, dodatak, integracija), prvo se radi commit i push konfiguracije, da bi postojao commit na koji se možete vratiti. Jedan commit za ažuriranja instalirana zajedno."
         }
       }
     },

@@ -72,7 +72,8 @@
           "export_time": "Ora exportului",
           "export_dir": "Folder de export",
           "export_format": "Format de export",
-          "export_before_commit": "Exportă tablourile de bord înainte de fiecare commit"
+          "export_before_commit": "Exportă tablourile de bord înainte de fiecare commit",
+          "commit_before_update": "Commit înainte de actualizări"
         },
         "data_description": {
           "ai_task_entity": "Generează un mesaj Conventional Commits din diff. Fără ea, se folosește un mesaj generic.",
@@ -83,7 +84,8 @@
           "notify_service": "De exemplu notify.mobile_app_telefon. Lăsați gol pentru a dezactiva.",
           "notify_image": "URL HTTPS absolut (cerut de iOS).",
           "export_format": "JSON copiază fișierele .storage ca atare; YAML păstrează doar configurația tabloului de bord, mai ușor de citit în diff-uri.",
-          "export_dir": "În dosarul de configurare (o cale relativă pornește de acolo) sau într-un dosar din allowlist_external_dirs."
+          "export_dir": "În dosarul de configurare (o cale relativă pornește de acolo) sau într-un dosar din allowlist_external_dirs.",
+          "commit_before_update": "Când se instalează o actualizare (Home Assistant, un add-on, o integrare), mai întâi fă commit și push configurației, ca să existe un commit la care să revii. Un singur commit pentru actualizările instalate împreună."
         }
       }
     },

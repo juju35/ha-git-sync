@@ -72,7 +72,8 @@
           "export_time": "Exporttid",
           "export_dir": "Exportmapp",
           "export_format": "Exportformat",
-          "export_before_commit": "Exportera instrumentpaneler före varje commit"
+          "export_before_commit": "Exportera instrumentpaneler före varje commit",
+          "commit_before_update": "Commit före uppdateringar"
         },
         "data_description": {
           "ai_task_entity": "Genererar ett Conventional Commits-meddelande utifrån diffen. Utan den används ett generiskt meddelande.",
@@ -83,7 +84,8 @@
           "notify_service": "Till exempel notify.mobile_app_telefon. Lämna tomt för att inaktivera.",
           "notify_image": "Absolut HTTPS-URL (krävs av iOS).",
           "export_format": "JSON kopierar .storage-filerna som de är; YAML behåller bara instrumentpanelens konfiguration, som är lättare att läsa i diffar.",
-          "export_dir": "I konfigurationsmappen (en relativ sökväg börjar där) eller i en mapp från allowlist_external_dirs."
+          "export_dir": "I konfigurationsmappen (en relativ sökväg börjar där) eller i en mapp från allowlist_external_dirs.",
+          "commit_before_update": "När en uppdatering installeras (Home Assistant, ett tillägg, en integration), committa och pusha konfigurationen först, så att det finns en commit att gå tillbaka till. En commit för uppdateringar som installeras tillsammans."
         }
       }
     },

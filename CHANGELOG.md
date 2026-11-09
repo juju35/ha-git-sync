@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.0 - 2026-11-09
+
+### Features
+- **Commit before updates** (option, off by default): when the `update.install` action runs — Home Assistant, an add-on, an integration, from its update entity, the Settings page, an automation or Update all — the configuration is committed and pushed first (*chore: snapshot before updating Home Assistant Core to 2026.12.0*), so there is a commit to go back to if the update breaks something. Updates installed together get one snapshot, from before the first. A failed snapshot is logged and never stops the update.
+
 ## 1.6.1 - 2026-11-09
 
 ### Security
