@@ -7,7 +7,7 @@ from typing import Final
 DOMAIN: Final = "git_sync"
 NAME: Final = "Git Sync"
 # Same as manifest.json and the card: the card URL carries it, so that browsers load a new release.
-VERSION: Final = "1.6.0"
+VERSION: Final = "1.6.1"
 
 # Config entry data / options
 CONF_REPO_PATH: Final = "repo_path"
@@ -39,7 +39,8 @@ DEFAULT_COMMIT_LANGUAGE: Final = "en"
 DEFAULT_STATUS_INTERVAL: Final = 60  # seconds
 DEFAULT_COMMIT_INTERVAL: Final = 60  # minutes, 0 = disabled
 DEFAULT_EXPORT_TIME: Final = "08:00:00"
-DEFAULT_EXPORT_DIR: Final = "/config/dashboards_export"
+# Relative: read from the configuration folder (/config on Home Assistant OS).
+DEFAULT_EXPORT_DIR: Final = "dashboards_export"
 DEFAULT_EXPORT_FORMAT: Final = "json"
 DEFAULT_FETCH_INTERVAL: Final = 15  # minutes, 0 = only before a push
 DEFAULT_PULL_BEFORE_PUSH: Final = True

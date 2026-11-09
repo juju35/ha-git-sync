@@ -82,12 +82,14 @@
           "allow_sensitive": "Face commit modificărilor fișierelor sensibile deja urmărite de Git (secrets.yaml, .storage, chei, bază de date, loguri). Fișierele sensibile noi sunt refuzate întotdeauna.",
           "notify_service": "De exemplu notify.mobile_app_telefon. Lăsați gol pentru a dezactiva.",
           "notify_image": "URL HTTPS absolut (cerut de iOS).",
-          "export_format": "JSON copiază fișierele .storage ca atare; YAML păstrează doar configurația tabloului de bord, mai ușor de citit în diff-uri."
+          "export_format": "JSON copiază fișierele .storage ca atare; YAML păstrează doar configurația tabloului de bord, mai ușor de citit în diff-uri.",
+          "export_dir": "În dosarul de configurare (o cale relativă pornește de acolo) sau într-un dosar din allowlist_external_dirs."
         }
       }
     },
     "error": {
-      "unknown_notify_service": "Această acțiune de notificare nu există."
+      "unknown_notify_service": "Această acțiune de notificare nu există.",
+      "export_dir_not_allowed": "Dosarul trebuie să fie în dosarul de configurare sau într-un dosar din allowlist_external_dirs, în afara dosarelor ascunse precum .storage."
     }
   },
   "selector": {
@@ -242,6 +244,9 @@
     },
     "sensitive_files": {
       "message": "Refuzat: modificările includ fișiere sensibile ({files}), care nu sunt nici incluse în commit, nici trimise la AI task. Adaugă-le în .gitignore sau permite-le pe cele urmărite în opțiunile Git Sync."
+    },
+    "export_dir_not_allowed": {
+      "message": "Dosarul de export {path} este în afara dosarului de configurare și a allowlist_external_dirs: alege altul în opțiunile Git Sync."
     }
   },
   "issues": {

@@ -82,12 +82,14 @@
           "allow_sensitive": "Commituje zmiany plików wrażliwych już śledzonych przez Git (secrets.yaml, .storage, klucze, baza danych, logi). Nowe pliki wrażliwe są zawsze odrzucane.",
           "notify_service": "Na przykład notify.mobile_app_telefon. Pozostaw puste, aby wyłączyć.",
           "notify_image": "Bezwzględny adres URL HTTPS (wymagany przez iOS).",
-          "export_format": "JSON kopiuje pliki .storage bez zmian; YAML zachowuje tylko konfigurację dashboardu, czytelniejszą w diffach."
+          "export_format": "JSON kopiuje pliki .storage bez zmian; YAML zachowuje tylko konfigurację dashboardu, czytelniejszą w diffach.",
+          "export_dir": "W folderze konfiguracji (ścieżka względna zaczyna się w nim) lub w folderze z allowlist_external_dirs."
         }
       }
     },
     "error": {
-      "unknown_notify_service": "Ta akcja powiadomienia nie istnieje."
+      "unknown_notify_service": "Ta akcja powiadomienia nie istnieje.",
+      "export_dir_not_allowed": "Folder musi znajdować się w folderze konfiguracji lub w folderze z allowlist_external_dirs, poza folderami ukrytymi, takimi jak .storage."
     }
   },
   "selector": {
@@ -242,6 +244,9 @@
     },
     "sensitive_files": {
       "message": "Odrzucono: zmiany obejmują pliki wrażliwe ({files}), które nie są ani commitowane, ani wysyłane do AI task. Dodaj je do .gitignore albo zezwól na śledzone w opcjach Git Sync."
+    },
+    "export_dir_not_allowed": {
+      "message": "Folder eksportu {path} jest poza folderem konfiguracji i allowlist_external_dirs: wybierz inny w opcjach Git Sync."
     }
   },
   "issues": {

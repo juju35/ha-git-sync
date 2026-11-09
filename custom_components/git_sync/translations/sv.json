@@ -82,12 +82,14 @@
           "allow_sensitive": "Committa ändringar i känsliga filer som Git redan spårar (secrets.yaml, .storage, nycklar, databas, loggar). Nya känsliga filer avvisas alltid.",
           "notify_service": "Till exempel notify.mobile_app_telefon. Lämna tomt för att inaktivera.",
           "notify_image": "Absolut HTTPS-URL (krävs av iOS).",
-          "export_format": "JSON kopierar .storage-filerna som de är; YAML behåller bara instrumentpanelens konfiguration, som är lättare att läsa i diffar."
+          "export_format": "JSON kopierar .storage-filerna som de är; YAML behåller bara instrumentpanelens konfiguration, som är lättare att läsa i diffar.",
+          "export_dir": "I konfigurationsmappen (en relativ sökväg börjar där) eller i en mapp från allowlist_external_dirs."
         }
       }
     },
     "error": {
-      "unknown_notify_service": "Den här aviseringsåtgärden finns inte."
+      "unknown_notify_service": "Den här aviseringsåtgärden finns inte.",
+      "export_dir_not_allowed": "Mappen måste ligga i konfigurationsmappen eller i en mapp från allowlist_external_dirs, utanför dolda mappar som .storage."
     }
   },
   "selector": {
@@ -242,6 +244,9 @@
     },
     "sensitive_files": {
       "message": "Avvisat: ändringarna innehåller känsliga filer ({files}) som varken committas eller skickas till AI-uppgiften. Lägg till dem i .gitignore, eller tillåt de spårade i Git Sync-alternativen."
+    },
+    "export_dir_not_allowed": {
+      "message": "Exportmappen {path} ligger utanför konfigurationsmappen och allowlist_external_dirs: välj en annan i Git Sync-alternativen."
     }
   },
   "issues": {

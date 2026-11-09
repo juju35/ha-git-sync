@@ -82,12 +82,14 @@
           "allow_sensitive": "Wijzigingen committen van gevoelige bestanden die Git al volgt (secrets.yaml, .storage, sleutels, database, logs). Nieuwe gevoelige bestanden worden altijd geweigerd.",
           "notify_service": "Bijvoorbeeld notify.mobile_app_telefoon. Leeg laten om uit te schakelen.",
           "notify_image": "Absolute HTTPS-URL (vereist door iOS).",
-          "export_format": "JSON kopieert de .storage-bestanden ongewijzigd; YAML bewaart alleen de dashboardconfiguratie, beter leesbaar in diffs."
+          "export_format": "JSON kopieert de .storage-bestanden ongewijzigd; YAML bewaart alleen de dashboardconfiguratie, beter leesbaar in diffs.",
+          "export_dir": "In de configuratiemap (een relatief pad begint daar) of in een map van allowlist_external_dirs."
         }
       }
     },
     "error": {
-      "unknown_notify_service": "Deze meldingsactie bestaat niet."
+      "unknown_notify_service": "Deze meldingsactie bestaat niet.",
+      "export_dir_not_allowed": "De map moet in de configuratiemap of in een map van allowlist_external_dirs liggen, buiten verborgen mappen zoals .storage."
     }
   },
   "selector": {
@@ -242,6 +244,9 @@
     },
     "sensitive_files": {
       "message": "Geweigerd: de wijzigingen bevatten gevoelige bestanden ({files}), die niet gecommit en niet naar de AI-taak gestuurd worden. Voeg ze toe aan .gitignore, of sta de gevolgde toe in de Git Sync-opties."
+    },
+    "export_dir_not_allowed": {
+      "message": "De exportmap {path} ligt buiten de configuratiemap en allowlist_external_dirs: kies een andere in de opties van Git Sync."
     }
   },
   "issues": {

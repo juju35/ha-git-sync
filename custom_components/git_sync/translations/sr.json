@@ -82,12 +82,14 @@
           "allow_sensitive": "Commit измена осетљивих датотека које Git већ прати (secrets.yaml, .storage, кључеви, база података, дневници). Нове осетљиве датотеке се увек одбијају.",
           "notify_service": "На пример notify.mobile_app_phone. Остави празно да искључиш.",
           "notify_image": "Апсолутни HTTPS URL (захтева га iOS).",
-          "export_format": "JSON копира датотеке из .storage какве јесу; YAML задржава само конфигурацију контролне табле, лакшу за читање у diff-овима."
+          "export_format": "JSON копира датотеке из .storage какве јесу; YAML задржава само конфигурацију контролне табле, лакшу за читање у diff-овима.",
+          "export_dir": "У фасцикли конфигурације (релативна путања почиње одатле) или у фасцикли из allowlist_external_dirs."
         }
       }
     },
     "error": {
-      "unknown_notify_service": "Ова радња обавештења не постоји."
+      "unknown_notify_service": "Ова радња обавештења не постоји.",
+      "export_dir_not_allowed": "Фасцикла мора бити у фасцикли конфигурације или у фасцикли из allowlist_external_dirs, ван скривених фасцикли као што је .storage."
     }
   },
   "selector": {
@@ -242,6 +244,9 @@
     },
     "sensitive_files": {
       "message": "Одбијено: измене садрже осетљиве датотеке ({files}), које се не укључују у commit нити шаљу AI task-у. Додај их у .gitignore или дозволи праћене у Git Sync опцијама."
+    },
+    "export_dir_not_allowed": {
+      "message": "Фасцикла за извоз {path} је ван фасцикле конфигурације и allowlist_external_dirs: изаберите другу у опцијама Git Sync-а."
     }
   },
   "issues": {

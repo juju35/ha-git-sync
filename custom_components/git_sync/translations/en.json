@@ -82,12 +82,14 @@
           "allow_sensitive": "Commit the changes of sensitive files already tracked by Git (secrets.yaml, .storage, keys, database, logs). New sensitive files are always refused.",
           "notify_service": "For example notify.mobile_app_phone. Leave empty to disable.",
           "notify_image": "Absolute HTTPS URL (required by iOS).",
-          "export_format": "JSON copies the .storage files as is; YAML keeps only the dashboard configuration, easier to read in diffs."
+          "export_format": "JSON copies the .storage files as is; YAML keeps only the dashboard configuration, easier to read in diffs.",
+          "export_dir": "Inside the configuration folder (a relative path starts there) or a folder of allowlist_external_dirs."
         }
       }
     },
     "error": {
-      "unknown_notify_service": "This notification action does not exist."
+      "unknown_notify_service": "This notification action does not exist.",
+      "export_dir_not_allowed": "The folder must be inside the configuration folder or a folder of allowlist_external_dirs, outside hidden folders such as .storage."
     }
   },
   "selector": {
@@ -242,6 +244,9 @@
     },
     "sensitive_files": {
       "message": "Refused: the changes include sensitive files ({files}), which are neither committed nor sent to the AI task. Add them to .gitignore, or allow the tracked ones in the Git Sync options."
+    },
+    "export_dir_not_allowed": {
+      "message": "The export folder {path} is outside the configuration folder and allowlist_external_dirs: choose another one in the Git Sync options."
     }
   },
   "issues": {

@@ -82,12 +82,14 @@
           "allow_sensitive": "Делать commit изменений конфиденциальных файлов, которые Git уже отслеживает (secrets.yaml, .storage, ключи, база данных, журналы). Новые конфиденциальные файлы всегда отклоняются.",
           "notify_service": "Например, notify.mobile_app_phone. Оставьте пустым, чтобы отключить.",
           "notify_image": "Абсолютный HTTPS URL (требуется для iOS).",
-          "export_format": "JSON копирует файлы .storage как есть; YAML сохраняет только конфигурацию панели, её проще читать в diff."
+          "export_format": "JSON копирует файлы .storage как есть; YAML сохраняет только конфигурацию панели, её проще читать в diff.",
+          "export_dir": "В папке конфигурации (относительный путь начинается от неё) или в папке из allowlist_external_dirs."
         }
       }
     },
     "error": {
-      "unknown_notify_service": "Такого действия уведомления не существует."
+      "unknown_notify_service": "Такого действия уведомления не существует.",
+      "export_dir_not_allowed": "Папка должна находиться в папке конфигурации или в папке из allowlist_external_dirs, вне скрытых папок, таких как .storage."
     }
   },
   "selector": {
@@ -242,6 +244,9 @@
     },
     "sensitive_files": {
       "message": "Отклонено: изменения содержат конфиденциальные файлы ({files}), которые не попадают в commit и не отправляются AI-задаче. Добавьте их в .gitignore или разрешите отслеживаемые в параметрах Git Sync."
+    },
+    "export_dir_not_allowed": {
+      "message": "Папка экспорта {path} находится вне папки конфигурации и allowlist_external_dirs: выберите другую в параметрах Git Sync."
     }
   },
   "issues": {
