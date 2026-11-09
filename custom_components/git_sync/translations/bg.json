@@ -82,12 +82,14 @@
           "allow_sensitive": "Commit на промените в чувствителни файлове, които Git вече следи (secrets.yaml, .storage, ключове, база данни, журнали). Новите чувствителни файлове винаги се отказват.",
           "notify_service": "Например notify.mobile_app_phone. Оставете празно, за да изключите.",
           "notify_image": "Абсолютен HTTPS URL (изисква се от iOS).",
-          "export_format": "JSON копира файловете от .storage без промяна; YAML запазва само конфигурацията на таблото, по-лесна за четене в diff-ове."
+          "export_format": "JSON копира файловете от .storage без промяна; YAML запазва само конфигурацията на таблото, по-лесна за четене в diff-ове.",
+          "export_dir": "В папката с конфигурацията (относителен път започва оттам) или в папка от allowlist_external_dirs."
         }
       }
     },
     "error": {
-      "unknown_notify_service": "Това действие за известие не съществува."
+      "unknown_notify_service": "Това действие за известие не съществува.",
+      "export_dir_not_allowed": "Папката трябва да е в папката с конфигурацията или в папка от allowlist_external_dirs, извън скрити папки като .storage."
     }
   },
   "selector": {
@@ -242,6 +244,9 @@
     },
     "sensitive_files": {
       "message": "Отказано: промените включват чувствителни файлове ({files}), които нито влизат в commit, нито се изпращат на AI task. Добавете ги в .gitignore или разрешете следените в опциите на Git Sync."
+    },
+    "export_dir_not_allowed": {
+      "message": "Папката за експорт {path} е извън папката с конфигурацията и allowlist_external_dirs: изберете друга в опциите на Git Sync."
     }
   },
   "issues": {

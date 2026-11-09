@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.1 - 2026-11-09
+
+### Security
+- The dashboard export only writes inside the configuration folder or a folder of `allowlist_external_dirs`, outside hidden folders such as `.storage` (symlinks followed). Any other folder is refused in the options, and an entry saved earlier with such a folder gets an error instead of an export: a folder such as `/media` would have handed the dashboards to every user of the media browser.
+
+### Changes
+- The default export folder is `dashboards_export`, read from the configuration folder (still `/config/dashboards_export` on Home Assistant OS); a relative folder is read from there instead of the process's working directory.
+
 ## 1.6.0 - 2026-11-09
 
 ### Performance

@@ -19,6 +19,14 @@ def auto_enable_custom_integrations(enable_custom_integrations):
     yield
 
 
+@pytest.fixture(autouse=True)
+def allow_tmp_path(request, tmp_path):
+    """Let the dashboard export write to the test's temporary folder, as allowlist_external_dirs would."""
+    if "hass" in request.fixturenames:
+        request.getfixturevalue("hass").config.allowlist_external_dirs.add(str(tmp_path))
+    yield
+
+
 class _DeprecationRecorder(logging.Handler):
     """Collects Home Assistant deprecation reports that name this integration."""
 

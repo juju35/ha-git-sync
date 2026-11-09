@@ -82,12 +82,14 @@
           "allow_sensitive": "Commit izmena osetljivih datoteka koje Git već prati (secrets.yaml, .storage, ključevi, baza podataka, dnevnici). Nove osetljive datoteke se uvek odbijaju.",
           "notify_service": "Na primer notify.mobile_app_phone. Ostavi prazno da isključiš.",
           "notify_image": "Apsolutni HTTPS URL (zahteva ga iOS).",
-          "export_format": "JSON kopira datoteke iz .storage kakve jesu; YAML zadržava samo konfiguraciju kontrolne table, lakšu za čitanje u diff-ovima."
+          "export_format": "JSON kopira datoteke iz .storage kakve jesu; YAML zadržava samo konfiguraciju kontrolne table, lakšu za čitanje u diff-ovima.",
+          "export_dir": "U fascikli konfiguracije (relativna putanja počinje odatle) ili u fascikli iz allowlist_external_dirs."
         }
       }
     },
     "error": {
-      "unknown_notify_service": "Ova radnja obaveštenja ne postoji."
+      "unknown_notify_service": "Ova radnja obaveštenja ne postoji.",
+      "export_dir_not_allowed": "Fascikla mora biti u fascikli konfiguracije ili u fascikli iz allowlist_external_dirs, van skrivenih fascikli kao što je .storage."
     }
   },
   "selector": {
@@ -242,6 +244,9 @@
     },
     "sensitive_files": {
       "message": "Odbijeno: izmene sadrže osetljive datoteke ({files}), koje se ne uključuju u commit niti šalju AI task-u. Dodaj ih u .gitignore ili dozvoli praćene u Git Sync opcijama."
+    },
+    "export_dir_not_allowed": {
+      "message": "Fascikla za izvoz {path} je van fascikle konfiguracije i allowlist_external_dirs: izaberite drugu u opcijama Git Sync-a."
     }
   },
   "issues": {

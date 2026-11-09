@@ -82,12 +82,14 @@
           "allow_sensitive": "Hace commit de los cambios de archivos sensibles ya seguidos por Git (secrets.yaml, .storage, claves, base de datos, logs). Los archivos sensibles nuevos siempre se rechazan.",
           "notify_service": "Por ejemplo notify.mobile_app_telefono. Déjalo vacío para desactivarlo.",
           "notify_image": "URL HTTPS absoluta (requerida por iOS).",
-          "export_format": "JSON copia los archivos .storage tal cual; YAML solo conserva la configuración del panel, más legible en los diffs."
+          "export_format": "JSON copia los archivos .storage tal cual; YAML solo conserva la configuración del panel, más legible en los diffs.",
+          "export_dir": "Dentro de la carpeta de configuración (una ruta relativa empieza ahí) o de una carpeta de allowlist_external_dirs."
         }
       }
     },
     "error": {
-      "unknown_notify_service": "Esta acción de notificación no existe."
+      "unknown_notify_service": "Esta acción de notificación no existe.",
+      "export_dir_not_allowed": "La carpeta debe estar dentro de la carpeta de configuración o de una carpeta de allowlist_external_dirs, fuera de carpetas ocultas como .storage."
     }
   },
   "selector": {
@@ -242,6 +244,9 @@
     },
     "sensitive_files": {
       "message": "Rechazado: los cambios incluyen archivos sensibles ({files}), que ni se incluyen en el commit ni se envían a la AI task. Añádelos al .gitignore o permite los seguidos en las opciones de Git Sync."
+    },
+    "export_dir_not_allowed": {
+      "message": "La carpeta de exportación {path} está fuera de la carpeta de configuración y de allowlist_external_dirs: elige otra en las opciones de Git Sync."
     }
   },
   "issues": {

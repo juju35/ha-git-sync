@@ -82,12 +82,14 @@
           "allow_sensitive": "Commitovat změny citlivých souborů, které Git už sleduje (secrets.yaml, .storage, klíče, databáze, logy). Nové citlivé soubory jsou vždy odmítnuty.",
           "notify_service": "Například notify.mobile_app_telefon. Ponechte prázdné pro vypnutí.",
           "notify_image": "Absolutní URL HTTPS (vyžaduje iOS).",
-          "export_format": "JSON zkopíruje soubory .storage beze změny; YAML ponechá pouze konfiguraci dashboardu, která se v diffech snáze čte."
+          "export_format": "JSON zkopíruje soubory .storage beze změny; YAML ponechá pouze konfiguraci dashboardu, která se v diffech snáze čte.",
+          "export_dir": "Ve složce konfigurace (relativní cesta začíná v ní) nebo ve složce z allowlist_external_dirs."
         }
       }
     },
     "error": {
-      "unknown_notify_service": "Tato akce oznámení neexistuje."
+      "unknown_notify_service": "Tato akce oznámení neexistuje.",
+      "export_dir_not_allowed": "Složka musí být ve složce konfigurace nebo ve složce z allowlist_external_dirs, mimo skryté složky, jako je .storage."
     }
   },
   "selector": {
@@ -242,6 +244,9 @@
     },
     "sensitive_files": {
       "message": "Odmítnuto: změny obsahují citlivé soubory ({files}), které se necommitují ani neposílají do AI task. Přidejte je do .gitignore nebo povolte sledované v možnostech Git Sync."
+    },
+    "export_dir_not_allowed": {
+      "message": "Složka exportu {path} je mimo složku konfigurace a allowlist_external_dirs: vyberte jinou v možnostech Git Sync."
     }
   },
   "issues": {

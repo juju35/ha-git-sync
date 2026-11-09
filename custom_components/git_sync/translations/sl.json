@@ -82,12 +82,14 @@
           "allow_sensitive": "Commit sprememb občutljivih datotek, ki jih Git že sledi (secrets.yaml, .storage, ključi, zbirka podatkov, dnevniki). Nove občutljive datoteke so vedno zavrnjene.",
           "notify_service": "Na primer notify.mobile_app_telefon. Pustite prazno za onemogočanje.",
           "notify_image": "Absolutni URL HTTPS (zahteva ga iOS).",
-          "export_format": "JSON kopira datoteke .storage nespremenjene; YAML ohrani le konfiguracijo nadzorne plošče, ki je v diffih lažje berljiva."
+          "export_format": "JSON kopira datoteke .storage nespremenjene; YAML ohrani le konfiguracijo nadzorne plošče, ki je v diffih lažje berljiva.",
+          "export_dir": "V mapi konfiguracije (relativna pot se začne tam) ali v mapi iz allowlist_external_dirs."
         }
       }
     },
     "error": {
-      "unknown_notify_service": "To dejanje obvestila ne obstaja."
+      "unknown_notify_service": "To dejanje obvestila ne obstaja.",
+      "export_dir_not_allowed": "Mapa mora biti v mapi konfiguracije ali v mapi iz allowlist_external_dirs, zunaj skritih map, kot je .storage."
     }
   },
   "selector": {
@@ -242,6 +244,9 @@
     },
     "sensitive_files": {
       "message": "Zavrnjeno: spremembe vsebujejo občutljive datoteke ({files}), ki niso ne commitane ne poslane AI task. Dodaj jih v .gitignore ali dovoli sledene v možnostih Git Sync."
+    },
+    "export_dir_not_allowed": {
+      "message": "Mapa za izvoz {path} je zunaj mape konfiguracije in allowlist_external_dirs: izberite drugo v možnostih Git Sync."
     }
   },
   "issues": {

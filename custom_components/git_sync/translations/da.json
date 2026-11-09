@@ -82,12 +82,14 @@
           "allow_sensitive": "Commit ændringer i følsomme filer, som Git allerede sporer (secrets.yaml, .storage, nøgler, database, logs). Nye følsomme filer afvises altid.",
           "notify_service": "For eksempel notify.mobile_app_telefon. Lad feltet være tomt for at deaktivere.",
           "notify_image": "Absolut HTTPS-URL (krævet af iOS).",
-          "export_format": "JSON kopierer .storage-filerne som de er; YAML beholder kun dashboardets konfiguration, som er lettere at læse i diffs."
+          "export_format": "JSON kopierer .storage-filerne som de er; YAML beholder kun dashboardets konfiguration, som er lettere at læse i diffs.",
+          "export_dir": "I konfigurationsmappen (en relativ sti starter der) eller i en mappe fra allowlist_external_dirs."
         }
       }
     },
     "error": {
-      "unknown_notify_service": "Denne notifikationshandling findes ikke."
+      "unknown_notify_service": "Denne notifikationshandling findes ikke.",
+      "export_dir_not_allowed": "Mappen skal ligge i konfigurationsmappen eller i en mappe fra allowlist_external_dirs, uden for skjulte mapper som .storage."
     }
   },
   "selector": {
@@ -242,6 +244,9 @@
     },
     "sensitive_files": {
       "message": "Afvist: ændringerne omfatter følsomme filer ({files}), som hverken committes eller sendes til AI-opgaven. Føj dem til .gitignore, eller tillad de sporede i Git Sync-indstillingerne."
+    },
+    "export_dir_not_allowed": {
+      "message": "Eksportmappen {path} ligger uden for konfigurationsmappen og allowlist_external_dirs: vælg en anden i Git Sync-indstillingerne."
     }
   },
   "issues": {

@@ -82,12 +82,14 @@
           "allow_sensitive": "A Git által már követett érzékeny fájlok (secrets.yaml, .storage, kulcsok, adatbázis, naplók) módosításainak commitja. Az új érzékeny fájlokat mindig elutasítja.",
           "notify_service": "Például notify.mobile_app_telefon. Hagyja üresen a letiltáshoz.",
           "notify_image": "Abszolút HTTPS URL (az iOS megköveteli).",
-          "export_format": "A JSON változatlanul másolja a .storage fájlokat; a YAML csak az irányítópult konfigurációját tartja meg, ami a diffekben könnyebben olvasható."
+          "export_format": "A JSON változatlanul másolja a .storage fájlokat; a YAML csak az irányítópult konfigurációját tartja meg, ami a diffekben könnyebben olvasható.",
+          "export_dir": "A konfigurációs mappában (a relatív útvonal innen indul) vagy az allowlist_external_dirs egyik mappájában."
         }
       }
     },
     "error": {
-      "unknown_notify_service": "Ez az értesítési művelet nem létezik."
+      "unknown_notify_service": "Ez az értesítési művelet nem létezik.",
+      "export_dir_not_allowed": "A mappának a konfigurációs mappában vagy az allowlist_external_dirs egyik mappájában kell lennie, rejtett mappákon (például .storage) kívül."
     }
   },
   "selector": {
@@ -242,6 +244,9 @@
     },
     "sensitive_files": {
       "message": "Elutasítva: a módosítások érzékeny fájlokat tartalmaznak ({files}), amelyek nem kerülnek commitba, és az AI task sem kapja meg őket. Vedd fel őket a .gitignore-ba, vagy engedélyezd a követetteket a Git Sync beállításaiban."
+    },
+    "export_dir_not_allowed": {
+      "message": "A(z) {path} exportmappa a konfigurációs mappán és az allowlist_external_dirs mappáin kívül van: válassz másikat a Git Sync beállításaiban."
     }
   },
   "issues": {

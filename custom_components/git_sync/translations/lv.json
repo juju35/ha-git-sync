@@ -82,12 +82,14 @@
           "allow_sensitive": "Veikt commit sensitīvo failu izmaiņām, kurus Git jau izseko (secrets.yaml, .storage, atslēgas, datubāze, žurnāli). Jauni sensitīvie faili vienmēr tiek noraidīti.",
           "notify_service": "Piemēram, notify.mobile_app_telefons. Atstājiet tukšu, lai atspējotu.",
           "notify_image": "Absolūts HTTPS URL (nepieciešams iOS).",
-          "export_format": "JSON kopē .storage failus bez izmaiņām; YAML saglabā tikai paneļa konfigurāciju, ko vieglāk lasīt diff."
+          "export_format": "JSON kopē .storage failus bez izmaiņām; YAML saglabā tikai paneļa konfigurāciju, ko vieglāk lasīt diff.",
+          "export_dir": "Konfigurācijas mapē (relatīvs ceļš sākas tur) vai allowlist_external_dirs mapē."
         }
       }
     },
     "error": {
-      "unknown_notify_service": "Šāda paziņojuma darbība nepastāv."
+      "unknown_notify_service": "Šāda paziņojuma darbība nepastāv.",
+      "export_dir_not_allowed": "Mapei jābūt konfigurācijas mapē vai allowlist_external_dirs mapē, ārpus slēptām mapēm, piemēram, .storage."
     }
   },
   "selector": {
@@ -242,6 +244,9 @@
     },
     "sensitive_files": {
       "message": "Noraidīts: izmaiņās ir sensitīvi faili ({files}), kas netiek ne iekļauti commit, ne nosūtīti AI task. Pievienojiet tos .gitignore vai atļaujiet izsekotos Git Sync opcijās."
+    },
+    "export_dir_not_allowed": {
+      "message": "Eksporta mape {path} ir ārpus konfigurācijas mapes un allowlist_external_dirs: izvēlieties citu Git Sync opcijās."
     }
   },
   "issues": {

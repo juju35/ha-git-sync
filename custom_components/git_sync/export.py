@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -24,6 +24,21 @@ def _file_digest(file: Path) -> str | None:
         return _digest(file.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError):
         return None
+
+
+def export_dir_allowed(export_dir: str, config_dir: str, allowlist: Iterable[str]) -> bool:
+    """Whether the export may write to export_dir (blocking: resolves the path, symlinks followed).
+
+    Only inside the configuration folder or an allowlist_external_dirs folder, outside hidden folders such as
+    .storage: elsewhere, a folder such as /media would hand the dashboards to every user of the media browser.
+    """
+    try:
+        target = Path(export_dir).resolve()
+        roots = [Path(config_dir).resolve(), *(Path(d).resolve() for d in allowlist)]
+    except OSError:
+        return False
+    root = next((r for r in roots if target.is_relative_to(r)), None)
+    return root is not None and not any(part.startswith(".") for part in target.relative_to(root).parts)
 
 
 def _dashboard_config(raw: str) -> Any | None:

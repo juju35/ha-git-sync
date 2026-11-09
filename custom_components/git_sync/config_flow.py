@@ -53,6 +53,7 @@ from .const import (
     EXPORT_FORMATS,
     NAME,
 )
+from .export import export_dir_allowed
 from .git import GitRepo
 
 _TEXT = selector.TextSelector()
@@ -282,7 +283,14 @@ class GitSyncOptionsFlow(OptionsFlow):
             service = user_input[CONF_NOTIFY_SERVICE].strip()
             if service and not _notify_service_exists(self.hass, service):
                 errors[CONF_NOTIFY_SERVICE] = "unknown_notify_service"
-            else:
+            if not await self.hass.async_add_executor_job(
+                export_dir_allowed,
+                self.hass.config.path(user_input[CONF_EXPORT_DIR]),
+                self.hass.config.config_dir,
+                self.hass.config.allowlist_external_dirs,
+            ):
+                errors[CONF_EXPORT_DIR] = "export_dir_not_allowed"
+            if not errors:
                 return self.async_create_entry(data=user_input)
 
         schema = _options_schema(self.hass, dict(self.config_entry.options))

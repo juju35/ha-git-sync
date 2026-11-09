@@ -67,7 +67,7 @@ from .const import (
     STATUS_ERROR,
     STORAGE_VERSION,
 )
-from .export import export_dashboards
+from .export import export_dashboards, export_dir_allowed
 from .git import (
     GitCommit,
     GitError,
@@ -564,7 +564,16 @@ class GitSyncCoordinator(DataUpdateCoordinator[GitSyncData]):
         return files
 
     async def _export(self) -> list[str]:
-        export_dir = os.path.normpath(self.settings.get(CONF_EXPORT_DIR) or DEFAULT_EXPORT_DIR)
+        # A relative folder is read from the configuration folder, not from the process's working directory.
+        export_dir = os.path.normpath(self.hass.config.path(self.settings.get(CONF_EXPORT_DIR) or DEFAULT_EXPORT_DIR))
+        if not await self.hass.async_add_executor_job(
+            export_dir_allowed, export_dir, self.hass.config.config_dir, self.hass.config.allowlist_external_dirs
+        ):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="export_dir_not_allowed",
+                translation_placeholders={"path": export_dir},
+            )
         # Files written by an earlier export into this same folder. Nothing is deleted from a folder the export
         # never wrote to, nor on the first export after an update from a version without manifest; that first
         # export (an export was done, no manifest) refreshes the old version's files instead of skipping them.
