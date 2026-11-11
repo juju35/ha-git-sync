@@ -18,6 +18,7 @@ from homeassistant.helpers.event import async_track_time_change, async_track_tim
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
+from . import system_hub_notice
 from .const import (
     CARD_URL,
     CONF_COMMIT_BEFORE_UPDATE,
@@ -109,6 +110,8 @@ async def _async_register_resource(hass: HomeAssistant) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: GitSyncConfigEntry) -> bool:
     """Set up a repository from a config entry."""
+    # Replaced by a System Hub module: a repair while System Hub is set up too.
+    entry.async_on_unload(system_hub_notice.async_watch(hass, entry, "Git Sync"))
     if hass.state is CoreState.running:
         # async_setup runs once per start: after the last entry was removed (which drops the card resource)
         # and one is added again, the resource has to come back without a restart.
