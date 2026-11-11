@@ -1,5 +1,7 @@
 # ha-git-sync
 
+<p align="center"><img src="https://raw.githubusercontent.com/juju35/ha-git-sync/main/images/archived.svg" alt="Archived: no longer updated, now part of System Hub" width="800"></p>
+
 > [!WARNING]
 > **Deprecated, this repository is archived.** Git Sync is now part of [System Hub](https://github.com/juju35/ha-system-hub), which takes over its settings and keeps its cards. No more updates are published here: install System Hub, then remove Git Sync. See [Migrating](https://github.com/juju35/ha-system-hub#migrating).
 
