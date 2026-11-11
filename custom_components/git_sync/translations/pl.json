@@ -273,6 +273,10 @@
           "not_loaded": "Repozytorium Git Sync nie jest załadowane."
         }
       }
+    },
+    "system_hub_installed": {
+      "title": "{name} jest teraz częścią System Hub",
+      "description": "System Hub jest skonfigurowany w tym Home Assistant i uruchamia {name} jako jeden ze swoich modułów. To repozytorium nie jest już utrzymywane.\n\nGdy oba są skonfigurowane, {name} działa podwójnie, a jego karty są rejestrowane dwukrotnie. Włącz moduł w System Hub (przejmie on ustawienia {name}), a następnie usuń {name} i zasób jego karty. Zobacz [Migrating]({url})."
     }
   },
   "services": {
